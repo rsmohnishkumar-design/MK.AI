@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MK.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app" id="appRoot">
+
+    <section id="authScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="header-mark">§</div>
+        <h1>MK.ai</h1>
+        <p class="auth-copy">Sign in to start asking.</p>
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" id="tabLogin">Log in</button>
+          <button type="button" class="auth-tab" id="tabSignup">Sign up</button>
+        </div>
+
+        <form id="authForm">
+          <input id="authEmail" type="email" placeholder="email" autocomplete="username" required />
+          <input id="authPassword" type="password" placeholder="password" autocomplete="current-password" required />
+          <input id="authCode" type="text" placeholder="access code (optional)" autocomplete="off" />
+          <button type="submit" id="authSubmit">Log in</button>
+        </form>
+        <p class="auth-hint">Have an access code for unlimited use? Enter it above — otherwise every new account gets a 3-hour trial.</p>
+        <p id="authError" class="auth-error"></p>
+      </div>
+    </section>
+
+    <div id="chatScreen" class="hidden">
+      <header class="header">
+        <div class="header-mark" id="secretMark" title="">§</div>
+        <div class="header-text">
+          <h1>MK.ai</h1>
+          <p>a real browser drives google.com for you — no API keys</p>
+        </div>
+        <span id="tierBadge" class="tier-badge"></span>
+        <button id="signOutBtn" class="signout-btn" title="Sign out"></button>
+      </header>
+
+      <main class="reading-room" id="thread" aria-live="polite">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-glyph">⌕</div>
+          <p>The shelves are empty. Ask something to send the browser off.</p>
+        </div>
+      </main>
+
+      <form class="desk" id="composer">
+        <input
+          id="question"
+          type="text"
+          autocomplete="off"
+          placeholder="What do you want to search for?"
+          aria-label="Your question"
+        />
+        <button type="submit" id="sendBtn">
+          <span class="btn-label">Search</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <template id="msg-user">
+    <div class="msg msg-user">
+      <div class="msg-label">you</div>
+      <div class="msg-body"></div>
+    </div>
+  </template>
+
+  <template id="msg-memory">
+    <div class="msg msg-bot">
+      <div class="card card-memory">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label"></div>
+          <div class="msg-body"></div>
+          <div class="memory-meta"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="msg-bot">
+    <div class="msg msg-bot">
+      <div class="card">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label">mk.ai — pulled from google.com</div>
+          <div class="sources"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="msg-loading">
+    <div class="msg msg-bot msg-loading">
+      <div class="card">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label">mk.ai</div>
+          <div class="pulling">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            checking memory, then the browser if needed…
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="msg-error">
+    <div class="msg msg-bot msg-error">
+      <div class="card card-error">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label">mk.ai — the trip failed</div>
+          <div class="msg-body"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="/script.js"></script>
+</body>
+</html>

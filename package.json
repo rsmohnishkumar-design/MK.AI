@@ -1,0 +1,26 @@
+{
+  "name": "mk-ai",
+  "version": "3.0.0",
+  "description": "A chatbot that searches Google by driving a real headless browser, with a hidden vault it can also learn from — no API keys.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.5.0",
+    "fuse.js": "^7.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "puppeteer": "^22.15.0"
+  }
+}
