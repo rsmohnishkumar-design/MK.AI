@@ -17,8 +17,8 @@ const ATTEMPTS = [
   { model: "gemini-flash-lite-latest", search: false },
 ];
 
-// Give up on an attempt that hasn't finished in this long (the default is 3 minutes).
-const TIMEOUT_MS = 45000;
+// Give up on a request that hasn't finished in this long (the default is 3 minutes).
+const TIMEOUT_MS = 60000;
 
 const models = new Map();
 function getModel({ model, search }) {
@@ -26,15 +26,11 @@ function getModel({ model, search }) {
   if (!models.has(key)) {
     models.set(
       key,
-      getGenerativeModel(
-        ai,
-        {
-          model,
-          systemInstruction: SYSTEM_PROMPT,
-          ...(search ? { tools: [{ googleSearch: {} }] } : {}),
-        },
-        { timeout: TIMEOUT_MS }
-      )
+      getGenerativeModel(ai, {
+        model,
+        systemInstruction: SYSTEM_PROMPT,
+        ...(search ? { tools: [{ googleSearch: {} }] } : {}),
+      })
     );
   }
   return models.get(key);
@@ -96,26 +92,56 @@ export async function askGemini(question, history, knowledge, onText = () => {})
   for (const attempt of attempts) {
     let text = "";
     try {
-      const result = await getModel(attempt).generateContentStream({ contents });
-      for await (const chunk of result.stream) {
-        try {
-          text += chunk.text() || "";
-        } catch {} // a chunk with no text part
-        if (text) onText(clean(text));
-      }
-      const response = await result.response;
-      // Google requires showing its search suggestions whenever an answer used Google Search.
-      const searchSuggestions =
-        response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || null;
-      return { answer: clean(text), searchSuggestions };
+      return await streamAnswer(getModel(attempt), contents, (t) => {
+        text = t;
+        onText(t);
+      });
     } catch (err) {
       lastError = err;
       console.warn(`Gemini (${attempt.model}, search ${attempt.search ? "on" : "off"}) failed:`, err);
+      // Some networks drop streaming connections: ask again the ordinary way.
+      if (!text && isNetworkDrop(err)) {
+        try {
+          return await wholeAnswer(getModel(attempt), contents, onText);
+        } catch (err2) {
+          lastError = err2;
+          console.warn("Non-streaming retry failed too:", err2);
+        }
+      }
       // Once part of the answer is on screen, starting over would be confusing.
-      if (text || !worthRetrying(err) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(err))) break;
+      if (text || !worthRetrying(lastError) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(lastError))) break;
     }
   }
   throw lastError;
+}
+
+function isNetworkDrop(err) {
+  return /failed to fetch|network|load failed|connection/i.test(errorText(err));
+}
+
+// Google requires showing its search suggestions whenever an answer used Google Search.
+function suggestionsOf(response) {
+  return response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || null;
+}
+
+async function streamAnswer(model, contents, onText) {
+  const result = await model.generateContentStream({ contents }, { timeout: TIMEOUT_MS });
+  let text = "";
+  for await (const chunk of result.stream) {
+    try {
+      text += chunk.text() || "";
+    } catch {} // a chunk with no text part
+    if (text) onText(clean(text));
+  }
+  const response = await result.response;
+  return { answer: clean(text), searchSuggestions: suggestionsOf(response) };
+}
+
+async function wholeAnswer(model, contents, onText) {
+  const { response } = await model.generateContent({ contents }, { timeout: TIMEOUT_MS });
+  const answer = clean(response.text() || "");
+  if (answer) onText(answer);
+  return { answer, searchSuggestions: suggestionsOf(response) };
 }
 
 export function aiErrorMessage(err) {
