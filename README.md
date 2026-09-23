@@ -1,26 +1,30 @@
-# MK.ai — a browser-driven, self-teaching search chatbot with accounts (no third-party API keys)
+# MK.ai — an AI chatbot backed by live web search, with accounts and a teachable vault
 
 A standalone web app. People sign in with an email and password, then
-ask it something — it checks its own memory first; if it doesn't
-know, a real headless Chrome browser (via Puppeteer) opens google.com,
-runs the search, and scrapes back the results — and remembers the
-question for next time. There's also a hidden, passcode-protected
-admin room where you can teach it answers directly and see everyone's
-activity.
+ask it anything. MK.ai searches the web with a real headless Chrome
+browser (via Puppeteer), then **Claude** reads the results and writes a
+real answer, citing its sources as [1], [2]. It follows the
+conversation, so follow-up questions work. If Google blocks the browser
+(common on cloud hosts), Claude searches the web itself instead.
 
-No Google API key, no LLM key. Firebase is optional and uses your own
-project's credentials (see below) — nothing paid or third-party required.
+There's also a hidden, passcode-protected admin room where you can
+teach it answers directly (those always win over the AI) and see
+everyone's activity.
+
+You need an Anthropic API key for the AI answers (pay per use, from
+https://console.anthropic.com). Without one, MK.ai falls back to
+showing raw Google results. Firebase is optional (see below).
 
 ## Setup
 
 ```bash
-cd search-chatbot
 npm install
 cp .env.example .env
 ```
 
 Open `.env` and set:
 
+- `ANTHROPIC_API_KEY` — turns on real AI answers
 - `VAULT_PASSCODE` — locks the hidden admin room
 - `JWT_SECRET` — signs everyone's login session; generate one with
   `openssl rand -hex 32` (or any long random string). Skipping this

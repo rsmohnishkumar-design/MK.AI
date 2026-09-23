@@ -192,6 +192,22 @@ body {
   user-select: none;
 }
 
+/* AI answer card */
+.ai-answer + .sources {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sources-heading {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
 /* Results list */
 .results-note {
   font-size: 14px;

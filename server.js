@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config"; // first, so every module below sees .env values
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -8,8 +8,7 @@ import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as brain from "./brain.js";
-
-dotenv.config();
+import * as ai from "./ai.js";
 puppeteer.use(StealthPlugin());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -246,6 +245,54 @@ function safeLog(entry) {
   brain.logActivity(entry).catch((err) => console.error("Activity log failed:", err.message));
 }
 
+// --- AI mode: vault answers still win; otherwise search, then Claude writes the answer ---
+async function answerWithAI(req, res, message) {
+  const ip = req.ip;
+  const email = req.user.email;
+
+  const memory = await brain.recall(message);
+  if (memory && memory.source === "vault") {
+    safeLog({
+      question: message,
+      mode: "memory",
+      source: "vault",
+      confidence: Math.round(memory.similarity * 100),
+      ip,
+      email,
+    });
+    return res.json({
+      mode: "memory",
+      source: "vault",
+      answer: memory.answer,
+      matchedQuestion: memory.question,
+      confidence: Math.round(memory.similarity * 100),
+      sourceLink: null,
+    });
+  }
+
+  let results = [];
+  try {
+    results = await searchGoogle(message);
+  } catch (err) {
+    // Google often blocks cloud servers; Claude then searches the web itself.
+    console.warn("Google search failed, answering without it:", err.message);
+  }
+
+  const { answer, sources } = await ai.generateAnswer({
+    question: message,
+    history: req.body.history,
+    results,
+  });
+
+  brain
+    .rememberFromSearch(message, answer, sources[0]?.link || null)
+    .catch((err) => console.error("Failed to save learned entry:", err.message));
+
+  safeLog({ question: message, mode: "ai", source: results.length ? "google" : "web", resultCount: sources.length, ip, email });
+
+  res.json({ mode: "ai", answer, results: sources });
+}
+
 // --- Chat endpoint: check memory first, fall back to a live search, then learn from it ---
 app.post("/api/chat", requireAuth, enforceAccess, async (req, res) => {
   const { message } = req.body;
@@ -255,6 +302,10 @@ app.post("/api/chat", requireAuth, enforceAccess, async (req, res) => {
   try {
     if (!message || typeof message !== "string") {
       return res.status(400).json({ error: "Missing 'message' string in request body." });
+    }
+
+    if (ai.aiEnabled) {
+      return await answerWithAI(req, res, message);
     }
 
     const memory = await brain.recall(message);

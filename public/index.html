@@ -38,7 +38,7 @@
         <div class="header-mark" id="secretMark" title="">§</div>
         <div class="header-text">
           <h1>MK.ai</h1>
-          <p>a real browser drives google.com for you — no API keys</p>
+          <p>ask anything — answers backed by live web search</p>
         </div>
         <span id="tierBadge" class="tier-badge"></span>
         <button id="signOutBtn" class="signout-btn" title="Sign out"></button>
@@ -47,7 +47,7 @@
       <main class="reading-room" id="thread" aria-live="polite">
         <div class="empty-state" id="emptyState">
           <div class="empty-glyph">⌕</div>
-          <p>The shelves are empty. Ask something to send the browser off.</p>
+          <p>Ask me anything to get started.</p>
         </div>
       </main>
 
@@ -56,11 +56,11 @@
           id="question"
           type="text"
           autocomplete="off"
-          placeholder="What do you want to search for?"
+          placeholder="Ask me anything…"
           aria-label="Your question"
         />
         <button type="submit" id="sendBtn">
-          <span class="btn-label">Search</span>
+          <span class="btn-label">Ask</span>
         </button>
       </form>
     </div>
@@ -98,6 +98,19 @@
     </div>
   </template>
 
+  <template id="msg-ai">
+    <div class="msg msg-bot">
+      <div class="card">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label">mk.ai</div>
+          <div class="msg-body ai-answer"></div>
+          <div class="sources"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <template id="msg-loading">
     <div class="msg msg-bot msg-loading">
       <div class="card">
@@ -106,7 +119,7 @@
           <div class="msg-label">mk.ai</div>
           <div class="pulling">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            checking memory, then the browser if needed…
+            thinking…
           </div>
         </div>
       </div>

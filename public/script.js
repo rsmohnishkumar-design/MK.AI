@@ -137,6 +137,15 @@ const secretMark = document.getElementById("secretMark");
 const tUser = document.getElementById("msg-user");
 const tMemory = document.getElementById("msg-memory");
 const tBot = document.getElementById("msg-bot");
+const tAi = document.getElementById("msg-ai");
+
+// Recent conversation, sent with each question so the AI can follow up.
+const history = [];
+const MAX_HISTORY = 12;
+function remember(role, content) {
+  history.push({ role, content });
+  if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+}
 const tLoading = document.getElementById("msg-loading");
 const tError = document.getElementById("msg-error");
 
@@ -208,6 +217,35 @@ function addBotMessage(results, note) {
   thread.appendChild(node);
 }
 
+function addAiMessage(answer, results) {
+  const node = tAi.content.cloneNode(true);
+  node.querySelector(".msg-body").textContent = answer;
+  const sourcesEl = node.querySelector(".sources");
+
+  if (!results.length) {
+    sourcesEl.remove();
+  } else {
+    const heading = document.createElement("div");
+    heading.className = "sources-heading";
+    heading.textContent = "sources";
+    sourcesEl.appendChild(heading);
+    results.forEach((r) => {
+      const row = document.createElement("div");
+      row.className = "source-item";
+      row.innerHTML = `
+        <span class="source-index">[${r.index}]</span>
+        <div class="source-body">
+          <a class="source-title" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.title)}</a>
+          <span class="source-link">${escapeHtml(r.link)}</span>
+        </div>
+      `;
+      sourcesEl.appendChild(row);
+    });
+  }
+
+  thread.appendChild(node);
+}
+
 function addErrorMessage(message) {
   const node = tError.content.cloneNode(true);
   node.querySelector(".msg-body").textContent = message;
@@ -238,7 +276,7 @@ composer.addEventListener("submit", async (e) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ message: question }),
+      body: JSON.stringify({ message: question, history }),
     });
 
     const data = await res.json();
@@ -252,8 +290,14 @@ composer.addEventListener("submit", async (e) => {
       lockChatExpired();
     } else if (!res.ok) {
       addErrorMessage(data.error || "Something went wrong.");
+    } else if (data.mode === "ai") {
+      addAiMessage(data.answer, data.results || []);
+      remember("user", question);
+      remember("assistant", data.answer);
     } else if (data.mode === "memory") {
       addMemoryMessage(data);
+      remember("user", question);
+      remember("assistant", data.answer);
     } else {
       addBotMessage(data.results || [], data.note);
     }
