@@ -390,6 +390,22 @@
 
 .ai-settings { margin-bottom: 28px; }
 
+.provider-rows {
+  display: grid;
+  gap: 18px;
+}
+
+.provider-row h3 {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin: 0 0 4px;
+  color: var(--paper);
+}
+
+.provider-row .provider-status { color: var(--sage); font-weight: 400; }
+
+.provider-row .col-hint { margin: 4px 0 8px; }
+
 .groq-form {
   display: flex;
   flex-wrap: wrap;

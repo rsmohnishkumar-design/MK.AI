@@ -4,7 +4,8 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/f
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 import { configured, auth, db, ai, appCheck } from "./firebase.js";
-import { GEMINI_MODELS, GROQ_MODELS } from "../firebase-config.js";
+import { GEMINI_MODELS } from "../firebase-config.js";
+import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
 const list = document.getElementById("steps");
 
@@ -85,32 +86,31 @@ async function run() {
     return `answered: ${(response.text() || "").trim().slice(0, 60)}`;
   };
 
-  // Groq (main AI when a key is saved in the vault).
-  let groqKey = null;
+  // Free AI services with a key saved in the vault.
+  let keys = {};
   if (user) {
-    await step("Groq key (from the vault)", async () => {
+    await step("AI keys (from the vault)", async () => {
       const snap = await getDoc(doc(db, "settings", "ai"));
-      groqKey = snap.exists() ? snap.data().groqKey : null;
-      if (!groqKey) throw new Error("no Groq key saved — add one in the vault's AI settings");
-      return "saved";
+      const data = snap.exists() ? snap.data() : {};
+      for (const p of PROVIDERS) if (data[keyField(p)]) keys[p.id] = data[keyField(p)];
+      const names = PROVIDERS.filter((p) => keys[p.id]).map((p) => p.name);
+      if (!names.length) throw new Error("no keys saved — add one in the vault's AI settings");
+      return names.join(", ");
     });
   }
-  if (groqKey) {
-    await Promise.all(
-      GROQ_MODELS.map((model) =>
-        step(`Groq: ${model}`, async () => {
-          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model, messages: [{ role: "user", content: "Reply with just: OK" }], max_completion_tokens: 20 }),
-          });
-          const body = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(`[${res.status}] ${body?.error?.message || ""}`);
-          return `answered: ${(body.choices?.[0]?.message?.content || "").trim().slice(0, 60)}`;
-        }, 30000)
-      )
-    );
-  }
+  await Promise.all(
+    PROVIDERS.filter((p) => keys[p.id]).map(async (p) => {
+      let models = p.prefer;
+      const ok = await step(`${p.name}: key and models`, async () => {
+        models = chooseModels(p, await listModels(p, keys[p.id]));
+        return models.join(", ") || "no usable models found";
+      });
+      if (!ok) return;
+      await Promise.all(
+        models.slice(0, 2).map((m) => step(`${p.name}: ${m}`, async () => `answered: ${(await quickChat(p, keys[p.id], m)).slice(0, 60)}`, 30000))
+      );
+    })
+  );
 
   // All models at once, so the whole check takes at most ~30 seconds.
   await Promise.all([
