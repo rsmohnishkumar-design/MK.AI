@@ -354,7 +354,8 @@ function startLoading() {
   const label = el.querySelector(".pulling");
   const steps = [
     [8000, "still thinking…"],
-    [20000, "this one is taking a while…"],
+    [20000, "Google's AI is busy — trying another model…"],
+    [45000, "still trying…"],
   ].map(([ms, text]) =>
     setTimeout(() => {
       if (label) label.lastChild.textContent = ` ${text}`;

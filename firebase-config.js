@@ -15,8 +15,15 @@ export const firebaseConfig = {
 // Firebase AI Logic won't answer without App Check.
 export const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
 
-// Which Gemini model writes the answers.
-export const GEMINI_MODEL = "gemini-flash-latest";
+// Gemini models to try, in order. When Google says one is overloaded or it's
+// too slow, MK.ai moves on to the next (each has separate capacity).
+export const GEMINI_MODELS = [
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+  "gemini-flash-lite-latest",
+  "gemini-2.5-flash-lite",
+];
+export const GEMINI_MODEL = GEMINI_MODELS[0];
 
 // Must match TRIAL_HOURS in firestore.rules.
 export const TRIAL_HOURS = 3;

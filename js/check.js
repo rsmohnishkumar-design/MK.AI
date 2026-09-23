@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/f
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 import { configured, auth, db, ai, appCheck } from "./firebase.js";
-import { GEMINI_MODEL } from "../firebase-config.js";
+import { GEMINI_MODELS } from "../firebase-config.js";
 
 const list = document.getElementById("steps");
 
@@ -85,9 +85,11 @@ async function run() {
     return `answered: ${(response.text() || "").trim().slice(0, 60)}`;
   };
 
-  await step(`AI: ${GEMINI_MODEL}`, ask(GEMINI_MODEL, false), 30000);
-  await step("AI: gemini-flash-lite-latest", ask("gemini-flash-lite-latest", false), 30000);
-  await step(`AI: ${GEMINI_MODEL} + Google Search`, ask(GEMINI_MODEL, true), 30000);
+  // All models at once, so the whole check takes at most ~30 seconds.
+  await Promise.all([
+    ...GEMINI_MODELS.map((model) => step(`AI: ${model}`, ask(model, false), 30000)),
+    step(`AI: ${GEMINI_MODELS[0]} + Google Search`, ask(GEMINI_MODELS[0], true), 30000),
+  ]);
 
   const done = document.createElement("li");
   done.className = "ok";

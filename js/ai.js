@@ -1,6 +1,6 @@
 import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 import { ai } from "./firebase.js";
-import { GEMINI_MODEL } from "../firebase-config.js";
+import { GEMINI_MODELS } from "../firebase-config.js";
 
 const SYSTEM_PROMPT = `You are MK.ai, a helpful, knowledgeable AI assistant.
 Answer the user's question directly and clearly, like a knowledgeable friend. Use Google Search whenever the question needs current or specific facts.
@@ -8,17 +8,16 @@ Give only the answer: never mention your sources, search results, websites or ci
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings, tables or bold.
 Reply in the same language the user writes in.`;
 
-// Tried in order. New free projects sometimes have no allowance for Google
-// Search or for a particular model, so a quota or "model not found" refusal
-// falls through to the next option instead of failing outright.
+// Tried in order: the first model with Google Search, then every model
+// without it. An overloaded, slow, over-quota or missing model falls through
+// to the next option instead of failing outright.
 const ATTEMPTS = [
-  { model: GEMINI_MODEL, search: true },
-  { model: GEMINI_MODEL, search: false },
-  { model: "gemini-flash-lite-latest", search: false },
+  { model: GEMINI_MODELS[0], search: true },
+  ...GEMINI_MODELS.map((model) => ({ model, search: false })),
 ];
 
-// Give up on a request that hasn't finished in this long (the default is 3 minutes).
-const TIMEOUT_MS = 60000;
+// Give up on one attempt after this long and try the next (the SDK default is 3 minutes).
+const TIMEOUT_MS = 20000;
 
 const models = new Map();
 function getModel({ model, search }) {
@@ -52,10 +51,14 @@ function errorText(err) {
   return `${err?.code || ""} ${err?.message || ""}`;
 }
 
-// Quota, missing-model and "search not allowed" refusals are worth retrying differently.
+// Overload, timeout, quota, missing-model and "search not allowed" failures
+// are worth retrying with the next option.
 function worthRetrying(err) {
   const status = err?.customErrorData?.status;
-  return [400, 403, 404, 429].includes(status) || /quota|resource.exhausted|not found|not supported/i.test(errorText(err));
+  return (
+    [400, 403, 404, 429, 500, 503, 504].includes(status) ||
+    /overloaded|unavailable|timeout|quota|resource.exhausted|not found|not supported/i.test(errorText(err))
+  );
 }
 
 // Turns what MK.ai already knows into context for the new answer.
@@ -160,6 +163,9 @@ export function aiErrorMessage(err) {
   }
   if (/api-not-enabled|not been used|disabled/i.test(text)) {
     return "The AI isn't switched on in Firebase yet — the admin needs to enable Firebase AI Logic (see the README)." + detail;
+  }
+  if (/overloaded|unavailable/i.test(text) || status === 503) {
+    return "Google's free AI is overloaded right now — please try again in a few minutes." + detail;
   }
   if (status === 429 || /quota|resource.exhausted/i.test(text)) {
     return "The AI's free limit was reached — please try again later." + detail;
