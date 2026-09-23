@@ -66,6 +66,9 @@ export function aiErrorMessage(err) {
   if (status === 429 || /quota|resource.exhausted|429/i.test(text)) {
     return "MK.ai is getting a lot of questions right now — please try again in a minute.";
   }
+  if (/app.?check|deactivated/i.test(text)) {
+    return "The AI is waiting for App Check to be set up in Firebase — the admin needs to finish that step (see the README).";
+  }
   if (/api-not-enabled|not been used|disabled/i.test(text)) {
     return "The AI isn't switched on in Firebase yet — the admin needs to enable Firebase AI Logic (see the README).";
   }

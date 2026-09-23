@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/fireba
 import { getAuth, connectAuthEmulator } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { getAI, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
-import { firebaseConfig } from "../firebase-config.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js";
+import { firebaseConfig, RECAPTCHA_SITE_KEY } from "../firebase-config.js";
 
 // False until firebase-config.js has been filled in.
 export const configured = !String(firebaseConfig.apiKey || "").startsWith("PASTE");
@@ -10,6 +11,16 @@ export const configured = !String(firebaseConfig.apiKey || "").startsWith("PASTE
 export const app = configured ? initializeApp(firebaseConfig) : null;
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
+
+// App Check proves requests come from this website. Firebase AI Logic refuses
+// to answer without it. Set up before the AI so every AI request carries it.
+if (app && RECAPTCHA_SITE_KEY && !window.MKAI_EMULATORS) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
 // Gemini through Firebase AI Logic, on the free Gemini Developer API.
 export const ai = app ? getAI(app, { backend: new GoogleAIBackend() }) : null;
 
