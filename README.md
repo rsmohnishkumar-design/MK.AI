@@ -62,7 +62,23 @@ MK.ai gets better the more it's used:
 2. Choose the **Gemini Developer API** (it has a free tier) and follow
    the prompts to enable it.
 
-### 5. Open your app
+### 5. Turn on App Check (required for the AI)
+
+Firebase AI Logic only answers requests that prove they come from your
+website. This uses a free reCAPTCHA v3 key.
+
+1. Go to [google.com/recaptcha/admin/create](https://www.google.com/recaptcha/admin/create).
+   Give it any label, choose **Score based (v3)**, add the domain
+   `rsmohnishkumar-design.github.io`, and submit. You get a **site key**
+   and a **secret key**.
+2. In Firebase, open **Security → App Check → Apps**, pick your web app,
+   choose **reCAPTCHA**, paste the **secret key**, and **Save**.
+3. Put the **site key** into `RECAPTCHA_SITE_KEY` in
+   [`firebase-config.js`](firebase-config.js).
+4. In **App Check → APIs**, find **Firebase AI Logic** and tap
+   **Enforce**.
+
+### 6. Open your app
 
 Go to **https://rsmohnishkumar-design.github.io/MK.AI/** and sign up
 using the admin email from step 3. Firebase emails you a verification
@@ -99,7 +115,7 @@ link — click it. That's it.
 | `index.html`, `style.css`, `js/app.js` | The chat app |
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/ai.js` | Asking Gemini |
-| `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project |
+| `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project (and App Check) |
 | `vault.html`, `vault.css`, `js/vault.js` | The admin vault |
 | `firestore.rules` | Database security rules (paste into Firebase) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installable app and offline support |
@@ -116,10 +132,9 @@ link — click it. That's it.
   AI products do: by remembering good answers, learning from feedback,
   and feeding what it knows back into the model.
 - **Trials are enforced by the database.** An expired trial account
-  can't save anything, and the app locks the chat. But because the AI
-  is called from the browser, a technical user could still reach it
-  directly. For stronger protection, enable **App Check** in Firebase
-  (optional).
+  can't save anything, and the app locks the chat. App Check stops other
+  websites from using your AI, but someone on your own site who knows
+  what they're doing could still call the AI directly.
 - **Free-tier limits.** Firebase's free plan caps AI requests and
   database reads per day, which is plenty for personal use. If you hit
   the cap, MK.ai says it's busy and to try again later.
