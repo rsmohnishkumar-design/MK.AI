@@ -38,6 +38,21 @@
         <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
 
+      <section class="activity-section ai-settings">
+        <div class="activity-heading">
+          <h2>AI settings</h2>
+          <span class="count" id="groqStatus"></span>
+        </div>
+        <p class="col-hint">Paste a free Groq API key (console.groq.com → API Keys) so MK.ai answers with Groq first, with Gemini as a backup. It's stored in your database, readable only by signed-in members, never in the public code.</p>
+        <form id="groqForm" class="groq-form">
+          <input id="groqKeyInput" type="password" placeholder="gsk_…" autocomplete="off" />
+          <button type="submit">Save key</button>
+          <button type="button" id="groqTestBtn" class="secondary">Test</button>
+          <button type="button" id="groqRemoveBtn" class="secondary danger">Remove</button>
+        </form>
+        <p id="groqMessage" class="col-hint"></p>
+      </section>
+
       <div class="vault-columns">
         <section class="vault-col">
           <h2>Add to the vault</h2>

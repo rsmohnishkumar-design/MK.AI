@@ -14,6 +14,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   Timestamp,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
@@ -112,6 +114,7 @@ if (configured) {
     loadEntries();
     loadActivity();
     loadUsers();
+    loadGroqKey();
   });
 }
 
@@ -344,3 +347,79 @@ async function loadUsers() {
     showError(err);
   }
 }
+
+// --- AI settings: the Groq API key ---
+const groqForm = $("groqForm");
+const groqKeyInput = $("groqKeyInput");
+const groqStatus = $("groqStatus");
+const groqMessage = $("groqMessage");
+const settingsRef = () => doc(db, "settings", "ai");
+
+async function loadGroqKey() {
+  try {
+    const snap = await getDoc(settingsRef());
+    const key = snap.exists() ? snap.data().groqKey : "";
+    groqKeyInput.value = key || "";
+    groqStatus.textContent = key ? "(Groq key saved)" : "(no Groq key — using Gemini only)";
+  } catch (err) {
+    groqStatus.textContent = "";
+    groqMessage.textContent =
+      "Couldn't read AI settings — republish firestore.rules from the repo (it now includes a settings rule). " +
+      friendlyError(err);
+  }
+}
+
+// Asks Groq which models this key can use.
+async function testGroqKey(key) {
+  const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${key}` } });
+  if (!res.ok) {
+    let message = "";
+    try {
+      message = (await res.json())?.error?.message || "";
+    } catch {}
+    throw new Error(`Groq said [${res.status}] ${message}`);
+  }
+  const { data } = await res.json();
+  return data.map((m) => m.id);
+}
+
+groqForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const key = groqKeyInput.value.trim();
+  if (!key) return;
+  groqMessage.textContent = "Checking the key with Groq…";
+  try {
+    const models = await testGroqKey(key);
+    await setDoc(settingsRef(), { groqKey: key, updatedAt: serverTimestamp() });
+    groqMessage.textContent = `Saved. The key works (${models.length} models available). New chats will use Groq.`;
+    loadGroqKey();
+  } catch (err) {
+    groqMessage.textContent = `Not saved: ${err.message || friendlyError(err)}`;
+  }
+});
+
+$("groqTestBtn").addEventListener("click", async () => {
+  const key = groqKeyInput.value.trim();
+  if (!key) {
+    groqMessage.textContent = "Paste a key first.";
+    return;
+  }
+  groqMessage.textContent = "Testing…";
+  try {
+    const models = await testGroqKey(key);
+    groqMessage.textContent = `Works. Models: ${models.slice(0, 12).join(", ")}${models.length > 12 ? "…" : ""}`;
+  } catch (err) {
+    groqMessage.textContent = err.message;
+  }
+});
+
+$("groqRemoveBtn").addEventListener("click", async () => {
+  if (!confirm("Remove the Groq key? MK.ai will use Gemini only.")) return;
+  try {
+    await deleteDoc(settingsRef());
+    groqMessage.textContent = "Removed.";
+    loadGroqKey();
+  } catch (err) {
+    groqMessage.textContent = friendlyError(err);
+  }
+});

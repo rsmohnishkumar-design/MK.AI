@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/f
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 import { configured, auth, db, ai, appCheck } from "./firebase.js";
-import { GEMINI_MODELS } from "../firebase-config.js";
+import { GEMINI_MODELS, GROQ_MODELS } from "../firebase-config.js";
 
 const list = document.getElementById("steps");
 
@@ -84,6 +84,33 @@ async function run() {
     const { response } = await m.generateContent("Reply with just: OK", { timeout: 25000 });
     return `answered: ${(response.text() || "").trim().slice(0, 60)}`;
   };
+
+  // Groq (main AI when a key is saved in the vault).
+  let groqKey = null;
+  if (user) {
+    await step("Groq key (from the vault)", async () => {
+      const snap = await getDoc(doc(db, "settings", "ai"));
+      groqKey = snap.exists() ? snap.data().groqKey : null;
+      if (!groqKey) throw new Error("no Groq key saved — add one in the vault's AI settings");
+      return "saved";
+    });
+  }
+  if (groqKey) {
+    await Promise.all(
+      GROQ_MODELS.map((model) =>
+        step(`Groq: ${model}`, async () => {
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model, messages: [{ role: "user", content: "Reply with just: OK" }], max_completion_tokens: 20 }),
+          });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(`[${res.status}] ${body?.error?.message || ""}`);
+          return `answered: ${(body.choices?.[0]?.message?.content || "").trim().slice(0, 60)}`;
+        }, 30000)
+      )
+    );
+  }
 
   // All models at once, so the whole check takes at most ~30 seconds.
   await Promise.all([
