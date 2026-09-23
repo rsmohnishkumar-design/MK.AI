@@ -12,6 +12,8 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+// Firestore rejects `undefined` fields; skip them instead of failing the write.
+db.settings({ ignoreUndefinedProperties: true });
 const vaultCol = db.collection("vault");
 const learnedCol = db.collection("learned");
 const activityCol = db.collection("activity");
@@ -33,10 +35,10 @@ export async function getLearnedEntries() {
   return snap.docs.map(docToEntry);
 }
 
-export async function addVaultEntry(question, answer) {
-  const createdAt = new Date().toISOString();
-  const ref = await vaultCol.add({ question, answer, createdAt });
-  return { id: ref.id, question, answer, createdAt };
+export async function addVaultEntry(question, answer, extra = {}) {
+  const fields = { question, answer, ...extra, createdAt: new Date().toISOString() };
+  const ref = await vaultCol.add(fields);
+  return { id: ref.id, ...fields };
 }
 
 export async function updateVaultEntry(id, patch) {
@@ -45,8 +47,9 @@ export async function updateVaultEntry(id, patch) {
   if (!snap.exists) return null;
 
   const updates = { updatedAt: new Date().toISOString() };
-  if (patch.question !== undefined) updates.question = patch.question;
-  if (patch.answer !== undefined) updates.answer = patch.answer;
+  for (const [key, value] of Object.entries(patch)) {
+    if (value !== undefined) updates[key] = value;
+  }
 
   await ref.update(updates);
   const updated = await ref.get();
@@ -57,10 +60,18 @@ export async function deleteVaultEntry(id) {
   await vaultCol.doc(id).delete();
 }
 
-export async function addLearnedEntry(question, answer, sourceLink) {
-  const createdAt = new Date().toISOString();
-  const ref = await learnedCol.add({ question, answer, sourceLink: sourceLink || null, createdAt });
-  return { id: ref.id, question, answer, sourceLink: sourceLink || null, createdAt };
+export async function addLearnedEntry(fields) {
+  const data = { ...fields, createdAt: new Date().toISOString() };
+  const ref = await learnedCol.add(data);
+  return { id: ref.id, ...data };
+}
+
+export async function updateLearnedEntry(id, patch) {
+  const ref = learnedCol.doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  await ref.update(patch);
+  return { id, ...snap.data(), ...patch };
 }
 
 export async function deleteLearnedEntry(id) {

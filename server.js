@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config"; // first, so every module below sees .env values
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -8,8 +8,7 @@ import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as brain from "./brain.js";
-
-dotenv.config();
+import * as ai from "./ai.js";
 puppeteer.use(StealthPlugin());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +37,11 @@ app.set("trust proxy", true);
 
 app.use(express.json());
 app.use(cookieParser());
+// The service worker must always be re-checked, or installed apps never update.
+app.get("/sw.js", (req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(__dirname, "public", "sw.js"));
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 function signToken(user) {
@@ -246,36 +250,93 @@ function safeLog(entry) {
   brain.logActivity(entry).catch((err) => console.error("Activity log failed:", err.message));
 }
 
-// --- Chat endpoint: check memory first, fall back to a live search, then learn from it ---
+// Follow-ups like "what about its population?" depend on the conversation, so
+// they're never answered from (or saved to) memory on their own.
+const FOLLOW_UP = /\b(it|its|he|she|him|her|his|they|them|their|this|that|these|those|there|then|same|more|else)\b/i;
+function dependsOnContext(message, history) {
+  if (!Array.isArray(history) || !history.length) return false;
+  return FOLLOW_UP.test(message) || message.trim().split(/\s+/).length <= 3;
+}
+
+// --- AI mode: answer from memory when it's confident, otherwise Gemini answers and MK.ai learns ---
+async function answerWithAI(req, res, message) {
+  const ip = req.ip;
+  const email = req.user.email;
+  const history = req.body.history;
+  const contextual = dependsOnContext(message, history);
+
+  const embedding = contextual ? null : await ai.embed(message);
+
+  if (!contextual) {
+    const memory = await brain.recall(message, embedding);
+    if (memory) {
+      if (memory.kind === "learned") brain.markUsed(memory.entry).catch(() => {});
+      safeLog({
+        question: message,
+        mode: "memory",
+        source: memory.kind,
+        confidence: Math.round(memory.similarity * 100),
+        ip,
+        email,
+      });
+      return res.json({
+        mode: "ai",
+        answer: memory.entry.answer,
+        entryId: memory.kind === "learned" ? memory.entry.id : null,
+      });
+    }
+  }
+
+  const knowledge = await brain.related(message, embedding || (await ai.embed(message)));
+  const answer = await ai.generateAnswer({ question: message, history, knowledge });
+  if (!answer) {
+    safeLog({ question: message, mode: "error", source: "ai", error: "empty answer", ip, email });
+    return res.status(502).json({ error: "The AI couldn't answer that — please try rephrasing." });
+  }
+
+  let entryId = null;
+  if (!contextual) {
+    try {
+      const entry = await brain.learn(message, answer, embedding, {
+        timeSensitive: brain.isTimeSensitive(message),
+      });
+      entryId = entry.id;
+    } catch (err) {
+      console.error("Failed to save learned entry:", err.message);
+    }
+  }
+
+  safeLog({ question: message, mode: "ai", source: "gemini", ip, email });
+  res.json({ mode: "ai", answer, entryId });
+}
+
+// --- Chat endpoint ---
 app.post("/api/chat", requireAuth, enforceAccess, async (req, res) => {
   const { message } = req.body;
   const ip = req.ip;
   const email = req.user.email;
 
   try {
-    if (!message || typeof message !== "string") {
+    if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({ error: "Missing 'message' string in request body." });
     }
 
-    const memory = await brain.recall(message);
+    if (ai.aiEnabled) {
+      return await answerWithAI(req, res, message.trim().slice(0, 4000));
+    }
+
+    // Without an AI key: memory first, then raw results from the headless browser.
+    const memory = await brain.recall(message, null);
     if (memory) {
       safeLog({
         question: message,
         mode: "memory",
-        source: memory.source,
+        source: memory.kind,
         confidence: Math.round(memory.similarity * 100),
         ip,
         email,
       });
-
-      return res.json({
-        mode: "memory",
-        source: memory.source, // "vault" (curated) or "learned" (self-taught)
-        answer: memory.answer,
-        matchedQuestion: memory.question,
-        confidence: Math.round(memory.similarity * 100),
-        sourceLink: memory.sourceLink || null,
-      });
+      return res.json({ mode: "ai", answer: memory.entry.answer, entryId: null });
     }
 
     const results = await searchGoogle(message);
@@ -289,21 +350,28 @@ app.post("/api/chat", requireAuth, enforceAccess, async (req, res) => {
       });
     }
 
-    // Teach itself: remember this question against the top result, so a
-    // similar question next time can be answered from memory instantly.
-    const top = results[0];
-    brain
-      .rememberFromSearch(message, `${top.title} — ${top.snippet}`.trim(), top.link)
-      .catch((err) => console.error("Failed to save learned entry:", err.message));
-
     safeLog({ question: message, mode: "search", source: "google", resultCount: results.length, ip, email });
-
     res.json({ mode: "search", results, note: null });
   } catch (err) {
     console.error(err);
     safeLog({ question: message, mode: "error", source: "none", error: err.message, ip, email });
-    res.status(500).json({ error: err.message || "Something went wrong." });
+    if (err.status === 429) {
+      return res.status(429).json({ error: "MK.ai is getting a lot of questions right now — please try again in a minute." });
+    }
+    res.status(500).json({ error: "Something went wrong — please try again." });
   }
+});
+
+// --- Feedback: 👍 / 👎 on an answer teaches MK.ai which answers to trust ---
+app.post("/api/feedback", requireAuth, async (req, res) => {
+  const { entryId, vote } = req.body || {};
+  if (typeof entryId !== "string" || !["up", "down"].includes(vote)) {
+    return res.status(400).json({ error: "Send an entryId and a vote of 'up' or 'down'." });
+  }
+  const entry = await brain.vote(entryId, req.user.id, vote);
+  if (!entry) return res.status(404).json({ error: "That answer isn't in memory anymore." });
+  safeLog({ question: entry.question, mode: "feedback", source: vote, ip: req.ip, email: req.user.email });
+  res.json({ ok: true });
 });
 
 // --- Vault routes (hidden admin room) ---
@@ -323,13 +391,14 @@ app.post("/api/vault/entries", requireVaultAuth, async (req, res) => {
   if (!question || !answer) {
     return res.status(400).json({ error: "Both 'question' and 'answer' are required." });
   }
-  const entry = await brain.addVaultEntry(question.trim(), answer.trim());
+  const entry = await brain.addVaultEntry(question.trim(), answer.trim(), await ai.embed(question.trim()));
   res.json({ entry });
 });
 
 app.put("/api/vault/entries/:id", requireVaultAuth, async (req, res) => {
   const { question, answer } = req.body || {};
-  const entry = await brain.updateVaultEntry(req.params.id, question, answer);
+  const embedding = typeof question === "string" ? await ai.embed(question) : null;
+  const entry = await brain.updateVaultEntry(req.params.id, question, answer, embedding);
   if (!entry) return res.status(404).json({ error: "Not found." });
   res.json({ entry });
 });
@@ -391,4 +460,12 @@ process.on("SIGINT", async () => {
 
 app.listen(PORT, () => {
   console.log(`MK.ai running at http://localhost:${PORT}`);
+
+  // Give older memories a meaning fingerprint so they can be matched by meaning too.
+  if (ai.aiEnabled) {
+    brain
+      .backfillEmbeddings(ai.embed)
+      .then((n) => n && console.log(`MK.ai: added meaning fingerprints to ${n} stored answers.`))
+      .catch((err) => console.warn("Embedding backfill failed:", err.message));
+  }
 });

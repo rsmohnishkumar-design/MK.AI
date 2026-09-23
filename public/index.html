@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MK.ai</title>
+<meta name="description" content="Ask anything — an AI assistant that learns from every conversation." />
+<meta name="theme-color" content="#14181c" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="MK.ai" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css" />
@@ -38,16 +47,17 @@
         <div class="header-mark" id="secretMark" title="">§</div>
         <div class="header-text">
           <h1>MK.ai</h1>
-          <p>a real browser drives google.com for you — no API keys</p>
+          <p>ask anything — it learns as you go</p>
         </div>
         <span id="tierBadge" class="tier-badge"></span>
+        <button id="installBtn" class="signout-btn hidden" title="Install MK.ai as an app">install app</button>
         <button id="signOutBtn" class="signout-btn" title="Sign out"></button>
       </header>
 
       <main class="reading-room" id="thread" aria-live="polite">
         <div class="empty-state" id="emptyState">
           <div class="empty-glyph">⌕</div>
-          <p>The shelves are empty. Ask something to send the browser off.</p>
+          <p>Ask me anything to get started.</p>
         </div>
       </main>
 
@@ -56,11 +66,11 @@
           id="question"
           type="text"
           autocomplete="off"
-          placeholder="What do you want to search for?"
+          placeholder="Ask me anything…"
           aria-label="Your question"
         />
         <button type="submit" id="sendBtn">
-          <span class="btn-label">Search</span>
+          <span class="btn-label">Ask</span>
         </button>
       </form>
     </div>
@@ -70,19 +80,6 @@
     <div class="msg msg-user">
       <div class="msg-label">you</div>
       <div class="msg-body"></div>
-    </div>
-  </template>
-
-  <template id="msg-memory">
-    <div class="msg msg-bot">
-      <div class="card card-memory">
-        <div class="card-spine"></div>
-        <div class="card-content">
-          <div class="msg-label"></div>
-          <div class="msg-body"></div>
-          <div class="memory-meta"></div>
-        </div>
-      </div>
     </div>
   </template>
 
@@ -98,6 +95,23 @@
     </div>
   </template>
 
+  <template id="msg-ai">
+    <div class="msg msg-bot">
+      <div class="card">
+        <div class="card-spine"></div>
+        <div class="card-content">
+          <div class="msg-label">mk.ai</div>
+          <div class="msg-body ai-answer"></div>
+          <div class="answer-actions">
+            <button type="button" class="vote-btn" data-vote="up" title="Helpful" aria-label="Helpful">👍</button>
+            <button type="button" class="vote-btn" data-vote="down" title="Not helpful" aria-label="Not helpful">👎</button>
+            <button type="button" class="copy-btn">copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <template id="msg-loading">
     <div class="msg msg-bot msg-loading">
       <div class="card">
@@ -106,7 +120,7 @@
           <div class="msg-label">mk.ai</div>
           <div class="pulling">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            checking memory, then the browser if needed…
+            thinking…
           </div>
         </div>
       </div>

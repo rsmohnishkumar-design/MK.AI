@@ -370,3 +370,11 @@
 .badge-learned { background: rgba(143, 169, 152, 0.18); color: var(--sage); }
 .badge-google { background: rgba(169, 176, 186, 0.15); color: var(--paper-dim); }
 .badge-error { background: rgba(201, 106, 74, 0.18); color: var(--error); }
+
+.entry-stats {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: #a9b0ba;
+  margin-right: auto;
+  align-self: center;
+}

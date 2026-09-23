@@ -33,9 +33,10 @@ body {
   max-width: 720px;
   margin: 0 auto;
   height: 100vh;
+  height: 100dvh; /* excludes mobile browser bars */
   display: flex;
   flex-direction: column;
-  padding: 0 20px;
+  padding: 0 max(20px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(20px, env(safe-area-inset-left));
 }
 
 /* Header */
@@ -68,6 +69,14 @@ body {
   font-size: 13px;
   color: var(--paper-dim);
   font-family: var(--font-mono);
+}
+
+/* Chat screen fills the app so the thread scrolls and the composer stays at the bottom */
+#chatScreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Reading room / thread */
@@ -190,6 +199,31 @@ body {
 .header-mark {
   cursor: default;
   user-select: none;
+}
+
+/* AI answer card */
+.answer-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.answer-actions button {
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--paper-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.answer-actions button:hover,
+.answer-actions button.chosen {
+  opacity: 1;
+  border-color: var(--brass);
 }
 
 /* Results list */
@@ -336,7 +370,11 @@ body {
 }
 
 @media (max-width: 520px) {
-  .app { padding: 0 14px; }
+  .header { padding: 16px 0 12px; gap: 10px; }
+  .header-text p { display: none; }
+  .signout-btn { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .desk { padding: 12px 0 16px; }
+  .app { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
   .card { max-width: 100%; }
   .msg-user .msg-body { max-width: 92%; }
 }
@@ -502,3 +540,6 @@ body {
 .signout-btn {
   margin-left: 10px;
 }
+
+/* Buttons after the badge sit next to it instead of splitting the free space */
+.tier-badge ~ .signout-btn { margin-left: 0; }

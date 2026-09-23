@@ -81,6 +81,15 @@ function renderList(container, entries, kind) {
       node.querySelector(".entry-a").textContent = entry.answer;
       const actions = node.querySelector(".entry-actions");
 
+      if (kind === "learned") {
+        const stats = document.createElement("span");
+        stats.className = "entry-stats";
+        stats.textContent =
+          `used ${entry.uses || 1}× · 👍 ${entry.upvotes || 0} · 👎 ${entry.downvotes || 0}` +
+          (entry.timeSensitive ? " · time-sensitive" : "");
+        actions.appendChild(stats);
+      }
+
       if (kind === "vault") {
         const editBtn = document.createElement("button");
         editBtn.textContent = "edit";
@@ -174,6 +183,8 @@ function badgeFor(row) {
   if (row.mode === "memory" && row.source === "vault") return '<span class="badge badge-vault">vault</span>';
   if (row.mode === "memory" && row.source === "learned") return '<span class="badge badge-learned">memory</span>';
   if (row.mode === "search") return '<span class="badge badge-google">google search</span>';
+  if (row.mode === "ai") return '<span class="badge badge-google">ai answer</span>';
+  if (row.mode === "feedback") return `<span class="badge badge-learned">${row.source === "up" ? "👍 helpful" : "👎 unhelpful"}</span>`;
   return '<span class="badge badge-error">error</span>';
 }
 

@@ -104,9 +104,9 @@ export async function getLearnedEntries() {
   return loadBrain().learned;
 }
 
-export async function addVaultEntry(question, answer) {
+export async function addVaultEntry(question, answer, extra = {}) {
   const data = loadBrain();
-  const entry = { id: makeId(), question, answer, createdAt: new Date().toISOString() };
+  const entry = { id: makeId(), question, answer, ...extra, createdAt: new Date().toISOString() };
   data.vault.push(entry);
   saveBrain(data);
   return entry;
@@ -116,8 +116,9 @@ export async function updateVaultEntry(id, patch) {
   const data = loadBrain();
   const entry = data.vault.find((e) => e.id === id);
   if (!entry) return null;
-  if (patch.question !== undefined) entry.question = patch.question;
-  if (patch.answer !== undefined) entry.answer = patch.answer;
+  for (const [key, value] of Object.entries(patch)) {
+    if (value !== undefined) entry[key] = value;
+  }
   entry.updatedAt = new Date().toISOString();
   saveBrain(data);
   return entry;
@@ -129,16 +130,19 @@ export async function deleteVaultEntry(id) {
   saveBrain(data);
 }
 
-export async function addLearnedEntry(question, answer, sourceLink) {
+export async function addLearnedEntry(fields) {
   const data = loadBrain();
-  const entry = {
-    id: makeId(),
-    question,
-    answer,
-    sourceLink: sourceLink || null,
-    createdAt: new Date().toISOString(),
-  };
+  const entry = { id: makeId(), ...fields, createdAt: new Date().toISOString() };
   data.learned.push(entry);
+  saveBrain(data);
+  return entry;
+}
+
+export async function updateLearnedEntry(id, patch) {
+  const data = loadBrain();
+  const entry = data.learned.find((e) => e.id === id);
+  if (!entry) return null;
+  Object.assign(entry, patch);
   saveBrain(data);
   return entry;
 }
