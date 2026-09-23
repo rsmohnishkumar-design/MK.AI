@@ -3,12 +3,12 @@
 // These values are safe to publish: they only identify your project. Access
 // is controlled by the security rules in firestore.rules.
 export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.firebasestorage.app",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:0000000000000000",
+  apiKey: "AIzaSyAUJbM-8j7CclTFbsw6mTZIDL3NXoZ10Ec",
+  authDomain: "mkai-c042b.firebaseapp.com",
+  projectId: "mkai-c042b",
+  storageBucket: "mkai-c042b.firebasestorage.app",
+  messagingSenderId: "857947772189",
+  appId: "1:857947772189:web:3c92efd564cb149d7b7df4",
 };
 
 // Which Gemini model writes the answers.

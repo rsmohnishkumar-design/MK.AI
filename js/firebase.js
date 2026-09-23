@@ -33,6 +33,7 @@ export function friendlyError(err) {
     "auth/too-many-requests": "Too many attempts — wait a minute and try again.",
     "auth/network-request-failed": "No connection — check your internet and try again.",
     "auth/operation-not-allowed": "Email sign-in isn't enabled in Firebase yet (see the README).",
+    "auth/unauthorized-domain": "This website isn't on Firebase's authorized domains list yet (see the README).",
     "permission-denied": "You don't have permission to do that.",
     unavailable: "Can't reach the database — check your internet and try again.",
   };
