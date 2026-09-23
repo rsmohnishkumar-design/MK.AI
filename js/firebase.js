@@ -14,12 +14,13 @@ export const db = app ? getFirestore(app) : null;
 
 // App Check proves requests come from this website. Firebase AI Logic refuses
 // to answer without it. Set up before the AI so every AI request carries it.
-if (app && RECAPTCHA_SITE_KEY && !window.MKAI_EMULATORS) {
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-    isTokenAutoRefreshEnabled: true,
-  });
-}
+export const appCheck =
+  app && RECAPTCHA_SITE_KEY && !window.MKAI_EMULATORS
+    ? initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      })
+    : null;
 
 // Gemini through Firebase AI Logic, on the free Gemini Developer API.
 export const ai = app ? getAI(app, { backend: new GoogleAIBackend() }) : null;

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>MK.ai — Check</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<style>
+  body { margin: 0; background: #14181c; color: #ede9e0; font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.hint { color: #a9b0ba; margin: 0 0 20px; }
+  ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  li { background: #202730; border: 1px solid #323d49; border-radius: 8px; padding: 12px 14px; }
+  .name { font-weight: 600; }
+  .status { float: right; font-family: ui-monospace, monospace; font-size: 13px; }
+  .detail { margin-top: 6px; font-family: ui-monospace, monospace; font-size: 12px; color: #a9b0ba; word-break: break-word; white-space: pre-wrap; }
+  .ok .status { color: #8fa998; }
+  .bad .status { color: #e07a5f; }
+  .wait .status { color: #c9a227; }
+  a { color: #c9a227; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>MK.ai check</h1>
+    <p class="hint">Tests each part of MK.ai separately. Wait until every line has finished, then take one screenshot. <a href="./">Back to chat</a></p>
+    <ol id="steps"></ol>
+  </main>
+  <script type="module" src="js/check.js"></script>
+</body>
+</html>
