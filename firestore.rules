@@ -105,6 +105,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // --- AI settings (the Groq API key): members read, only the admin changes ---
+    match /settings/{id} {
+      allow read: if signedIn() && hasAccess();
+      allow write: if isAdmin();
+    }
+
     // --- Activity log: people add their own entries, only the admin reads ---
     match /activity/{id} {
       allow create: if signedIn()

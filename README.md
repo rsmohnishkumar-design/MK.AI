@@ -1,12 +1,13 @@
 # MK.ai — an AI assistant that learns from every conversation
 
-An installable web app (PWA) that runs entirely on free services: the
-site is hosted on **GitHub Pages**, and **Firebase** (free Spark plan,
-no card) handles logins, the database and the AI (Google Gemini).
+An installable web app (PWA) that runs entirely on free services, no card
+needed: the site is hosted on **GitHub Pages**, **Firebase** (free Spark
+plan) handles logins and the database, and answers come from **Groq**
+(free, large daily limits) with **Google Gemini** as a backup.
 
-People sign up with an email and password and ask anything. Gemini
-writes the answer, running a Google search itself when a question needs
-current facts. Only the answer is shown.
+People sign up with an email and password and ask anything. Only the
+answer is shown. Questions about news, prices, weather and other current
+events go to a model that can search the web.
 
 MK.ai gets better the more it's used:
 
@@ -78,7 +79,24 @@ website. This uses a free reCAPTCHA key (reCAPTCHA Enterprise).
 4. In **App Check → APIs**, find **Firebase AI Logic** and tap
    **Enforce**.
 
-### 6. Open your app
+### 6. Add a free Groq key (recommended — the main AI)
+
+Gemini's free tier allows only a few dozen answers a day. Groq is free,
+needs no card, and allows far more.
+
+1. Go to [console.groq.com](https://console.groq.com), sign up (Google
+   sign-in works), open **API Keys** and **Create API Key**. Copy it
+   (it starts with `gsk_`).
+2. Open MK.ai's admin vault (step 7), paste the key into **AI settings**
+   and tap **Save key**. It's checked with Groq before saving.
+
+The key is stored in your database, readable only by signed-in members
+with access — never in the public code (GitHub would detect it there and
+Groq would cancel it). If your Firestore rules were published before
+this feature, republish [`firestore.rules`](firestore.rules) (with your
+email and code) so the vault can save the key.
+
+### 7. Open your app
 
 Go to **https://rsmohnishkumar-design.github.io/MK.AI/** and sign up
 using the admin email from step 3. Firebase emails you a verification
@@ -114,10 +132,11 @@ link — click it. That's it.
 | --- | --- |
 | `index.html`, `style.css`, `js/app.js` | The chat app |
 | `js/brain.js` | Memory: matching questions, learning, votes |
-| `js/ai.js` | Asking Gemini |
+| `js/ai.js` | Asking the AI (Groq, then Gemini as a backup) |
 | `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project (and App Check) |
 | `vault.html`, `vault.css`, `js/vault.js` | The admin vault |
 | `firestore.rules` | Database security rules (paste into Firebase) |
+| `check.html`, `js/check.js` | Tests each part (App Check, login, database, every AI model) |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installable app and offline support |
 
 ## Honest limitations
@@ -135,14 +154,15 @@ link — click it. That's it.
   can't save anything, and the app locks the chat. App Check stops other
   websites from using your AI, but someone on your own site who knows
   what they're doing could still call the AI directly.
-- **Free-tier limits.** Gemini's free tier allows only a small number of
-  requests per model per day (for example 20 a day for Gemini 3.8 Flash),
-  and Google Search has its own small allowance. MK.ai tries the models in
-  `GEMINI_MODELS` in turn and skips any that are used up, retired or
-  overloaded for a while, so the allowances add up. Answers from memory
-  cost nothing. For heavier use you'd need to add billing to the Firebase
-  project. Open `check.html` on your site to see which models are
-  answering right now.
+- **Free-tier limits.** Every free AI service has daily limits. MK.ai
+  tries Groq's models (`GROQ_MODELS`), then Gemini's (`GEMINI_MODELS`),
+  and skips any that are used up, retired or overloaded for a while, so
+  the allowances add up. Answers from memory cost nothing. Open
+  `check.html` on your site to see which models are answering right now.
+- **The Groq key is visible to members.** Anyone signed in with access
+  could extract it from their browser. The worst they could do is use up
+  your free Groq allowance (it has no card attached, so it can't cost
+  money); you can create a new key and save it in the vault anytime.
 - **Google Search suggestions.** When an answer used Google Search,
   Google requires apps to show its small search-suggestion chip under
   the answer, so it appears there.

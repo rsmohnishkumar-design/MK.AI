@@ -15,7 +15,18 @@ export const firebaseConfig = {
 // Firebase AI Logic won't answer without App Check.
 export const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
 
-// Gemini models to try, in order. Each has its own free daily allowance, and
+// Groq models (free, no card; the API key is saved in the admin vault, not
+// here). Tried first, in order. GROQ_SEARCH_MODELS can search the web and are
+// used first for questions about news, prices, weather and other current events.
+export const GROQ_MODELS = [
+  "openai/gpt-oss-120b",
+  "llama-3.3-70b-versatile",
+  "openai/gpt-oss-20b",
+  "llama-3.1-8b-instant",
+];
+export const GROQ_SEARCH_MODELS = ["groq/compound-mini"];
+
+// Backup: Gemini models through Firebase, tried in order. Each has its own free daily allowance, and
 // MK.ai skips one for a while when it's used up, retired or overloaded.
 // (gemini-flash-latest is currently Gemini 3.8 Flash: only 20 free requests a day.)
 export const GEMINI_MODELS = [
