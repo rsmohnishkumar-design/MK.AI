@@ -24,7 +24,7 @@ import {
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { keywords, votes } from "./brain.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
-import { PROVIDERS, keyField, listModels, chooseModels } from "./providers.js";
+import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
 const $ = (id) => document.getElementById(id);
 const loginScreen = $("loginScreen");
@@ -387,9 +387,26 @@ function providerRow(provider, savedKey) {
   input.value = savedKey || "";
   const message = row.querySelector(".provider-message");
 
+  // Checks the key: first the service's model list, and if the browser isn't
+  // allowed to read that, a tiny real question to the first preferred model.
   const test = async () => {
-    const models = chooseModels(provider, await listModels(provider, input.value.trim()));
-    return models;
+    const key = input.value.trim();
+    try {
+      return chooseModels(provider, await listModels(provider, key));
+    } catch (err) {
+      if (!/failed to fetch|network|load failed/i.test(err.message)) throw err;
+      try {
+        await quickChat(provider, key, provider.prefer[0]);
+        return provider.prefer;
+      } catch (err2) {
+        if (/failed to fetch|network|load failed/i.test(err2.message)) {
+          throw new Error(
+            `${provider.name} doesn't allow requests from websites (the browser blocked it), so MK.ai can't use it. Try another service above — OpenRouter works from websites.`
+          );
+        }
+        throw err2;
+      }
+    }
   };
 
   row.querySelector("form").addEventListener("submit", async (e) => {
