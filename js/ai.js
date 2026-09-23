@@ -19,6 +19,48 @@ const ATTEMPTS = [
 // Give up on one attempt after this long and try the next (the SDK default is 3 minutes).
 const TIMEOUT_MS = 20000;
 
+// Options that just failed are skipped for a while, so every question doesn't
+// spend requests (and seconds) on a model whose free allowance is used up.
+// Remembered in this browser across reloads.
+const COOLDOWN_KEY = "mkai-ai-cooldowns";
+function loadCooldowns() {
+  try {
+    return JSON.parse(localStorage.getItem(COOLDOWN_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveCooldowns(cooldowns) {
+  try {
+    localStorage.setItem(COOLDOWN_KEY, JSON.stringify(cooldowns));
+  } catch {}
+}
+function cooldownKey({ model, search }) {
+  return search ? "google-search" : model; // search quota is shared across models
+}
+function cooldownFor(err) {
+  const status = err?.customErrorData?.status;
+  const text = errorText(err);
+  if (status === 404 || /no longer available|not found/i.test(text)) return 7 * 24 * 3600e3; // retired
+  if (/overloaded|unavailable/i.test(text) || status === 503) return 2 * 60e3;
+  if (status === 429 || /quota|resource.exhausted/i.test(text)) return 60 * 60e3; // free allowance used up
+  if (/timeout|abort/i.test(text)) return 2 * 60e3;
+  return 0;
+}
+function coolDown(attempt, err) {
+  const ms = cooldownFor(err);
+  if (!ms) return;
+  const cooldowns = loadCooldowns();
+  cooldowns[cooldownKey(attempt)] = Date.now() + ms;
+  saveCooldowns(cooldowns);
+}
+function available(attempts) {
+  const cooldowns = loadCooldowns();
+  const ready = attempts.filter((a) => !(cooldowns[cooldownKey(a)] > Date.now()));
+  // If everything is cooling down, try them all anyway rather than refusing.
+  return ready.length ? ready : attempts;
+}
+
 const models = new Map();
 function getModel({ model, search }) {
   const key = `${model}|${search}`;
@@ -90,7 +132,7 @@ export async function askGemini(question, history, knowledge, onText = () => {})
     { role: "user", parts: [{ text: note ? `${note}\n\nQuestion: ${question}` : question }] },
   ];
 
-  const attempts = needsSearch(question) ? ATTEMPTS : ATTEMPTS.filter((a) => !a.search);
+  const attempts = available(needsSearch(question) ? ATTEMPTS : ATTEMPTS.filter((a) => !a.search));
   let lastError = null;
   for (const attempt of attempts) {
     let text = "";
@@ -111,6 +153,7 @@ export async function askGemini(question, history, knowledge, onText = () => {})
           console.warn("Non-streaming retry failed too:", err2);
         }
       }
+      coolDown(attempt, lastError);
       // Once part of the answer is on screen, starting over would be confusing.
       if (text || !worthRetrying(lastError) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(lastError))) break;
     }
@@ -168,7 +211,7 @@ export function aiErrorMessage(err) {
     return "Google's free AI is overloaded right now — please try again in a few minutes." + detail;
   }
   if (status === 429 || /quota|resource.exhausted/i.test(text)) {
-    return "The AI's free limit was reached — please try again later." + detail;
+    return "Today's free AI allowance is used up — MK.ai can still answer questions it has learned. Please try again later." + detail;
   }
   if (!navigator.onLine) return "You're offline — connect to the internet to ask.";
   if (/abort|timeout|timed out/i.test(text)) {
