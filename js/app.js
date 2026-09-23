@@ -251,40 +251,50 @@ function addLoading() {
   return thread.lastElementChild;
 }
 
-function addAiMessage(answer, entryId, searchSuggestions) {
+// An answer bubble that can fill in as the answer streams, then gets its
+// buttons once it's done. Vote buttons appear once the answer is saved.
+function createAiMessage() {
   const node = tAi.content.cloneNode(true);
-  node.querySelector(".msg-body").textContent = answer;
-
-  if (searchSuggestions) {
-    // Shadow DOM keeps Google's own styling from clashing with the page.
-    const host = node.querySelector(".search-suggestions");
-    host.classList.remove("hidden");
-    host.attachShadow({ mode: "open" }).innerHTML = searchSuggestions;
-  }
-
-  const actions = node.querySelector(".answer-actions");
-  const copyBtn = actions.querySelector(".copy-btn");
-  copyBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(answer);
-      copyBtn.textContent = "copied";
-      setTimeout(() => (copyBtn.textContent = "copy"), 1500);
-    } catch {}
-  });
-
-  const voteButtons = actions.querySelectorAll(".vote-btn");
-  if (!entryId) {
-    voteButtons.forEach((b) => b.remove());
-  } else {
-    voteButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        voteButtons.forEach((b) => b.classList.toggle("chosen", b === btn));
-        vote(entryId, btn.dataset.vote).catch(() => {});
-      });
-    });
-  }
-
+  const el = node.firstElementChild;
+  const body = el.querySelector(".msg-body");
+  const actions = el.querySelector(".answer-actions");
+  const voteButtons = [...actions.querySelectorAll(".vote-btn")];
+  actions.classList.add("hidden");
+  voteButtons.forEach((b) => b.classList.add("hidden"));
   thread.appendChild(node);
+
+  return {
+    setText(text) {
+      body.textContent = text;
+    },
+    finish(answer, searchSuggestions) {
+      body.textContent = answer;
+      if (searchSuggestions) {
+        // Shadow DOM keeps Google's own styling from clashing with the page.
+        const host = el.querySelector(".search-suggestions");
+        host.classList.remove("hidden");
+        host.attachShadow({ mode: "open" }).innerHTML = searchSuggestions;
+      }
+      const copyBtn = actions.querySelector(".copy-btn");
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(answer);
+          copyBtn.textContent = "copied";
+          setTimeout(() => (copyBtn.textContent = "copy"), 1500);
+        } catch {}
+      });
+      actions.classList.remove("hidden");
+    },
+    enableVotes(entryId) {
+      voteButtons.forEach((btn) => {
+        btn.classList.remove("hidden");
+        btn.addEventListener("click", () => {
+          voteButtons.forEach((b) => b.classList.toggle("chosen", b === btn));
+          vote(entryId, btn.dataset.vote).catch(() => {});
+        });
+      });
+    },
+  };
 }
 
 function addErrorMessage(message) {
@@ -297,8 +307,9 @@ function scrollToBottom() {
   thread.scrollTop = thread.scrollHeight;
 }
 
-// Memory first; otherwise Gemini answers and MK.ai remembers the answer.
-async function answer(question) {
+// Memory first; otherwise Gemini answers (streaming into onText) and MK.ai
+// remembers the answer in the background (saved → entryId resolves).
+async function answer(question, onText) {
   const contextual = dependsOnContext(question, history);
   let memory = null;
   let knowledge = { good: [], bad: [] };
@@ -315,23 +326,46 @@ async function answer(question) {
     const isLearned = memory.collection === "learned";
     if (isLearned) markUsed(memory.id).catch(() => {});
     logActivity(question, isLearned ? "memory" : "vault");
-    return { answer: memory.answer, entryId: isLearned ? memory.id : null, searchSuggestions: null };
+    return {
+      answer: memory.answer,
+      searchSuggestions: null,
+      saved: Promise.resolve(isLearned ? memory.id : null),
+    };
   }
 
-  const result = await askGemini(question, history, knowledge);
+  const result = await askGemini(question, history, knowledge, onText);
   if (!result.answer) throw new Error("empty answer");
+  logActivity(question, "ai");
 
   // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
-  let entryId = null;
-  if (!contextual && !isTimeSensitive(question)) {
-    try {
-      entryId = await learn(question, result.answer);
-    } catch (err) {
-      console.warn("Couldn't save to memory:", err);
-    }
-  }
-  logActivity(question, "ai");
-  return { ...result, entryId };
+  const saved =
+    contextual || isTimeSensitive(question)
+      ? Promise.resolve(null)
+      : learn(question, result.answer).catch((err) => {
+          console.warn("Couldn't save to memory:", err);
+          return null;
+        });
+  return { ...result, saved };
+}
+
+// The waiting message changes if Gemini is slow, so it never looks frozen.
+function startLoading() {
+  const el = addLoading();
+  const label = el.querySelector(".pulling");
+  const steps = [
+    [8000, "still thinking…"],
+    [20000, "this one is taking a while…"],
+  ].map(([ms, text]) =>
+    setTimeout(() => {
+      if (label) label.lastChild.textContent = ` ${text}`;
+    }, ms)
+  );
+  return {
+    remove() {
+      steps.forEach(clearTimeout);
+      el.remove();
+    },
+  };
 }
 
 composer.addEventListener("submit", async (e) => {
@@ -349,17 +383,29 @@ composer.addEventListener("submit", async (e) => {
   sendBtn.disabled = true;
   scrollToBottom();
 
-  const loadingEl = addLoading();
+  const loading = startLoading();
   scrollToBottom();
+  let bubble = null;
+  const showBubble = () => {
+    if (!bubble) {
+      loading.remove();
+      bubble = createAiMessage();
+    }
+    return bubble;
+  };
 
   try {
-    const result = await answer(question);
-    loadingEl.remove();
-    addAiMessage(result.answer, result.entryId, result.searchSuggestions);
+    const result = await answer(question, (text) => {
+      showBubble().setText(text);
+      scrollToBottom();
+    });
+    const msg = showBubble();
+    msg.finish(result.answer, result.searchSuggestions);
     remember(question, result.answer);
+    result.saved.then((entryId) => entryId && msg.enableVotes(entryId));
   } catch (err) {
     console.error(err);
-    loadingEl.remove();
+    loading.remove();
     addErrorMessage(aiErrorMessage(err));
   } finally {
     sendBtn.disabled = !hasAccess();
