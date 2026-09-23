@@ -1,16 +1,16 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 
-// The AI brain: Claude reads the live search results (plus the recent
-// conversation) and writes a real answer. Without ANTHROPIC_API_KEY the app
+// The AI brain: Gemini reads the live search results (plus the recent
+// conversation) and writes a real answer. Without GEMINI_API_KEY the app
 // falls back to its original behaviour of showing raw search results.
-export const aiEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+export const aiEnabled = Boolean(process.env.GEMINI_API_KEY);
+const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 
-const client = aiEnabled ? new Anthropic() : null;
+const client = aiEnabled ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 if (aiEnabled) {
   console.log(`MK.ai: AI answers enabled (${MODEL}).`);
 } else {
-  console.log("MK.ai: ANTHROPIC_API_KEY not set — showing raw search results only.");
+  console.log("MK.ai: GEMINI_API_KEY not set — showing raw search results only.");
 }
 
 const SYSTEM_PROMPT = `You are MK.ai, a helpful, knowledgeable AI assistant.
@@ -20,9 +20,9 @@ Write in plain text: short paragraphs, and "- " bullet lists when they help. Do 
 Reply in the same language the user writes in.`;
 
 const MAX_HISTORY_MESSAGES = 12;
-const MAX_TURNS = 4; // continuations allowed when a server-side web search pauses
 
-// Keep only well-formed, alternating user/assistant turns from the browser.
+// Keep only well-formed, alternating user/assistant turns from the browser,
+// converted to Gemini's { role: "user" | "model", parts } shape.
 function cleanHistory(history) {
   if (!Array.isArray(history)) return [];
   const turns = history
@@ -47,7 +47,11 @@ function cleanHistory(history) {
   }
   // The new question is appended as a user turn, so history must end on the assistant.
   if (out.length && out[out.length - 1].role === "user") out.pop();
-  return out;
+
+  return out.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
 }
 
 function formatResults(results) {
@@ -57,60 +61,40 @@ function formatResults(results) {
 }
 
 // results: Google results scraped by the browser. When there are none (e.g.
-// Google blocked the headless browser), Claude searches the web itself.
+// Google blocked the headless browser), Gemini searches Google itself.
 export async function generateAnswer({ question, history, results }) {
   const hasResults = results.length > 0;
-  const userContent = hasResults
+  const userText = hasResults
     ? `Web search results for this question:\n\n${formatResults(results)}\n\nQuestion: ${question}`
     : question;
 
-  const messages = [...cleanHistory(history), { role: "user", content: userContent }];
-  const tools = hasResults ? [] : [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }];
+  const response = await client.models.generateContent({
+    model: MODEL,
+    contents: [...cleanHistory(history), { role: "user", parts: [{ text: userText }] }],
+    config: {
+      systemInstruction: SYSTEM_PROMPT,
+      ...(hasResults ? {} : { tools: [{ googleSearch: {} }] }),
+    },
+  });
 
-  const webSources = [];
-  let response;
-  for (let turn = 0; turn < MAX_TURNS; turn++) {
-    response = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 16000,
-      system: SYSTEM_PROMPT,
-      output_config: { effort: "medium" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      ...(tools.length ? { tools } : {}),
-      messages,
-    });
+  const answer = (response.text || "").trim();
 
-    for (const block of response.content) {
-      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
-        for (const r of block.content) {
-          if (r.type === "web_search_result" && !webSources.some((s) => s.link === r.url)) {
-            webSources.push({ title: r.title, link: r.url });
-          }
-        }
-      }
+  let sources = results;
+  if (!hasResults) {
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const seen = new Set();
+    sources = [];
+    for (const chunk of chunks) {
+      const web = chunk.web;
+      if (!web?.uri || seen.has(web.uri)) continue;
+      seen.add(web.uri);
+      sources.push({ index: sources.length + 1, title: web.title || web.uri, link: web.uri, snippet: "" });
+      if (sources.length >= 6) break;
     }
-
-    if (response.stop_reason !== "pause_turn") break;
-    messages.push({ role: "assistant", content: response.content });
   }
 
-  if (response.stop_reason === "refusal") {
-    return {
-      answer: "Sorry, I can't help with that request.",
-      sources: [],
-    };
-  }
-
-  const answer = response.content
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
-
-  const sources = hasResults
-    ? results
-    : webSources.slice(0, 6).map((s, i) => ({ index: i + 1, snippet: "", ...s }));
-
-  return { answer: answer || "I couldn't come up with an answer — please try rephrasing.", sources };
+  return {
+    answer: answer || "Sorry, I couldn't answer that — please try rephrasing.",
+    sources,
+  };
 }

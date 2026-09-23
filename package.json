@@ -1,7 +1,7 @@
 {
   "name": "mk-ai",
   "version": "3.0.0",
-  "description": "An AI chatbot that answers with Claude, backed by live web search, with a hidden vault it can also learn from.",
+  "description": "An AI chatbot that answers with Google Gemini, backed by live web search, with a hidden vault it can also learn from.",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.128.0",
+    "@google/genai": "^2.24.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",

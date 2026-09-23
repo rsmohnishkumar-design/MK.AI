@@ -245,7 +245,7 @@ function safeLog(entry) {
   brain.logActivity(entry).catch((err) => console.error("Activity log failed:", err.message));
 }
 
-// --- AI mode: vault answers still win; otherwise search, then Claude writes the answer ---
+// --- AI mode: vault answers still win; otherwise search, then the AI writes the answer ---
 async function answerWithAI(req, res, message) {
   const ip = req.ip;
   const email = req.user.email;
@@ -274,7 +274,7 @@ async function answerWithAI(req, res, message) {
   try {
     results = await searchGoogle(message);
   } catch (err) {
-    // Google often blocks cloud servers; Claude then searches the web itself.
+    // Google often blocks cloud servers; Gemini then runs the search itself.
     console.warn("Google search failed, answering without it:", err.message);
   }
 

@@ -2,17 +2,17 @@
 
 A standalone web app. People sign in with an email and password, then
 ask it anything. MK.ai searches the web with a real headless Chrome
-browser (via Puppeteer), then **Claude** reads the results and writes a
+browser (via Puppeteer), then **Google Gemini** reads the results and writes a
 real answer, citing its sources as [1], [2]. It follows the
 conversation, so follow-up questions work. If Google blocks the browser
-(common on cloud hosts), Claude searches the web itself instead.
+(common on cloud hosts), Gemini runs the Google search itself instead.
 
 There's also a hidden, passcode-protected admin room where you can
 teach it answers directly (those always win over the AI) and see
 everyone's activity.
 
-You need an Anthropic API key for the AI answers (pay per use, from
-https://console.anthropic.com). Without one, MK.ai falls back to
+You need a Gemini API key for the AI answers (free tier, no card
+needed, from https://aistudio.google.com/apikey). Without one, MK.ai falls back to
 showing raw Google results. Firebase is optional (see below).
 
 ## Setup
@@ -24,7 +24,7 @@ cp .env.example .env
 
 Open `.env` and set:
 
-- `ANTHROPIC_API_KEY` — turns on real AI answers
+- `GEMINI_API_KEY` — turns on real AI answers
 - `VAULT_PASSCODE` — locks the hidden admin room
 - `JWT_SECRET` — signs everyone's login session; generate one with
   `openssl rand -hex 32` (or any long random string). Skipping this
