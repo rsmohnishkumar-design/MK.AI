@@ -13,7 +13,7 @@ export const firebaseConfig = {
 
 // reCAPTCHA v3 *site key* for Firebase App Check (safe to publish; the secret
 // key goes only into Firebase). Firebase AI Logic won't answer without it.
-export const RECAPTCHA_SITE_KEY = "";
+export const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
 
 // Which Gemini model writes the answers.
 export const GEMINI_MODEL = "gemini-flash-latest";
