@@ -135,9 +135,14 @@ link — click it. That's it.
   can't save anything, and the app locks the chat. App Check stops other
   websites from using your AI, but someone on your own site who knows
   what they're doing could still call the AI directly.
-- **Free-tier limits.** Firebase's free plan caps AI requests and
-  database reads per day, which is plenty for personal use. If you hit
-  the cap, MK.ai says it's busy and to try again later.
+- **Free-tier limits.** Gemini's free tier allows only a small number of
+  requests per model per day (for example 20 a day for Gemini 3.8 Flash),
+  and Google Search has its own small allowance. MK.ai tries the models in
+  `GEMINI_MODELS` in turn and skips any that are used up, retired or
+  overloaded for a while, so the allowances add up. Answers from memory
+  cost nothing. For heavier use you'd need to add billing to the Firebase
+  project. Open `check.html` on your site to see which models are
+  answering right now.
 - **Google Search suggestions.** When an answer used Google Search,
   Google requires apps to show its small search-suggestion chip under
   the answer, so it appears there.

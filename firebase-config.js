@@ -15,13 +15,14 @@ export const firebaseConfig = {
 // Firebase AI Logic won't answer without App Check.
 export const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
 
-// Gemini models to try, in order. When Google says one is overloaded or it's
-// too slow, MK.ai moves on to the next (each has separate capacity).
+// Gemini models to try, in order. Each has its own free daily allowance, and
+// MK.ai skips one for a while when it's used up, retired or overloaded.
+// (gemini-flash-latest is currently Gemini 3.8 Flash: only 20 free requests a day.)
 export const GEMINI_MODELS = [
+  "gemini-3.6-flash",
   "gemini-flash-latest",
-  "gemini-2.5-flash",
+  "gemini-3.5-flash-lite",
   "gemini-flash-lite-latest",
-  "gemini-2.5-flash-lite",
 ];
 export const GEMINI_MODEL = GEMINI_MODELS[0];
 
