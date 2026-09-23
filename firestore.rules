@@ -8,7 +8,8 @@ service cloud.firestore {
 
     // ===== EDIT THESE TWO LINES BEFORE PUBLISHING =====
     // Your email, in lowercase: the admin who can open the vault. Sign up in
-    // MK.ai with this email and click the link in the verification email.
+    // MK.ai with this email before publishing, so nobody else can claim it
+    // (Firebase never allows two accounts with the same email).
     function adminEmails() { return ['your-email@example.com']; }
     // The access code that unlocks unlimited use. Keep it secret.
     function unlimitedCode() { return 'change-this-code'; }
@@ -21,9 +22,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
 
     function isAdmin() {
-      return signedIn()
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in adminEmails();
+      return signedIn() && request.auth.token.email in adminEmails();
     }
 
     function incoming() { return request.resource.data; }
