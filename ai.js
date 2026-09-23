@@ -1,10 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 
-// The AI brain: Gemini reads the live search results (plus the recent
-// conversation) and writes a real answer. Without GEMINI_API_KEY the app
-// falls back to its original behaviour of showing raw search results.
+// The AI brain: Gemini writes the answers, searching Google itself whenever a
+// question needs fresh facts. Without GEMINI_API_KEY the app falls back to its
+// original behaviour of showing raw search results from the headless browser.
 export const aiEnabled = Boolean(process.env.GEMINI_API_KEY);
 const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || "gemini-embedding-001";
+const EMBED_DIMENSIONS = 768;
 
 const client = aiEnabled ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 if (aiEnabled) {
@@ -14,8 +16,8 @@ if (aiEnabled) {
 }
 
 const SYSTEM_PROMPT = `You are MK.ai, a helpful, knowledgeable AI assistant.
-Answer the user's question directly and clearly, like a knowledgeable friend.
-When web search results are provided, use them for current facts and cite them inline as [1], [2] matching their numbers. If the results don't cover the question, answer from your own knowledge.
+Answer the user's question directly and clearly, like a knowledgeable friend. Use Google Search whenever the question needs current or specific facts.
+Give only the answer: never mention your sources, search results, websites or citations, and never write reference numbers like [1].
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings, tables or bold.
 Reply in the same language the user writes in.`;
 
@@ -54,47 +56,58 @@ function cleanHistory(history) {
   }));
 }
 
-function formatResults(results) {
-  return results
-    .map((r) => `[${r.index}] ${r.title}\n${r.link}\n${r.snippet || ""}`.trim())
-    .join("\n\n");
+// Turns what MK.ai already knows into context for the new answer.
+function knowledgeNote({ good = [], bad = [] }) {
+  const parts = [];
+  if (good.length) {
+    parts.push(
+      "Things you have learned before that may help (curated ones are verified by the admin — follow them):\n" +
+        good
+          .map((e) => `- ${e.curated ? "(curated) " : ""}Q: ${e.question}\n  A: ${e.answer.slice(0, 1500)}`)
+          .join("\n")
+    );
+  }
+  if (bad.length) {
+    parts.push(
+      "A user marked this earlier answer to a similar question as unhelpful — do better this time:\n" +
+        bad.map((e) => `Q: ${e.question}\nA: ${e.answer.slice(0, 1500)}`).join("\n")
+    );
+  }
+  return parts.join("\n\n");
 }
 
-// results: Google results scraped by the browser. When there are none (e.g.
-// Google blocked the headless browser), Gemini searches Google itself.
-export async function generateAnswer({ question, history, results }) {
-  const hasResults = results.length > 0;
-  const userText = hasResults
-    ? `Web search results for this question:\n\n${formatResults(results)}\n\nQuestion: ${question}`
-    : question;
+// A list of numbers describing the meaning of `text`, used to match
+// questions that are worded differently. Returns null if unavailable.
+export async function embed(text) {
+  if (!aiEnabled) return null;
+  try {
+    const res = await client.models.embedContent({
+      model: EMBED_MODEL,
+      contents: text.slice(0, 2000),
+      config: { taskType: "SEMANTIC_SIMILARITY", outputDimensionality: EMBED_DIMENSIONS },
+    });
+    const values = res.embeddings?.[0]?.values;
+    return Array.isArray(values) && values.length ? values : null;
+  } catch (err) {
+    console.warn("Embedding failed:", err.message);
+    return null;
+  }
+}
+
+export async function generateAnswer({ question, history, knowledge }) {
+  const note = knowledge ? knowledgeNote(knowledge) : "";
+  const userText = note ? `${note}\n\nQuestion: ${question}` : question;
 
   const response = await client.models.generateContent({
     model: MODEL,
     contents: [...cleanHistory(history), { role: "user", parts: [{ text: userText }] }],
     config: {
       systemInstruction: SYSTEM_PROMPT,
-      ...(hasResults ? {} : { tools: [{ googleSearch: {} }] }),
+      tools: [{ googleSearch: {} }],
     },
   });
 
-  const answer = (response.text || "").trim();
-
-  let sources = results;
-  if (!hasResults) {
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const seen = new Set();
-    sources = [];
-    for (const chunk of chunks) {
-      const web = chunk.web;
-      if (!web?.uri || seen.has(web.uri)) continue;
-      seen.add(web.uri);
-      sources.push({ index: sources.length + 1, title: web.title || web.uri, link: web.uri, snippet: "" });
-      if (sources.length >= 6) break;
-    }
-  }
-
-  return {
-    answer: answer || "Sorry, I couldn't answer that — please try rephrasing.",
-    sources,
-  };
+  // Belt and braces: strip any citation markers the model adds anyway.
+  const answer = (response.text || "").replace(/\s?\[\d+(?:,\s*\d+)*\]/g, "").trim();
+  return answer || null;
 }

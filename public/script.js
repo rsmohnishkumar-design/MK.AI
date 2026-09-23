@@ -135,7 +135,6 @@ const sendBtn = document.getElementById("sendBtn");
 const secretMark = document.getElementById("secretMark");
 
 const tUser = document.getElementById("msg-user");
-const tMemory = document.getElementById("msg-memory");
 const tBot = document.getElementById("msg-bot");
 const tAi = document.getElementById("msg-ai");
 
@@ -168,27 +167,6 @@ function addLoading() {
   return thread.lastElementChild;
 }
 
-function addMemoryMessage(data) {
-  const node = tMemory.content.cloneNode(true);
-  const label = data.source === "vault" ? "mk.ai — from the vault" : "mk.ai — from memory";
-  node.querySelector(".msg-label").textContent = label;
-  node.querySelector(".msg-body").textContent = data.answer;
-
-  const meta = node.querySelector(".memory-meta");
-  let metaText = `matched "${data.matchedQuestion}" (${data.confidence}% confidence)`;
-  meta.textContent = metaText;
-  if (data.sourceLink) {
-    const link = document.createElement("a");
-    link.href = data.sourceLink;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = " · source";
-    meta.appendChild(link);
-  }
-
-  thread.appendChild(node);
-}
-
 function addBotMessage(results, note) {
   const node = tBot.content.cloneNode(true);
   const sourcesEl = node.querySelector(".sources");
@@ -217,29 +195,37 @@ function addBotMessage(results, note) {
   thread.appendChild(node);
 }
 
-function addAiMessage(answer, results) {
+function addAiMessage(answer, entryId) {
   const node = tAi.content.cloneNode(true);
   node.querySelector(".msg-body").textContent = answer;
-  const sourcesEl = node.querySelector(".sources");
 
-  if (!results.length) {
-    sourcesEl.remove();
+  const actions = node.querySelector(".answer-actions");
+  const copyBtn = actions.querySelector(".copy-btn");
+  copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(answer);
+      copyBtn.textContent = "copied";
+      setTimeout(() => (copyBtn.textContent = "copy"), 1500);
+    } catch {}
+  });
+
+  const voteButtons = actions.querySelectorAll(".vote-btn");
+  if (!entryId) {
+    voteButtons.forEach((b) => b.remove());
   } else {
-    const heading = document.createElement("div");
-    heading.className = "sources-heading";
-    heading.textContent = "sources";
-    sourcesEl.appendChild(heading);
-    results.forEach((r) => {
-      const row = document.createElement("div");
-      row.className = "source-item";
-      row.innerHTML = `
-        <span class="source-index">[${r.index}]</span>
-        <div class="source-body">
-          <a class="source-title" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.title)}</a>
-          <span class="source-link">${escapeHtml(r.link)}</span>
-        </div>
-      `;
-      sourcesEl.appendChild(row);
+    voteButtons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const vote = btn.dataset.vote;
+        voteButtons.forEach((b) => b.classList.toggle("chosen", b === btn));
+        try {
+          await fetch("/api/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ entryId, vote }),
+          });
+        } catch {}
+      });
     });
   }
 
@@ -291,11 +277,7 @@ composer.addEventListener("submit", async (e) => {
     } else if (!res.ok) {
       addErrorMessage(data.error || "Something went wrong.");
     } else if (data.mode === "ai") {
-      addAiMessage(data.answer, data.results || []);
-      remember("user", question);
-      remember("assistant", data.answer);
-    } else if (data.mode === "memory") {
-      addMemoryMessage(data);
+      addAiMessage(data.answer, data.entryId);
       remember("user", question);
       remember("assistant", data.answer);
     } else {
@@ -303,7 +285,7 @@ composer.addEventListener("submit", async (e) => {
     }
   } catch (err) {
     loadingEl.remove();
-    addErrorMessage("Couldn't reach the server. Is it running?");
+    addErrorMessage(navigator.onLine ? "Couldn't reach the server — please try again." : "You're offline — connect to the internet to ask.");
   } finally {
     sendBtn.disabled = false;
     questionInput.focus();
@@ -324,3 +306,26 @@ secretMark.addEventListener("click", () => {
     window.location.href = "/vault";
   }
 });
+
+// --- Installable app (PWA) ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
+const installBtn = document.getElementById("installBtn");
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  installBtn.classList.remove("hidden");
+});
+installBtn.addEventListener("click", async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installBtn.classList.add("hidden");
+});
+window.addEventListener("appinstalled", () => installBtn.classList.add("hidden"));

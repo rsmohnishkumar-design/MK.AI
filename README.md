@@ -1,19 +1,37 @@
-# MK.ai — an AI chatbot backed by live web search, with accounts and a teachable vault
+# MK.ai — an AI assistant that learns from every conversation
 
-A standalone web app. People sign in with an email and password, then
-ask it anything. MK.ai searches the web with a real headless Chrome
-browser (via Puppeteer), then **Google Gemini** reads the results and writes a
-real answer, citing its sources as [1], [2]. It follows the
-conversation, so follow-up questions work. If Google blocks the browser
-(common on cloud hosts), Gemini runs the Google search itself instead.
+An installable web app (PWA). People sign in with an email and password,
+then ask it anything. **Google Gemini** writes the answers, running a
+Google search itself whenever a question needs current facts. It shows
+only the answer: no source lists or citation numbers. It follows the
+conversation, so follow-up questions work.
+
+MK.ai also gets better the more it's used:
+
+- **Memory by meaning.** Every answer is saved with a "meaning
+  fingerprint" (an embedding). A later question that means the same
+  thing, even worded completely differently, is answered instantly from
+  memory without calling the AI.
+- **Learns from 👍 / 👎.** Each answer has helpful / not-helpful
+  buttons. Upvoted answers are trusted more and never expire. A
+  downvoted answer stops being reused; the next time someone asks,
+  the AI is shown the bad answer and told to do better, and the new
+  answer replaces it.
+- **Uses what it knows.** Related things it has learned (and anything
+  the admin taught it in the vault) are handed to the AI as background
+  for new answers.
+- **Knows what goes stale.** Questions about "today", prices, weather,
+  news and so on are always answered fresh, and unconfirmed memories
+  are re-checked after 45 days.
 
 There's also a hidden, passcode-protected admin room where you can
-teach it answers directly (those always win over the AI) and see
-everyone's activity.
+teach it answers directly (those always win), see what it has learned
+with use counts and votes, and see everyone's activity.
 
-You need a Gemini API key for the AI answers (free tier, no card
-needed, from https://aistudio.google.com/apikey). Without one, MK.ai falls back to
-showing raw Google results. Firebase is optional (see below).
+You need a Gemini API key (free tier, no card needed, from
+https://aistudio.google.com/apikey). Without one, MK.ai falls back to
+showing raw Google results. For a hosted deployment, set up Firebase
+too (see "Storage") or everything it learns is lost on restart.
 
 ## Setup
 
@@ -80,18 +98,23 @@ Change `TRIAL_HOURS` in `.env` if 3 hours isn't the window you want.
 
 ## How answering works, in order
 
-1. **Vault check** — did the admin teach it this exact thing (or
-   something close, typos included) in the vault? Answer from there.
-2. **Memory check** — has it answered something similar before, from
-   an earlier search? Answer from there.
-3. **Live search** — neither of the above matched, so it drives a
-   real browser to google.com, scrapes the results, shows them to
-   the person, *and* saves the question against the top result so it
-   can answer from memory next time — for anyone who asks.
+1. **Vault check.** Did the admin teach it something with the same
+   meaning? Answer from there.
+2. **Memory check.** Has it already given a good answer to a question
+   with the same meaning? Answer from there (skipped for time-sensitive
+   questions, follow-ups that depend on the conversation, and answers
+   people voted down).
+3. **Ask the AI.** Gemini answers, using Google Search when needed plus
+   related things MK.ai has learned. The answer is saved to memory so
+   the next person gets it instantly.
 
-That third step is the "learns by itself" part: every unanswered
-question that gets searched becomes a new memory, shared across all
-logged-in users.
+## Install it as an app
+
+Open the site on a phone and choose **Add to Home screen** (Android
+Chrome also shows an **Install app** button in the header; on iPhone use
+Share → Add to Home Screen). It then opens full-screen with its own
+icon, like a native app. Installing needs the site served over HTTPS,
+which Render and similar hosts provide automatically.
 
 ## The hidden vault
 
@@ -127,8 +150,9 @@ GDPR/CCPA) require.
 
 ## Storage: local file or Firebase
 
-By default, everything (vault entries, learned memory, activity log)
-is stored in a `data/` folder as JSON files — nothing to set up, but
+**Use Firebase for any real deployment.** By default, everything
+(accounts, vault entries, learned memory, activity log) is stored in a
+`data/` folder as JSON files — nothing to set up, but
 it only lives on that one machine's disk, and won't survive a
 redeploy on hosts with an ephemeral filesystem (Render's free tier,
 for instance).
@@ -159,37 +183,30 @@ switches to Firestore automatically (you'll see a line in the
 console log confirming which storage it picked). Leave them blank and
 it just uses local files, no code changes needed either way.
 
-**On "no API key":** a Firebase service account key is a credential
-you generate yourself, for your own project, the same way you set
-your own `VAULT_PASSCODE` — it isn't a third-party paid API key. If
-you'd rather not use Firebase at all, everything works exactly as
-before with zero configuration.
+Firestore's free (Spark) plan is plenty for a personal deployment.
+MK.ai keeps its knowledge in memory after the first load, so it
+doesn't re-read the whole database on every question.
 
-## About the garbled/misspelled input ask
+## How the matching works
 
-Two things are doing the work here, and it's worth knowing which is
-which:
+- **With a Gemini key**, questions are compared by meaning using
+  Gemini embeddings (`gemini-embedding-001`), so "how tall is everest"
+  matches "what's the height of mount everest". Stored answers from
+  before this feature get their fingerprints filled in automatically
+  on the next start.
+- **Without embeddings**, it falls back to word matching: keyword
+  overlap (ignoring filler words like "what" and "the") blended with
+  typo-tolerant fuzzy matching from `fuse.js`.
 
-- **Fuzzy matching** (via the `fuse.js` library) means typos and
-  minor rewording of a question you've already taught it — or that
-  it's already searched before — will still find the right memory.
-  It also tries matching with spaces stripped out, to catch input
-  that got squished together.
-- **For a genuinely new, badly garbled question** ("are youhowms"),
-  there's no memory to match against, so it falls through to the live
-  Google search — and Google's own spelling correction ("did you
-  mean...") often rescues queries like that better than a from-scratch
-  local guesser would.
-
-What this *isn't* is a language model that understands intent from
-scratch. It's pattern-matching against things it has seen before, plus
-Google's own search-relevance handling for anything new. That's a
-meaningfully different thing from a true self-training AI — but it
-does genuinely get smarter with use, and it never phones home to
-anyone else's server to do it.
+What this *isn't* is retraining the AI model itself; that takes huge
+datasets and specialised hardware. MK.ai improves the way most real AI
+products do: by remembering good answers, learning from feedback, and
+feeding what it knows back into the model.
 
 ## The honest limitations (carried over from before)
 
+- These apply only to the fallback mode without a Gemini key, which
+  scrapes Google with a headless browser.
 - Scraping google.com isn't officially sanctioned and can get
   blocked, especially from cloud IPs or under frequent requests —
   the server detects this and reports it clearly rather than failing
