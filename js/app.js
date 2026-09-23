@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
@@ -82,6 +83,22 @@ authForm.addEventListener("submit", async (e) => {
 });
 
 signOutBtn.addEventListener("click", () => signOut(auth));
+
+// Emails a password-reset link to the address typed in the email box.
+async function sendReset(emailInput, messageEl) {
+  const email = emailInput.value.trim();
+  if (!email) {
+    messageEl.textContent = "Type your email above first, then tap Forgot password.";
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    messageEl.textContent = `If ${email} has an account, a reset link is on its way — check your inbox and spam folder.`;
+  } catch (err) {
+    messageEl.textContent = friendlyError(err);
+  }
+}
+$("forgotBtn").addEventListener("click", () => sendReset(authEmail, authError));
 
 // Creates the account's profile on first sign-in, and applies an access code if one was entered.
 async function loadProfile(user, accessCode) {

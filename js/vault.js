@@ -2,6 +2,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
@@ -80,6 +81,22 @@ resendBtn.addEventListener("click", async () => {
 });
 
 $("signOutBtn").addEventListener("click", () => signOut(auth));
+
+// Emails a password-reset link to the address typed in the email box.
+async function sendReset(emailInput, messageEl) {
+  const email = emailInput.value.trim();
+  if (!email) {
+    messageEl.textContent = "Type your email above first, then tap Forgot password.";
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    messageEl.textContent = `If ${email} has an account, a reset link is on its way — check your inbox and spam folder.`;
+  } catch (err) {
+    messageEl.textContent = friendlyError(err);
+  }
+}
+$("forgotBtn").addEventListener("click", () => sendReset(emailInput, loginError));
 
 // The security rules decide who the admin is; reading the activity log is the test.
 async function isAdmin() {
