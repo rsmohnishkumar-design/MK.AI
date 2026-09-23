@@ -1,0 +1,59 @@
+// MK.ai service worker: makes the app installable and lets it open offline.
+// Bump CACHE when shipping changes that must reach installed apps right away.
+// Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
+const CACHE = "mkai-v2";
+const SHELL = [
+  "./",
+  "style.css",
+  "js/app.js",
+  "js/ai.js",
+  "js/brain.js",
+  "js/firebase.js",
+  "firebase-config.js",
+  "manifest.webmanifest",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
+  "icons/apple-touch-icon.png",
+  "icons/favicon-32.png",
+];
+const ROOT = new URL("./", self.location).href;
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Only our own files and the Firebase library itself; database, login and AI
+  // requests (and the admin vault) always go straight to the network.
+  const firebaseLibrary = url.origin === "https://www.gstatic.com" && url.pathname.startsWith("/firebasejs/");
+  if (request.method !== "GET" || (url.origin !== self.location.origin && !firebaseLibrary)) return;
+  if (url.pathname.includes("vault")) return;
+
+  // Network first so updates (including firebase-config.js) show up right away;
+  // the cached copy is only used when offline.
+  event.respondWith(
+    fetch(request)
+      .then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          const key = request.mode === "navigate" ? ROOT : request;
+          caches.open(CACHE).then((cache) => cache.put(key, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(request.mode === "navigate" ? ROOT : request))
+  );
+});

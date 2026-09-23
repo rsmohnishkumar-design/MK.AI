@@ -1,0 +1,120 @@
+rules_version = '2';
+
+// Security rules for MK.ai. Paste this whole file into
+// Firebase console → Firestore Database → Rules, then click Publish.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== EDIT THESE TWO LINES BEFORE PUBLISHING =====
+    // Your email, in lowercase: the admin who can open the vault. Sign up in
+    // MK.ai with this email and click the link in the verification email.
+    function adminEmails() { return ['your-email@example.com']; }
+    // The access code that unlocks unlimited use. Keep it secret.
+    function unlimitedCode() { return 'change-this-code'; }
+    // ==================================================
+
+    // Trial length: 3 hours (180 minutes) plus 5 minutes for clock differences.
+    // Must match TRIAL_HOURS in firebase-config.js.
+    function maxTrialMinutes() { return 185; }
+
+    function signedIn() { return request.auth != null; }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in adminEmails();
+    }
+
+    function incoming() { return request.resource.data; }
+    function changed() { return incoming().diff(resource.data).affectedKeys(); }
+
+    // Unlimited accounts always, trial accounts until their time runs out.
+    function hasAccess() {
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return profile.tier == 'unlimited' || (profile.tier == 'trial' && profile.expiresAt > request.time);
+    }
+
+    // --- Accounts: one profile per user, created at first sign-in ---
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      allow create: if signedIn() && request.auth.uid == uid
+        && incoming().email == request.auth.token.email
+        && incoming().createdAt == request.time
+        && (
+          (incoming().keys().hasOnly(['email', 'tier', 'expiresAt', 'createdAt'])
+            && incoming().tier == 'trial'
+            && incoming().expiresAt is timestamp
+            && incoming().expiresAt > request.time
+            && incoming().expiresAt <= request.time + duration.value(maxTrialMinutes(), 'm'))
+          || (incoming().keys().hasOnly(['email', 'tier', 'expiresAt', 'createdAt', 'accessCode'])
+            && incoming().tier == 'unlimited'
+            && incoming().expiresAt == null
+            && incoming().accessCode == unlimitedCode())
+        );
+
+      // People can only upgrade themselves, and only with the right code.
+      allow update: if isAdmin() || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['tier', 'expiresAt', 'accessCode'])
+        && resource.data.tier == 'trial'
+        && incoming().tier == 'unlimited'
+        && incoming().expiresAt == null
+        && incoming().accessCode == unlimitedCode()
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Curated answers: everyone can read, only the admin can change ---
+    match /vault/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Learned memory ---
+    match /learned/{id} {
+      allow read: if signedIn();
+
+      allow create: if signedIn() && hasAccess()
+        && incoming().keys().hasOnly([
+          'question', 'answer', 'keywords', 'timeSensitive', 'uses', 'voters',
+          'createdBy', 'createdAt', 'lastUsedAt'
+        ])
+        && incoming().createdBy == request.auth.uid
+        && incoming().question is string && incoming().question.size() <= 1000
+        && incoming().answer is string && incoming().answer.size() <= 20000
+        && incoming().keywords is list && incoming().keywords.size() <= 50
+        && incoming().timeSensitive is bool
+        && incoming().uses == 1
+        && incoming().voters == {}
+        && incoming().createdAt == request.time
+        && incoming().lastUsedAt == request.time;
+
+      // Anyone with access can count a use, or set their own single vote.
+      allow update: if isAdmin() || (signedIn() && hasAccess() && (
+        (changed().hasOnly(['uses', 'lastUsedAt'])
+          && incoming().uses == resource.data.uses + 1
+          && incoming().lastUsedAt == request.time)
+        || (changed().hasOnly(['voters'])
+          && incoming().voters.diff(resource.data.voters).affectedKeys().hasOnly([request.auth.uid])
+          && incoming().voters[request.auth.uid] in ['up', 'down'])
+      ));
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Activity log: people add their own entries, only the admin reads ---
+    match /activity/{id} {
+      allow create: if signedIn()
+        && incoming().keys().hasOnly(['question', 'mode', 'uid', 'email', 'createdAt'])
+        && incoming().uid == request.auth.uid
+        && incoming().email == request.auth.token.email
+        && incoming().question is string && incoming().question.size() <= 1000
+        && incoming().mode in ['ai', 'memory', 'vault']
+        && incoming().createdAt == request.time;
+      allow read, delete: if isAdmin();
+    }
+  }
+}

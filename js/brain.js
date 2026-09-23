@@ -1,0 +1,199 @@
+import {
+  collection,
+  query,
+  where,
+  limit,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  increment,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { auth, db } from "./firebase.js";
+
+// ---------------------------------------------------------------------------
+// Word matching. Each stored question keeps a list of its keywords, so the
+// database can hand back only the few entries that share words with a new
+// question instead of everything. Those candidates are then scored by how
+// much of their meaning-carrying words overlap, forgiving small typos.
+// ---------------------------------------------------------------------------
+const STOPWORDS = new Set(
+  "a an the is are was were be been am do does did of to in on at for by with from and or but " +
+    "what whats who whom which when where why how can could would should will shall may might " +
+    "i me my you your it its this that these those tell please about there their they them " +
+    "give explain know want need some any much many"
+      .split(" ")
+);
+
+function normalize(str) {
+  return str.trim().toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function stem(word) {
+  if (word.length > 5 && word.endsWith("ies")) return word.slice(0, -3) + "y";
+  if (word.length > 4 && word.endsWith("es") && /(sh|ch|x|ss)es$/.test(word)) return word.slice(0, -2);
+  if (word.length > 3 && word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
+}
+
+export function keywords(str) {
+  const words = normalize(str)
+    .split(" ")
+    .filter((w) => w && !STOPWORDS.has(w))
+    .map(stem);
+  return [...new Set(words)];
+}
+
+function editDistanceAtMostOne(a, b) {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else {
+      i++;
+      j++;
+    }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+function sameWord(a, b) {
+  return a === b || (a.length >= 5 && b.length >= 5 && editDistanceAtMostOne(a, b));
+}
+
+// 0..1: blends "share most of their words" with "one contains the other".
+export function similarity(questionA, questionB) {
+  const a = keywords(questionA);
+  const b = keywords(questionB);
+  if (!a.length || !b.length) return normalize(questionA) === normalize(questionB) ? 1 : 0;
+  const shared = a.filter((w) => b.some((x) => sameWord(w, x))).length;
+  const jaccard = shared / (a.length + b.length - shared);
+  const containment = shared / Math.min(a.length, b.length);
+  return 0.5 * jaccard + 0.5 * containment;
+}
+
+// ---------------------------------------------------------------------------
+// When a stored answer is reused as-is. Upvoted answers are trusted a bit
+// more; answers people voted down are never reused.
+// ---------------------------------------------------------------------------
+const THRESHOLD = { vault: 0.7, learned: 0.82, related: 0.34 };
+const LEARNED_MAX_AGE_DAYS = 45;
+
+export function votes(entry) {
+  const values = Object.values(entry.voters || {});
+  return {
+    up: values.filter((v) => v === "up").length,
+    down: values.filter((v) => v === "down").length,
+  };
+}
+
+function isBad(entry) {
+  const { up, down } = votes(entry);
+  return down > up;
+}
+
+function isUsable(entry) {
+  if (isBad(entry) || entry.timeSensitive) return false;
+  if (votes(entry).up > 0) return true; // confirmed good answers don't expire
+  const created = entry.createdAt?.toMillis ? entry.createdAt.toMillis() : Date.now();
+  return (Date.now() - created) / 86400000 < LEARNED_MAX_AGE_DAYS;
+}
+
+// Questions whose answer changes over time shouldn't be answered from memory.
+const TIME_SENSITIVE =
+  /\b(today|tonight|tomorrow|yesterday|now|current(ly)?|latest|recent(ly)?|this (week|month|year)|news|weather|price|rate|score|stock|live|trending|upcoming|20\d\d)\b/i;
+export function isTimeSensitive(question) {
+  return TIME_SENSITIVE.test(question);
+}
+
+// Follow-ups like "what about its population?" depend on the conversation.
+const FOLLOW_UP = /\b(it|its|he|she|him|her|his|they|them|their|this|that|these|those|there|then|same|more|else)\b/i;
+export function dependsOnContext(question, history) {
+  if (!history.length) return false;
+  return FOLLOW_UP.test(question) || question.trim().split(/\s+/).length <= 3;
+}
+
+async function candidates(collectionName, question) {
+  const words = keywords(question).slice(0, 30); // Firestore allows up to 30 values here
+  if (!words.length) return [];
+  const snap = await getDocs(
+    query(collection(db, collectionName), where("keywords", "array-contains-any", words), limit(30))
+  );
+  return snap.docs
+    .map((d) => ({ id: d.id, collection: collectionName, ...d.data() }))
+    .map((entry) => ({ entry, score: similarity(question, entry.question) }))
+    .sort((x, y) => y.score - x.score);
+}
+
+// Looks up the vault and learned memory together (one read each).
+export async function lookup(question) {
+  const [vault, learned] = await Promise.all([candidates("vault", question), candidates("learned", question)]);
+
+  let memory = null;
+  if (vault[0] && vault[0].score >= THRESHOLD.vault) {
+    memory = vault[0].entry;
+  } else if (!isTimeSensitive(question)) {
+    const best = learned.find(({ entry }) => isUsable(entry));
+    const bar = best ? THRESHOLD.learned - Math.min(votes(best.entry).up, 3) * 0.03 : 1;
+    if (best && best.score >= bar) memory = best.entry;
+  }
+
+  // Related knowledge handed to the AI, plus one similar answer people disliked.
+  const good = [];
+  const bad = [];
+  for (const { entry, score } of [...vault, ...learned].sort((x, y) => y.score - x.score)) {
+    if (score < THRESHOLD.related) break;
+    if (entry.collection === "learned" && isBad(entry)) {
+      if (!bad.length) bad.push(entry);
+    } else if (good.length < 3 && !(entry.collection === "learned" && entry.timeSensitive)) {
+      good.push({ ...entry, curated: entry.collection === "vault" });
+    }
+  }
+
+  return { memory, knowledge: { good, bad } };
+}
+
+export async function learn(question, answer) {
+  const ref = await addDoc(collection(db, "learned"), {
+    question: question.slice(0, 1000),
+    answer: answer.slice(0, 20000),
+    keywords: keywords(question).slice(0, 50),
+    timeSensitive: isTimeSensitive(question),
+    uses: 1,
+    voters: {},
+    createdBy: auth.currentUser.uid,
+    createdAt: serverTimestamp(),
+    lastUsedAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export function markUsed(entryId) {
+  return updateDoc(doc(db, "learned", entryId), { uses: increment(1), lastUsedAt: serverTimestamp() });
+}
+
+// One vote per person per answer; voting again changes it.
+export function vote(entryId, direction) {
+  return updateDoc(doc(db, "learned", entryId), { [`voters.${auth.currentUser.uid}`]: direction });
+}
+
+export function logActivity(question, mode) {
+  return addDoc(collection(db, "activity"), {
+    question: question.slice(0, 1000),
+    mode,
+    uid: auth.currentUser.uid,
+    email: auth.currentUser.email,
+    createdAt: serverTimestamp(),
+  }).catch(() => {}); // logging should never break the chat
+}

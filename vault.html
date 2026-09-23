@@ -7,8 +7,9 @@
 <meta name="robots" content="noindex, nofollow" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css" />
-<link rel="stylesheet" href="/vault.css" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="vault.css" />
 </head>
 <body>
   <div class="vault-app">
@@ -17,11 +18,13 @@
       <div class="login-card">
         <div class="header-mark">🔒</div>
         <h1>The Vault</h1>
-        <p class="login-copy">This room isn't linked anywhere. Enter the passcode to get in.</p>
+        <p class="login-copy">This room isn't linked anywhere. Log in with the admin account.</p>
         <form id="loginForm">
-          <input id="passcodeInput" type="password" placeholder="passcode" autocomplete="off" autofocus />
+          <input id="emailInput" type="email" placeholder="admin email" autocomplete="username" required />
+          <input id="passwordInput" type="password" placeholder="password" autocomplete="current-password" required />
           <button type="submit">Unlock</button>
         </form>
+        <button id="resendBtn" type="button" class="refresh-btn hidden">resend verification email</button>
         <p id="loginError" class="login-error"></p>
       </div>
     </section>
@@ -30,9 +33,9 @@
       <header class="vault-header">
         <div>
           <h1>The Vault</h1>
-          <p>What you add here, the bot answers from directly — before it ever tries a search.</p>
+          <p>What you add here, MK.ai answers from directly, and follows when writing related answers.</p>
         </div>
-        <a href="/" class="back-link">&larr; back to chat</a>
+        <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
 
       <div class="vault-columns">
@@ -53,13 +56,13 @@
 
         <section class="vault-col">
           <h2>Curated entries <span class="count" id="vaultCount"></span></h2>
-          <p class="col-hint">These are trusted first, and matched fairly loosely — typos and rephrasing are okay.</p>
+          <p class="col-hint">These are trusted first, and matched by their key words — small typos and rewording are okay.</p>
           <div id="vaultList" class="entry-list"></div>
         </section>
 
         <section class="vault-col">
           <h2>Self-taught memory <span class="count" id="learnedCount"></span></h2>
-          <p class="col-hint">Auto-saved every time it had to fall back to a live search. Promote the good ones, delete the bad ones.</p>
+          <p class="col-hint">Every new AI answer is saved here, with how often it was reused and how people voted. Promote the good ones, delete the bad ones.</p>
           <div id="learnedList" class="entry-list"></div>
         </section>
       </div>
@@ -68,7 +71,7 @@
         <div class="activity-heading">
           <h2>Registered users <span class="count" id="usersCount"></span></h2>
         </div>
-        <p class="col-hint">Everyone with an account. Delete one to revoke their access immediately.</p>
+        <p class="col-hint">Everyone with an account. Block one to turn off their access.</p>
         <div class="activity-table-wrap users-table-wrap">
           <table class="activity-table">
             <thead>
@@ -87,8 +90,7 @@
       <section class="activity-section">
         <div class="activity-heading">
           <h2>Activity <span class="count" id="activityCount"></span></h2>
-          <span class="storage-badge" id="storageBadge"></span>
-          <button id="refreshActivity" class="refresh-btn">refresh</button>
+                    <button id="refreshActivity" class="refresh-btn">refresh</button>
         </div>
         <p class="col-hint">Every question asked in the chat, in order, by whom, and how it got answered.</p>
         <div class="activity-table-wrap">
@@ -97,7 +99,6 @@
               <tr>
                 <th>Time</th>
                 <th>User</th>
-                <th>IP</th>
                 <th>Question</th>
                 <th>Answered via</th>
               </tr>
@@ -117,6 +118,6 @@
     </div>
   </template>
 
-  <script src="/vault.js"></script>
+  <script type="module" src="js/vault.js"></script>
 </body>
 </html>

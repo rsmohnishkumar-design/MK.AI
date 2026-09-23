@@ -6,16 +6,16 @@
 <title>MK.ai</title>
 <meta name="description" content="Ask anything — an AI assistant that learns from every conversation." />
 <meta name="theme-color" content="#14181c" />
-<link rel="manifest" href="/manifest.webmanifest" />
-<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="MK.ai" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app" id="appRoot">
@@ -24,7 +24,7 @@
       <div class="auth-card">
         <div class="header-mark">§</div>
         <h1>MK.ai</h1>
-        <p class="auth-copy">Sign in to start asking.</p>
+        <p class="auth-copy" id="authCopy">Sign in to start asking.</p>
 
         <div class="auth-tabs">
           <button type="button" class="auth-tab active" id="tabLogin">Log in</button>
@@ -83,18 +83,6 @@
     </div>
   </template>
 
-  <template id="msg-bot">
-    <div class="msg msg-bot">
-      <div class="card">
-        <div class="card-spine"></div>
-        <div class="card-content">
-          <div class="msg-label">mk.ai — pulled from google.com</div>
-          <div class="sources"></div>
-        </div>
-      </div>
-    </div>
-  </template>
-
   <template id="msg-ai">
     <div class="msg msg-bot">
       <div class="card">
@@ -102,6 +90,7 @@
         <div class="card-content">
           <div class="msg-label">mk.ai</div>
           <div class="msg-body ai-answer"></div>
+          <div class="search-suggestions hidden"></div>
           <div class="answer-actions">
             <button type="button" class="vote-btn" data-vote="up" title="Helpful" aria-label="Helpful">👍</button>
             <button type="button" class="vote-btn" data-vote="down" title="Not helpful" aria-label="Not helpful">👎</button>
@@ -132,13 +121,13 @@
       <div class="card card-error">
         <div class="card-spine"></div>
         <div class="card-content">
-          <div class="msg-label">mk.ai — the trip failed</div>
+          <div class="msg-label">mk.ai</div>
           <div class="msg-body"></div>
         </div>
       </div>
     </div>
   </template>
 
-  <script src="/script.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

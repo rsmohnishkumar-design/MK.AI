@@ -202,6 +202,11 @@ body {
 }
 
 /* AI answer card */
+.search-suggestions {
+  margin-top: 12px;
+}
+
+
 .answer-actions {
   display: flex;
   gap: 8px;
