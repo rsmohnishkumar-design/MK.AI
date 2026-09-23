@@ -17,20 +17,39 @@ const ATTEMPTS = [
   { model: "gemini-flash-lite-latest", search: false },
 ];
 
+// Give up on an attempt that hasn't finished in this long (the default is 3 minutes).
+const TIMEOUT_MS = 45000;
+
 const models = new Map();
 function getModel({ model, search }) {
   const key = `${model}|${search}`;
   if (!models.has(key)) {
     models.set(
       key,
-      getGenerativeModel(ai, {
-        model,
-        systemInstruction: SYSTEM_PROMPT,
-        ...(search ? { tools: [{ googleSearch: {} }] } : {}),
-      })
+      getGenerativeModel(
+        ai,
+        {
+          model,
+          systemInstruction: SYSTEM_PROMPT,
+          ...(search ? { tools: [{ googleSearch: {} }] } : {}),
+        },
+        { timeout: TIMEOUT_MS }
+      )
     );
   }
   return models.get(key);
+}
+
+// Greetings and small talk don't need a web search, which only adds seconds.
+const SMALL_TALK =
+  /^(hi+|hey+|hello+|hii+|yo|sup|thanks?|thank you|thx|ok(ay)?|cool|nice|great|bye|good (morning|afternoon|evening|night)|how are you|who are you|what'?s up)[\s!.?]*$/i;
+function needsSearch(question) {
+  return !SMALL_TALK.test(question.trim());
+}
+
+// Strip citation markers the model sometimes adds anyway.
+function clean(text) {
+  return text.replace(/\s?\[\d+(?:,\s*\d+)*\]/g, "").trim();
 }
 
 function errorText(err) {
@@ -64,34 +83,39 @@ function knowledgeNote({ good = [], bad = [] }) {
 }
 
 // history: [{ role: "user" | "assistant", content }], oldest first, ending on "assistant".
-export async function askGemini(question, history, knowledge) {
+// onText(textSoFar) is called as the answer streams in.
+export async function askGemini(question, history, knowledge, onText = () => {}) {
   const note = knowledgeNote(knowledge);
   const contents = [
     ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
     { role: "user", parts: [{ text: note ? `${note}\n\nQuestion: ${question}` : question }] },
   ];
 
-  let response = null;
+  const attempts = needsSearch(question) ? ATTEMPTS : ATTEMPTS.filter((a) => !a.search);
   let lastError = null;
-  for (const attempt of ATTEMPTS) {
+  for (const attempt of attempts) {
+    let text = "";
     try {
-      response = (await getModel(attempt).generateContent({ contents })).response;
-      break;
+      const result = await getModel(attempt).generateContentStream({ contents });
+      for await (const chunk of result.stream) {
+        try {
+          text += chunk.text() || "";
+        } catch {} // a chunk with no text part
+        if (text) onText(clean(text));
+      }
+      const response = await result.response;
+      // Google requires showing its search suggestions whenever an answer used Google Search.
+      const searchSuggestions =
+        response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || null;
+      return { answer: clean(text), searchSuggestions };
     } catch (err) {
       lastError = err;
       console.warn(`Gemini (${attempt.model}, search ${attempt.search ? "on" : "off"}) failed:`, err);
-      if (!worthRetrying(err) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(err))) break;
+      // Once part of the answer is on screen, starting over would be confusing.
+      if (text || !worthRetrying(err) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(err))) break;
     }
   }
-  if (!response) throw lastError;
-  // Belt and braces: strip any citation markers the model adds anyway.
-  const answer = (response.text() || "").replace(/\s?\[\d+(?:,\s*\d+)*\]/g, "").trim();
-
-  // Google requires showing its search suggestions whenever an answer used Google Search.
-  const searchSuggestions =
-    response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || null;
-
-  return { answer, searchSuggestions };
+  throw lastError;
 }
 
 export function aiErrorMessage(err) {
@@ -115,5 +139,8 @@ export function aiErrorMessage(err) {
     return "The AI's free limit was reached — please try again later." + detail;
   }
   if (!navigator.onLine) return "You're offline — connect to the internet to ask.";
+  if (/abort|timeout|timed out/i.test(text)) {
+    return "The AI took too long to answer — please try again." + detail;
+  }
   return "The AI couldn't answer that right now — please try again." + detail;
 }
