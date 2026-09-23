@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MK.ai — Vault</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="/vault.css" />
+</head>
+<body>
+  <div class="vault-app">
+
+    <section id="loginScreen" class="login-screen">
+      <div class="login-card">
+        <div class="header-mark">🔒</div>
+        <h1>The Vault</h1>
+        <p class="login-copy">This room isn't linked anywhere. Enter the passcode to get in.</p>
+        <form id="loginForm">
+          <input id="passcodeInput" type="password" placeholder="passcode" autocomplete="off" autofocus />
+          <button type="submit">Unlock</button>
+        </form>
+        <p id="loginError" class="login-error"></p>
+      </div>
+    </section>
+
+    <section id="vaultScreen" class="vault-screen hidden">
+      <header class="vault-header">
+        <div>
+          <h1>The Vault</h1>
+          <p>What you add here, the bot answers from directly — before it ever tries a search.</p>
+        </div>
+        <a href="/" class="back-link">&larr; back to chat</a>
+      </header>
+
+      <div class="vault-columns">
+        <section class="vault-col">
+          <h2>Add to the vault</h2>
+          <form id="addForm" class="add-form">
+            <label>
+              Question
+              <input id="newQuestion" type="text" placeholder="e.g. what's our office wifi password" required />
+            </label>
+            <label>
+              Answer
+              <textarea id="newAnswer" placeholder="the exact answer to give back" required></textarea>
+            </label>
+            <button type="submit">Save entry</button>
+          </form>
+        </section>
+
+        <section class="vault-col">
+          <h2>Curated entries <span class="count" id="vaultCount"></span></h2>
+          <p class="col-hint">These are trusted first, and matched fairly loosely — typos and rephrasing are okay.</p>
+          <div id="vaultList" class="entry-list"></div>
+        </section>
+
+        <section class="vault-col">
+          <h2>Self-taught memory <span class="count" id="learnedCount"></span></h2>
+          <p class="col-hint">Auto-saved every time it had to fall back to a live search. Promote the good ones, delete the bad ones.</p>
+          <div id="learnedList" class="entry-list"></div>
+        </section>
+      </div>
+
+      <section class="activity-section">
+        <div class="activity-heading">
+          <h2>Registered users <span class="count" id="usersCount"></span></h2>
+        </div>
+        <p class="col-hint">Everyone with an account. Delete one to revoke their access immediately.</p>
+        <div class="activity-table-wrap users-table-wrap">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Tier</th>
+                <th>Joined</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="activity-section">
+        <div class="activity-heading">
+          <h2>Activity <span class="count" id="activityCount"></span></h2>
+          <span class="storage-badge" id="storageBadge"></span>
+          <button id="refreshActivity" class="refresh-btn">refresh</button>
+        </div>
+        <p class="col-hint">Every question asked in the chat, in order, by whom, and how it got answered.</p>
+        <div class="activity-table-wrap">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>IP</th>
+                <th>Question</th>
+                <th>Answered via</th>
+              </tr>
+            </thead>
+            <tbody id="activityBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <template id="entry-row">
+    <div class="entry-row">
+      <div class="entry-q"></div>
+      <div class="entry-a"></div>
+      <div class="entry-actions"></div>
+    </div>
+  </template>
+
+  <script src="/vault.js"></script>
+</body>
+</html>
