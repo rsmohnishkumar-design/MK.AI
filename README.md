@@ -65,15 +65,15 @@ MK.ai gets better the more it's used:
 ### 5. Turn on App Check (required for the AI)
 
 Firebase AI Logic only answers requests that prove they come from your
-website. This uses a free reCAPTCHA v3 key.
+website. This uses a free reCAPTCHA key (reCAPTCHA Enterprise).
 
 1. Go to [google.com/recaptcha/admin/create](https://www.google.com/recaptcha/admin/create).
    Give it any label, choose **Score based (v3)**, add the domain
-   `rsmohnishkumar-design.github.io`, and submit. You get a **site key**
-   and a **secret key**.
+   `rsmohnishkumar-design.github.io`, pick your Firebase project under
+   **Google Cloud Platform**, and submit. Copy the **site key**.
 2. In Firebase, open **Security → App Check → Apps**, pick your web app,
-   choose **reCAPTCHA**, paste the **secret key**, and **Save**.
-3. Put the **site key** into `RECAPTCHA_SITE_KEY` in
+   choose **reCAPTCHA Enterprise**, paste the **site key**, and **Save**.
+3. Put the same **site key** into `RECAPTCHA_SITE_KEY` in
    [`firebase-config.js`](firebase-config.js).
 4. In **App Check → APIs**, find **Firebase AI Logic** and tap
    **Enforce**.
