@@ -16,12 +16,14 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteField,
   Timestamp,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { keywords, votes } from "./brain.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
+import { PROVIDERS, keyField, listModels, chooseModels } from "./providers.js";
 
 const $ = (id) => document.getElementById(id);
 const loginScreen = $("loginScreen");
@@ -348,78 +350,92 @@ async function loadUsers() {
   }
 }
 
-// --- AI settings: the Groq API key ---
-const groqForm = $("groqForm");
-const groqKeyInput = $("groqKeyInput");
-const groqStatus = $("groqStatus");
-const groqMessage = $("groqMessage");
+// --- AI settings: keys for the free AI services ---
+const providerRows = $("providerRows");
 const settingsRef = () => doc(db, "settings", "ai");
 
+function providerRow(provider, savedKey) {
+  const row = document.createElement("div");
+  row.className = "provider-row";
+  row.innerHTML = `
+    <h3><span class="provider-name"></span> <span class="provider-status"></span></h3>
+    <p class="col-hint provider-signup"></p>
+    <form class="groq-form">
+      <input type="password" autocomplete="off" />
+      <button type="submit">Save key</button>
+      <button type="button" class="secondary test-btn">Test</button>
+      <button type="button" class="secondary danger remove-btn">Remove</button>
+    </form>
+    <p class="col-hint provider-message"></p>
+  `;
+  row.querySelector(".provider-name").textContent = provider.name;
+  row.querySelector(".provider-status").textContent = savedKey ? "· key saved" : "";
+  row.querySelector(".provider-signup").textContent = `Get a free key: ${provider.signup}`;
+  const input = row.querySelector("input");
+  input.placeholder = `${provider.name} key`;
+  input.value = savedKey || "";
+  const message = row.querySelector(".provider-message");
+
+  const test = async () => {
+    const models = chooseModels(provider, await listModels(provider, input.value.trim()));
+    return models;
+  };
+
+  row.querySelector("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const key = input.value.trim();
+    if (!key) return;
+    message.textContent = `Checking the key with ${provider.name}…`;
+    try {
+      const models = await test();
+      await setDoc(settingsRef(), { [keyField(provider)]: key, updatedAt: serverTimestamp() }, { merge: true });
+      message.textContent = `Saved. The key works — MK.ai will use: ${models.join(", ") || "its default models"}.`;
+      row.querySelector(".provider-status").textContent = "· key saved";
+    } catch (err) {
+      message.textContent = `Not saved: ${err.message || friendlyError(err)}`;
+    }
+  });
+
+  row.querySelector(".test-btn").addEventListener("click", async () => {
+    if (!input.value.trim()) {
+      message.textContent = "Paste a key first.";
+      return;
+    }
+    message.textContent = "Testing…";
+    try {
+      const models = await test();
+      message.textContent = `Works. MK.ai would use: ${models.join(", ") || "its default models"}.`;
+    } catch (err) {
+      message.textContent = err.message;
+    }
+  });
+
+  row.querySelector(".remove-btn").addEventListener("click", async () => {
+    if (!confirm(`Remove the ${provider.name} key?`)) return;
+    try {
+      await setDoc(settingsRef(), { [keyField(provider)]: deleteField(), updatedAt: serverTimestamp() }, { merge: true });
+      input.value = "";
+      row.querySelector(".provider-status").textContent = "";
+      message.textContent = "Removed.";
+    } catch (err) {
+      message.textContent = friendlyError(err);
+    }
+  });
+
+  return row;
+}
+
 async function loadGroqKey() {
+  let data = {};
   try {
     const snap = await getDoc(settingsRef());
-    const key = snap.exists() ? snap.data().groqKey : "";
-    groqKeyInput.value = key || "";
-    groqStatus.textContent = key ? "(Groq key saved)" : "(no Groq key — using Gemini only)";
+    data = snap.exists() ? snap.data() : {};
   } catch (err) {
-    groqStatus.textContent = "";
-    groqMessage.textContent =
-      "Couldn't read AI settings — republish firestore.rules from the repo (it now includes a settings rule). " +
+    providerRows.textContent =
+      "Couldn't read AI settings — republish firestore.rules from the repo (it includes a settings rule). " +
       friendlyError(err);
-  }
-}
-
-// Asks Groq which models this key can use.
-async function testGroqKey(key) {
-  const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${key}` } });
-  if (!res.ok) {
-    let message = "";
-    try {
-      message = (await res.json())?.error?.message || "";
-    } catch {}
-    throw new Error(`Groq said [${res.status}] ${message}`);
-  }
-  const { data } = await res.json();
-  return data.map((m) => m.id);
-}
-
-groqForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const key = groqKeyInput.value.trim();
-  if (!key) return;
-  groqMessage.textContent = "Checking the key with Groq…";
-  try {
-    const models = await testGroqKey(key);
-    await setDoc(settingsRef(), { groqKey: key, updatedAt: serverTimestamp() });
-    groqMessage.textContent = `Saved. The key works (${models.length} models available). New chats will use Groq.`;
-    loadGroqKey();
-  } catch (err) {
-    groqMessage.textContent = `Not saved: ${err.message || friendlyError(err)}`;
-  }
-});
-
-$("groqTestBtn").addEventListener("click", async () => {
-  const key = groqKeyInput.value.trim();
-  if (!key) {
-    groqMessage.textContent = "Paste a key first.";
     return;
   }
-  groqMessage.textContent = "Testing…";
-  try {
-    const models = await testGroqKey(key);
-    groqMessage.textContent = `Works. Models: ${models.slice(0, 12).join(", ")}${models.length > 12 ? "…" : ""}`;
-  } catch (err) {
-    groqMessage.textContent = err.message;
-  }
-});
-
-$("groqRemoveBtn").addEventListener("click", async () => {
-  if (!confirm("Remove the Groq key? MK.ai will use Gemini only.")) return;
-  try {
-    await deleteDoc(settingsRef());
-    groqMessage.textContent = "Removed.";
-    loadGroqKey();
-  } catch (err) {
-    groqMessage.textContent = friendlyError(err);
-  }
-});
+  providerRows.innerHTML = "";
+  PROVIDERS.forEach((p) => providerRows.appendChild(providerRow(p, data[keyField(p)])));
+}

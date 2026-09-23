@@ -1,10 +1,11 @@
 import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-ai.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { ai, db } from "./firebase.js";
-import { GEMINI_MODELS, GROQ_MODELS, GROQ_SEARCH_MODELS } from "../firebase-config.js";
+import { GEMINI_MODELS } from "../firebase-config.js";
+import { PROVIDERS, keyField, listModels, chooseModels, streamChat } from "./providers.js";
 
-// Answers come from Groq first (free, no card, large daily limits) when the
-// admin has saved a Groq API key in the vault, then from Gemini through
+// Answers come from the free AI services whose keys the admin saved in the
+// vault (Groq, Cerebras, OpenRouter, GitHub Models), then from Gemini through
 // Firebase as a backup. Every option that fails for quota, overload, timeout
 // or retirement is skipped for a while, so questions don't waste requests.
 
@@ -96,93 +97,44 @@ function available(attempts) {
 }
 
 // ---------------------------------------------------------------------------
-// Groq: OpenAI-compatible API, called straight from the browser with the key
-// the admin saved in the vault (Firestore settings/ai, readable by members).
+// Saved keys (Firestore settings/ai, readable by members with access).
+// Saved keys are kept for the session; "no keys" is re-checked every few
+// minutes so keys the admin adds are picked up without a reload.
 // ---------------------------------------------------------------------------
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-
-// A saved key is kept for the session; "no key" is re-checked every few
-// minutes so a key the admin adds is picked up without a reload.
-let groqKeyCache = { value: null, checkedAt: 0 };
-async function groqKey() {
-  if (groqKeyCache.value || Date.now() - groqKeyCache.checkedAt < 5 * 60e3) return groqKeyCache.value;
-  let value = null;
+let keysCache = { value: {}, checkedAt: 0 };
+async function savedKeys() {
+  const hasAny = Object.keys(keysCache.value).length > 0;
+  if (hasAny || Date.now() - keysCache.checkedAt < 5 * 60e3) return keysCache.value;
+  let value = {};
   try {
     const snap = await getDoc(doc(db, "settings", "ai"));
-    value = (snap.exists() && snap.data().groqKey) || null;
+    if (snap.exists()) {
+      const data = snap.data();
+      for (const p of PROVIDERS) if (data[keyField(p)]) value[p.id] = data[keyField(p)];
+    }
   } catch {}
-  groqKeyCache = { value, checkedAt: Date.now() };
+  keysCache = { value, checkedAt: Date.now() };
   return value;
+}
+
+// Which models each service offers this key, looked up once per session.
+const modelLists = new Map();
+function modelsFor(provider, key) {
+  if (!modelLists.has(provider.id)) {
+    modelLists.set(
+      provider.id,
+      listModels(provider, key)
+        .then((available) => chooseModels(provider, available))
+        .catch(() => provider.prefer)
+    );
+  }
+  return modelLists.get(provider.id);
 }
 
 function httpError(status, message) {
   const err = new Error(message || `HTTP ${status}`);
   err.customErrorData = { status };
   return err;
-}
-
-async function groqAnswer(model, messages, key, onText) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(GROQ_URL, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: true,
-        temperature: 0.6,
-        max_completion_tokens: 2048,
-        ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
-      }),
-    });
-    if (!res.ok) {
-      let message = "";
-      try {
-        message = (await res.json())?.error?.message || "";
-      } catch {}
-      throw httpError(res.status, `Groq ${model}: [${res.status}] ${message}`);
-    }
-
-    // Server-sent events: lines of "data: {json}", ending with "data: [DONE]".
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let text = "";
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
-      for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
-        const data = line.slice(5).trim();
-        if (!data || data === "[DONE]") continue;
-        let event;
-        try {
-          event = JSON.parse(data);
-        } catch {
-          continue;
-        }
-        if (event.error) throw httpError(500, `Groq ${model}: ${event.error.message || "stream error"}`);
-        const piece = event.choices?.[0]?.delta?.content || "";
-        if (piece) {
-          text += piece;
-          const shown = clean(text);
-          if (shown) onText(shown);
-        }
-      }
-    }
-    return { answer: clean(text), searchSuggestions: null };
-  } catch (err) {
-    if (err.name === "AbortError") throw httpError(504, `Groq ${model}: timeout — no answer in ${TIMEOUT_MS / 1000}s`);
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -258,25 +210,35 @@ function knowledgeNote({ good = [], bad = [] }) {
 
 // The ordered list of things to try for this question.
 async function plan(question) {
-  const key = await groqKey();
+  const keys = await savedKeys();
   const smallTalk = SMALL_TALK.test(question.trim());
   const fresh = !smallTalk && NEEDS_FRESH.test(question);
-  const attempts = [];
+  const withKeys = PROVIDERS.filter((p) => keys[p.id]);
 
-  if (key) {
-    const groq = (model, search) => ({
-      key: `groq:${model}`,
-      run: (ctx, onText) => groqAnswer(model, ctx.messages(search), key, onText),
-    });
-    if (fresh) GROQ_SEARCH_MODELS.forEach((m) => attempts.push(groq(m, true)));
-    GROQ_MODELS.forEach((m) => attempts.push(groq(m, false)));
-  }
-
+  const external = (provider, model, search) => ({
+    key: `${provider.id}:${model}`,
+    run: async (ctx, onText) => {
+      const raw = await streamChat(provider, keys[provider.id], model, ctx.messages(search), (t) => {
+        const shown = clean(t);
+        if (shown) onText(shown);
+      }, TIMEOUT_MS);
+      return { answer: clean(raw), searchSuggestions: null };
+    },
+  });
   const gemini = (model, search) => ({
     key: search ? "gemini:google-search" : `gemini:${model}`,
     run: (ctx, onText) => geminiAnswer(model, search, ctx.contents, onText),
   });
-  if (!smallTalk && (fresh || !key)) attempts.push(gemini(GEMINI_MODELS[0], true));
+
+  const attempts = [];
+  if (fresh) {
+    // Web-search models first for current events.
+    for (const p of withKeys) (p.searchModels || []).forEach((m) => attempts.push(external(p, m, true)));
+    attempts.push(gemini(GEMINI_MODELS[0], true));
+  }
+  const lists = await Promise.all(withKeys.map((p) => modelsFor(p, keys[p.id])));
+  withKeys.forEach((p, i) => lists[i].forEach((m) => attempts.push(external(p, m, false))));
+  if (!smallTalk && !fresh && !withKeys.length) attempts.push(gemini(GEMINI_MODELS[0], true));
   GEMINI_MODELS.forEach((m) => attempts.push(gemini(m, false)));
 
   return available(attempts);
