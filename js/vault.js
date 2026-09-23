@@ -116,13 +116,7 @@ if (configured) {
       loginScreen.classList.remove("hidden");
       return;
     }
-    await user.reload(); // pick up a just-clicked verification link
-    if (!user.emailVerified) {
-      loginError.textContent = "Verify your email first — check your inbox for the link from Firebase.";
-      resendBtn.classList.remove("hidden");
-      return;
-    }
-    await user.getIdToken(true); // make sure the token knows the email is verified
+    // The security rules decide who the admin is (by email).
     if (!(await isAdmin())) {
       loginError.textContent = "This account isn't the admin. The admin email is set in firestore.rules.";
       await signOut(auth);

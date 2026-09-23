@@ -106,8 +106,7 @@ email and code) so the vault can save keys.
 ### 7. Open your app
 
 Go to **https://rsmohnishkumar-design.github.io/MK.AI/** and sign up
-using the admin email from step 3. Firebase emails you a verification
-link — click it. That's it.
+using the admin email from step 3. That's it.
 
 - **Install it:** on Android, tap **Install app** in the header (or the
   browser menu → **Add to Home screen**). On iPhone, Share → **Add to
