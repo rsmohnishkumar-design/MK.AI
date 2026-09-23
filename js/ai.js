@@ -8,16 +8,39 @@ Give only the answer: never mention your sources, search results, websites or ci
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings, tables or bold.
 Reply in the same language the user writes in.`;
 
-let model = null;
-function getModel() {
-  if (!model) {
-    model = getGenerativeModel(ai, {
-      model: GEMINI_MODEL,
-      systemInstruction: SYSTEM_PROMPT,
-      tools: [{ googleSearch: {} }],
-    });
+// Tried in order. New free projects sometimes have no allowance for Google
+// Search or for a particular model, so a quota or "model not found" refusal
+// falls through to the next option instead of failing outright.
+const ATTEMPTS = [
+  { model: GEMINI_MODEL, search: true },
+  { model: GEMINI_MODEL, search: false },
+  { model: "gemini-flash-lite-latest", search: false },
+];
+
+const models = new Map();
+function getModel({ model, search }) {
+  const key = `${model}|${search}`;
+  if (!models.has(key)) {
+    models.set(
+      key,
+      getGenerativeModel(ai, {
+        model,
+        systemInstruction: SYSTEM_PROMPT,
+        ...(search ? { tools: [{ googleSearch: {} }] } : {}),
+      })
+    );
   }
-  return model;
+  return models.get(key);
+}
+
+function errorText(err) {
+  return `${err?.code || ""} ${err?.message || ""}`;
+}
+
+// Quota, missing-model and "search not allowed" refusals are worth retrying differently.
+function worthRetrying(err) {
+  const status = err?.customErrorData?.status;
+  return [400, 403, 404, 429].includes(status) || /quota|resource.exhausted|not found|not supported/i.test(errorText(err));
 }
 
 // Turns what MK.ai already knows into context for the new answer.
@@ -48,8 +71,19 @@ export async function askGemini(question, history, knowledge) {
     { role: "user", parts: [{ text: note ? `${note}\n\nQuestion: ${question}` : question }] },
   ];
 
-  const result = await getModel().generateContent({ contents });
-  const response = result.response;
+  let response = null;
+  let lastError = null;
+  for (const attempt of ATTEMPTS) {
+    try {
+      response = (await getModel(attempt).generateContent({ contents })).response;
+      break;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Gemini (${attempt.model}, search ${attempt.search ? "on" : "off"}) failed:`, err);
+      if (!worthRetrying(err) || /app.?check|deactivated|api-not-enabled|not been used/i.test(errorText(err))) break;
+    }
+  }
+  if (!response) throw lastError;
   // Belt and braces: strip any citation markers the model adds anyway.
   const answer = (response.text() || "").replace(/\s?\[\d+(?:,\s*\d+)*\]/g, "").trim();
 
@@ -62,16 +96,24 @@ export async function askGemini(question, history, knowledge) {
 
 export function aiErrorMessage(err) {
   const status = err?.customErrorData?.status;
-  const text = `${err?.code || ""} ${err?.message || ""}`;
-  if (status === 429 || /quota|resource.exhausted|429/i.test(text)) {
-    return "MK.ai is getting a lot of questions right now — please try again in a minute.";
-  }
+  const text = errorText(err);
+  // Google's own wording, shortened, so problems can be diagnosed from a screenshot.
+  const reason = `${err?.customErrorData?.errorDetails?.[0]?.reason || ""} ${err?.message || ""}`;
+  const detail = `\n\n(${reason
+    .replace(/Error fetching from \S+/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 220)})`;
+
   if (/app.?check|deactivated/i.test(text)) {
-    return "The AI is waiting for App Check to be set up in Firebase — the admin needs to finish that step (see the README).";
+    return "The AI is waiting for App Check to be set up in Firebase — the admin needs to finish that step (see the README)." + detail;
   }
   if (/api-not-enabled|not been used|disabled/i.test(text)) {
-    return "The AI isn't switched on in Firebase yet — the admin needs to enable Firebase AI Logic (see the README).";
+    return "The AI isn't switched on in Firebase yet — the admin needs to enable Firebase AI Logic (see the README)." + detail;
+  }
+  if (status === 429 || /quota|resource.exhausted/i.test(text)) {
+    return "The AI's free limit was reached — please try again later." + detail;
   }
   if (!navigator.onLine) return "You're offline — connect to the internet to ask.";
-  return "The AI couldn't answer that right now — please try again.";
+  return "The AI couldn't answer that right now — please try again." + detail;
 }
