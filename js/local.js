@@ -6,6 +6,7 @@ import { CREATOR_NAME } from "../firebase-config.js";
 import { codingAnswer } from "./knowledge.js";
 import { solveAdvanced, solveAdvancedFirst } from "./mathadvanced.js";
 import { solveScience, solveScienceFirst } from "./science.js";
+import { thirukkural } from "./thirukkural.js";
 import { algebra } from "./algebra.js";
 import { cleanMaths, solveEquations, solveNumbers } from "./mathsolve.js";
 import { solveWordProblems } from "./mathword.js";
@@ -345,6 +346,8 @@ export function localAnswer(question, { creator = false } = {}) {
   const solved =
     solveAdvancedFirst(m) || solveScienceFirst(question) || algebra(question) || solveEveryday(m) || solveHigherMaths(m) || solveEquations(m) || solveNumbers(m) || solveWordProblems(m) || solveAdvanced(m) || solveScience(question);
   if (solved) return solved;
+  const kural = thirukkural(question);
+  if (kural) return kural;
   for (const rule of RULES) {
     if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
   }

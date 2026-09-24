@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oracle GoldenGate Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b1220; color: #dbe4f0; font-family: system-ui, sans-serif; padding: 14px; }
+  h1 { font-size: 20px; margin: 0 0 4px; color: #f8b84e; }
+  .sub { color: #8aa0bb; font-size: 13px; margin-bottom: 14px; }
+  .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .stage { background: #14203a; border: 1px solid #243556; border-radius: 10px; padding: 10px; text-align: center; font-size: 13px; }
+  .stage b { display: block; font-size: 14px; margin-bottom: 4px; }
+  .stage .state { font-family: monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; display: inline-block; margin: 4px 0; }
+  .RUNNING { background: #14532d; color: #86efac; } .STOPPED { background: #3f3f46; color: #d4d4d8; } .ABENDED { background: #7f1d1d; color: #fecaca; }
+  .stage button { font-size: 12px; padding: 4px 8px; margin: 2px; border: 0; border-radius: 6px; cursor: pointer; background: #f8b84e; color: #0b1220; }
+  .trail { font-family: monospace; font-size: 12px; color: #93c5fd; }
+  .dbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .db { background: #111a2e; border: 1px solid #243556; border-radius: 12px; padding: 12px; }
+  .db h2 { font-size: 15px; margin: 0 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border-bottom: 1px solid #243556; padding: 5px; text-align: left; }
+  th { color: #8aa0bb; font-weight: 600; }
+  tr.flash { animation: flash 1s; }
+  @keyframes flash { from { background: #f8b84e55; } to { background: transparent; } }
+  .dml { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .dml input { width: 90px; padding: 6px; border-radius: 6px; border: 1px solid #243556; background: #0b1220; color: #dbe4f0; }
+  .dml button { padding: 6px 10px; border: 0; border-radius: 6px; cursor: pointer; background: #3b82f6; color: #fff; }
+  .console { margin-top: 14px; background: #000; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 13px; }
+  #out { height: 220px; overflow-y: auto; white-space: pre-wrap; color: #a7f3d0; }
+  .prompt { display: flex; gap: 6px; margin-top: 6px; }
+  .prompt span { color: #f8b84e; }
+  .prompt input { flex: 1; background: transparent; border: 0; color: #fff; font-family: monospace; font-size: 13px; outline: none; }
+  .help { color: #8aa0bb; font-size: 12px; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h1>🔁 Oracle GoldenGate Replication Simulator</h1>
+<div class="sub">Change rows in the source database and watch Extract → Data Pump → Replicat copy them to the target in real time.</div>
+
+<div class="pipeline" id="pipeline"></div>
+
+<div class="dbs">
+  <div class="db">
+    <h2>🟦 Source DB (ORCLSRC) · HR.EMP</h2>
+    <table id="srcTable"></table>
+    <div class="dml">
+      <input id="id" type="number" placeholder="ID">
+      <input id="name" placeholder="Name">
+      <input id="sal" type="number" placeholder="Salary">
+      <button id="ins">INSERT</button><button id="upd">UPDATE</button><button id="del">DELETE</button>
+    </div>
+  </div>
+  <div class="db">
+    <h2>🟩 Target DB (ORCLTGT) · HR.EMP</h2>
+    <table id="tgtTable"></table>
+    <div class="dml"><button id="breakIt" style="background:#b91c1c">Delete a row on the target only (make it out of sync)</button></div>
+  </div>
+</div>
+
+<div class="console">
+  <div id="out"></div>
+  <div class="prompt"><span>GGSCI (ogg-host) 1&gt;</span><input id="cmd" placeholder="type a command, e.g. INFO ALL" autocomplete="off"></div>
+</div>
+<div class="help">
+  Try: <b>INFO ALL</b> · <b>STOP REPLICAT REP1</b> (then change rows and see the lag grow) · <b>START REPLICAT REP1</b> ·
+  <b>STATS EXTRACT EXT1</b> · <b>LAG REPLICAT REP1</b> · <b>SEND EXTRACT EXT1, STATUS</b> · <b>HELP</b>.<br>
+  How it works: <b>Extract</b> reads committed changes from the source redo log and writes them to the local <b>trail</b> (./dirdat/lt).
+  The <b>Data Pump</b> sends the trail across the network to the remote trail (./dirdat/rt). <b>Replicat</b> applies the changes to the target.
+</div>
+
+<script>
+  // --- The two databases -------------------------------------------------------------
+  const source = new Map([[101, { name: "Asha", sal: 50000 }], [102, { name: "Ravi", sal: 42000 }], [103, { name: "Priya", sal: 61000 }]]);
+  const target = new Map([...source].map(([k, v]) => [k, { ...v }]));   // initial load already done
+  let scn = 1000;                     // system change number
+  const redo = [];                    // committed changes in the source redo log
+  const localTrail = [], remoteTrail = [];
+  let flashRows = new Set();
+
+  // --- The GoldenGate processes -----------------------------------------------------
+  const procs = {
+    EXT1: { type: "EXTRACT", status: "RUNNING", done: 0, stats: { INSERT: 0, UPDATE: 0, DELETE: 0 }, from: redo, to: localTrail, lagMs: 0 },
+    PMP1: { type: "EXTRACT (PUMP)", status: "RUNNING", done: 0, stats: { INSERT: 0, UPDATE: 0, DELETE: 0 }, from: localTrail, to: remoteTrail, lagMs: 0 },
+    REP1: { type: "REPLICAT", status: "RUNNING", done: 0, stats: { INSERT: 0, UPDATE: 0, DELETE: 0 }, from: remoteTrail, to: null, lagMs: 0 },
+  };
+  const out = document.getElementById("out");
+  const log = (text) => { out.textContent += text + "\n"; out.scrollTop = out.scrollHeight; };
+
+  function commit(op, id, row) {
+    scn++;
+    redo.push({ scn, op, id, row: row && { ...row }, at: Date.now() });
+    render();
+  }
+
+  // Replicat applies one change; a missing row is an error, like real GoldenGate (OGG-01403).
+  function apply(rec) {
+    if (rec.op === "INSERT") {
+      if (target.has(rec.id)) throw new Error(`OGG-00664 ORA-00001: unique constraint violated for ID ${rec.id}`);
+      target.set(rec.id, { ...rec.row });
+    } else if (rec.op === "UPDATE") {
+      if (!target.has(rec.id)) throw new Error(`OGG-01403 no data found: UPDATE for ID ${rec.id} has no row in the target`);
+      target.set(rec.id, { ...rec.row });
+    } else {
+      if (!target.has(rec.id)) throw new Error(`OGG-01403 no data found: DELETE for ID ${rec.id} has no row in the target`);
+      target.delete(rec.id);
+    }
+    flashRows.add(rec.id);
+  }
+
+  // Every half second each running process moves the next record along.
+  setInterval(() => {
+    for (const [name, p] of Object.entries(procs)) {
+      if (p.status !== "RUNNING") continue;
+      const rec = p.from[p.done];
+      if (!rec) { p.lagMs = 0; continue; }
+      try {
+        if (p.to) p.to.push(rec);
+        else apply(rec);
+        p.done++;
+        p.stats[rec.op]++;
+        p.lagMs = Date.now() - rec.at;
+      } catch (err) {
+        p.status = "ABENDED";
+        log(`ERROR ${name} abended: ${err.message}\nTo skip that change: START REPLICAT ${name} SKIPTRANSACTION`);
+      }
+    }
+    render();
+  }, 500);
+
+  // --- Screen -----------------------------------------------------------------------
+  function renderTable(el, db) {
+    el.innerHTML = "<tr><th>ID</th><th>NAME</th><th>SALARY</th></tr>";
+    [...db].sort((a, b) => a[0] - b[0]).forEach(([id, r]) => {
+      const tr = el.insertRow();
+      if (el.id === "tgtTable" && flashRows.has(id)) tr.className = "flash";
+      [id, r.name, r.sal].forEach((v) => (tr.insertCell().textContent = v));
+    });
+  }
+  function stage(name, label, trail) {
+    const p = procs[name];
+    const pending = p.from.length - p.done;
+    return `<div class="stage"><b>${label}</b>${name}<br><span class="state ${p.status}">${p.status}</span><br>
+      <span class="trail">${trail} · waiting: ${pending}</span><br>
+      <button onclick="run('START ${p.type.startsWith("REP") ? "REPLICAT" : "EXTRACT"} ${name}')">start</button>
+      <button onclick="run('STOP ${p.type.startsWith("REP") ? "REPLICAT" : "EXTRACT"} ${name}')">stop</button></div>`;
+  }
+  function render() {
+    document.getElementById("pipeline").innerHTML =
+      `<div class="stage"><b>Redo log</b>SCN ${scn}<br><span class="trail">${redo.length} committed changes</span></div>` +
+      stage("EXT1", "Extract", "→ ./dirdat/lt") + stage("PMP1", "Data Pump", "lt → ./dirdat/rt") + stage("REP1", "Replicat", "rt → target");
+    renderTable(document.getElementById("srcTable"), source);
+    renderTable(document.getElementById("tgtTable"), target);
+    flashRows = new Set();
+  }
+
+  // --- Changing the source (DML) ------------------------------------------------------
+  const val = (id) => document.getElementById(id).value.trim();
+  document.getElementById("ins").onclick = () => {
+    const id = Number(val("id"));
+    if (!id || source.has(id)) return log(`ORA-00001: unique constraint violated (ID ${id || "?"} exists or is empty)`);
+    source.set(id, { name: val("name") || "New", sal: Number(val("sal")) || 30000 });
+    log(`SQL> INSERT INTO hr.emp VALUES (${id}, '${source.get(id).name}', ${source.get(id).sal}); COMMIT;`);
+    commit("INSERT", id, source.get(id));
+  };
+  document.getElementById("upd").onclick = () => {
+    const id = Number(val("id"));
+    if (!source.has(id)) return log(`0 rows updated (no ID ${id || "?"})`);
+    const row = source.get(id);
+    if (val("name")) row.name = val("name");
+    if (val("sal")) row.sal = Number(val("sal"));
+    log(`SQL> UPDATE hr.emp SET name='${row.name}', salary=${row.sal} WHERE id=${id}; COMMIT;`);
+    commit("UPDATE", id, row);
+  };
+  document.getElementById("del").onclick = () => {
+    const id = Number(val("id"));
+    if (!source.delete(id)) return log(`0 rows deleted (no ID ${id || "?"})`);
+    log(`SQL> DELETE FROM hr.emp WHERE id=${id}; COMMIT;`);
+    commit("DELETE", id, null);
+  };
+
+  // Out of sync on purpose: the next UPDATE/DELETE of that row makes Replicat abend.
+  document.getElementById("breakIt").onclick = () => {
+    const id = [...target.keys()][0];
+    if (id === undefined) return log("The target table is empty.");
+    target.delete(id);
+    log(`SQL@target> DELETE FROM hr.emp WHERE id=${id}; -- done directly on the target, so it is now out of sync.\nNow UPDATE or DELETE ID ${id} on the source and watch Replicat.`);
+    render();
+  };
+
+  // --- GGSCI commands -----------------------------------------------------------------
+  function run(text) {
+    const cmd = text.trim().toUpperCase().replace(/\s+/g, " ");
+    log(`GGSCI> ${text}`);
+    let m;
+    if (cmd === "INFO ALL") {
+      log("Program     Status      Group       Lag at Chkpt  Time Since Chkpt\n\nMANAGER     RUNNING");
+      for (const [n, p] of Object.entries(procs)) {
+        const lag = new Date(p.lagMs).toISOString().substr(11, 8);
+        log(`${(p.type.startsWith("REP") ? "REPLICAT" : "EXTRACT").padEnd(12)}${p.status.padEnd(12)}${n.padEnd(12)}${lag}      00:00:0${Math.floor(Math.random() * 9)}`);
+      }
+    } else if ((m = cmd.match(/^(START|STOP) (EXTRACT|REPLICAT|EXT|REP) (\w+)( SKIPTRANSACTION)?$/))) {
+      const p = procs[m[3]];
+      if (!p) return log(`ERROR: Group ${m[3]} does not exist.`);
+      if (m[1] === "START") {
+        if (p.status === "RUNNING") return log(`${m[3]} is already running.`);
+        if (m[4] && p.from[p.done]) {
+          log(`Skipping transaction at SCN ${p.from[p.done].scn} (${p.from[p.done].op} ID ${p.from[p.done].id}).`);
+          p.done++;
+        }
+        p.status = "RUNNING";
+        log(`Sending START request to MANAGER ...\n${p.type.startsWith("REP") ? "REPLICAT" : "EXTRACT"} ${m[3]} starting`);
+      } else {
+        p.status = "STOPPED";
+        log(`Sending STOP request to ${m[3]} ...\nRequest processed.`);
+      }
+    } else if ((m = cmd.match(/^STATS (?:EXTRACT|REPLICAT|EXT|REP) (\w+)/))) {
+      const p = procs[m[1]];
+      if (!p) return log(`ERROR: Group ${m[1]} does not exist.`);
+      log(`Sending STATS request to ${m[1]} ...\n\n*** Total statistics since start ***\n  Total inserts   ${p.stats.INSERT}\n  Total updates   ${p.stats.UPDATE}\n  Total deletes   ${p.stats.DELETE}\n  Total operations ${p.stats.INSERT + p.stats.UPDATE + p.stats.DELETE}`);
+    } else if ((m = cmd.match(/^LAG (?:EXTRACT|REPLICAT|EXT|REP) (\w+)/))) {
+      const p = procs[m[1]];
+      if (!p) return log(`ERROR: Group ${m[1]} does not exist.`);
+      const pending = p.from.length - p.done;
+      log(pending ? `Last record lag: ${(p.lagMs / 1000).toFixed(1)} seconds.\n${pending} record(s) waiting in the trail.` : "At EOF, no more records to process.");
+    } else if ((m = cmd.match(/^SEND (?:EXTRACT|REPLICAT) (\w+), ?STATUS$/))) {
+      const p = procs[m[1]];
+      if (!p) return log(`ERROR: Group ${m[1]} does not exist.`);
+      log(`Sending STATUS request to ${m[1]} ...\n  Current status: ${p.status === "RUNNING" ? (p.from.length > p.done ? "Processing data" : "At EOF") : p.status}\n  Records processed: ${p.done}`);
+    } else if (cmd === "HELP") {
+      log("Commands: INFO ALL · START REPLICAT REP1 SKIPTRANSACTION · START|STOP EXTRACT EXT1 · START|STOP EXTRACT PMP1 · START|STOP REPLICAT REP1 · STATS EXTRACT EXT1 · LAG REPLICAT REP1 · SEND EXTRACT EXT1, STATUS · CLEAR");
+    } else if (cmd === "CLEAR") {
+      out.textContent = "";
+    } else {
+      log(`ERROR: Invalid command. Type HELP.`);
+    }
+    render();
+  }
+  window.run = run;
+  document.getElementById("cmd").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.value.trim()) { run(e.target.value); e.target.value = ""; }
+  });
+
+  log("Oracle GoldenGate Command Interpreter (simulator)\nManager, Extract EXT1, Pump PMP1 and Replicat REP1 are running. Type HELP.");
+  render();
+</script>
+</body>
+</html>

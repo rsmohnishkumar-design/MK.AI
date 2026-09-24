@@ -3,6 +3,7 @@
 // ready to run (▶ run), download or copy. No outside service is used.
 
 import { knowledgeAnswer } from "./kb.js";
+import { wikiAnswer, wikiFind } from "./wiki.js";
 
 const URL_APPS = new URL("../data/apps.json", import.meta.url);
 let apps = null;
@@ -69,7 +70,7 @@ function findApp(q, lang, strict) {
 }
 
 function listApps() {
-  const web = apps.filter((a) => a.lang === "html").map((a) => a.title);
+  const web = apps.filter((a) => a.lang === "html" && a.names.length).map((a) => a.title);
   const py = apps.filter((a) => a.lang === "python").map((a) => a.title.replace(/^Python /, ""));
   return [
     "🛠️ I can build these for you — complete and tested, ready to run:",
@@ -121,7 +122,7 @@ export async function appAnswer(question) {
   const lang = languageOf(q);
   const explicit = THING.test(q.replace(/\bcode\b/, "")) || /\b(in|using|with) (python|html|javascript|js)\b/.test(q);
   const app = findApp(q, lang, !explicit);
-  if (!app) return null;
+  if (!app) return BUILD.test(q) && explicit && !/^(what|who|why|when|where|which|is|are|does|explain|define)\b/.test(q) ? buildFromResearch(q) : null;
   // "calculator" alone is a thing to build only with a build word or "app/game/…"
   if (!BUILD.test(q) && !explicit) return null;
   // Questions *about* something ("what is a calculator") aren't build requests
@@ -134,4 +135,58 @@ export async function appAnswer(question) {
   else if (lang === "python" && app.lang !== "python") note = "I don't have a Python version of this one yet, so here it is as a web app.";
   else if (/\bandroid\b|\bmobile app\b|\bphone app\b|\biphone\b|\bios\b/.test(q)) note = "This web app works on Android and iPhone: open it in Chrome and choose “Add to Home screen” to use it like an installed app.";
   return present(app, note);
+}
+
+// --- No template? Research the subject and make a starter ------------------------------
+
+const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const titleCase = (t) => t.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
+// "create a app - oracle golden gate simulator" → "oracle golden gate simulator"
+export function subjectOf(q) {
+  return q
+    .replace(BUILD, " ")
+    .replace(/\b(a|an|the|me|my|own|for|please|pls|simple|small|basic|new|some|one|called|named|that|which|with|using|in|to|of|and)\b/g, " ")
+    .replace(/\b(html|css|javascript|js|python|web|mobile|android)\b/g, " ")
+    .replace(THING, " ")
+    .replace(/[^a-z0-9+#\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function buildFromResearch(q) {
+  // "write a program to find factorial" is a coding exercise, not an app
+  if (/\b(program|programme|code|function|script)s? (to|for|that|which)\b/.test(q)) return null;
+  if (await knowledgeAnswer(q).catch(() => null)) return null;
+  const subject = subjectOf(q);
+  if (!subject || subject.split(" ").length > 8) return null;
+  // What is it? The knowledge base first, then Wikipedia (without "simulator", "tracker"…)
+  const topic = subject.replace(/\b(simulator|simulation|tracker|manager|generator|viewer|maker|system|dashboard|tool|clone)\b/g, "").trim() || subject;
+  let about = null;
+  let source = null;
+  const known = await knowledgeAnswer(`what is ${topic}`).catch(() => null);
+  if (known) [about, source] = [known.answer, "my knowledge base"];
+  if (!about && typeof navigator !== "undefined" && navigator.onLine !== false) {
+    const wiki = (await wikiAnswer(`what is ${topic}`).catch(() => null)) || (await wikiFind(topic).catch(() => null));
+    if (wiki) [about, source] = [wiki.answer, "Wikipedia"];
+  }
+  const starter = apps.find((a) => a.id === "starter");
+  if (!starter) return null;
+  const title = titleCase(subject.replace(/[^a-z0-9 +#-]/g, "")).slice(0, 60);
+  const summary = about ? about.replace(/\s+/g, " ").match(/^(.{20,300}?[.!?])(\s|$)/)?.[1] || about.slice(0, 300) : `Your ${title} app.`;
+  const code = starter.code.replaceAll("{{TITLE}}", esc(title)).replaceAll("{{ABOUT}}", esc(summary));
+  const lines = [`🛠️ **${title}** — a starter app, made for you`, ""];
+  if (about) lines.push(`🔎 I looked it up (${source}):`, "", about.trim(), "");
+  else lines.push(`I couldn't find information about “${subject}” right now, so here's a starter you can shape.`, "");
+  lines.push(
+    "I don't have a ready-made template for this one yet, so here's a starter with a dashboard, an item list and an activity log, titled for your project:",
+    "",
+    "```html\n" + code + "```",
+    "",
+    "**Next steps:**",
+    "- Tap **▶ run** to try it, or **⬇ download** to save it.",
+    `- Tell me what it should do (for example “${title}: add a start/stop button”), and change the sections and the script to match.`,
+    '- Say "what apps can you make" to see the 33 complete apps I can build straight away.'
+  );
+  return lines.join("\n");
 }
