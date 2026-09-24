@@ -11,7 +11,7 @@ function normalize(text) {
   return text
     .toLowerCase()
     .replace(/[’']/g, "'")
-    .replace(/[^\p{L}\p{N}\s'+\-*/().,%^×÷]/gu, " ")
+    .replace(/[^\p{L}\p{N}\s'+\-*/().,%^×÷√∛]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -94,17 +94,49 @@ function evaluate(expr) {
   }
 }
 
+// Common misspellings, so "squre root of 16" still works instantly.
+const MATHS_TYPOS = [
+  [/\b(squre|sqaure|sqare|squar|sqaur|suare|squaer|squrae)\b/g, "square"],
+  [/\b(roote|rooot|rout)\b/g, "root"],
+  [/\b(cub|cueb|qube)\b/g, "cube"],
+  [/\b(percentage|percent|per cent|pct)\b/g, "%"],
+  [/\bsqrt\b|√/g, " square root of "],
+  [/\bcbrt\b|∛/g, " cube root of "],
+];
+const REQUEST = /^(please |pls |can you |could you |tell me |what'?s |what is |whats |calculate |compute |solve |find |how much is |the )+/;
+const N = "(-?\\d+(?:\\.\\d+)?)";
+
 function maths(q) {
-  let text = q.replace(/^(what'?s|what is|calculate|compute|solve|find|how much is)\s+/, "").replace(/[?=]+$/, "").trim();
+  let text = q;
+  for (const [re, word] of MATHS_TYPOS) text = text.replace(re, word);
+  text = text
+    .replace(/(\d),(?=\d)/g, "$1") // 1,00,000 → 100000
+    .replace(/[?=!]+$/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(REQUEST, "")
+    .replace(/\broot of ?\(\s*([^()]*?)\s*\)$/, "root of $1") // sqrt(2)
+    .replace(/\s+/g, " ")
+    .trim();
 
-  let m = text.match(/^(?:the\s+)?square root of\s+(\d+(?:\.\d+)?)$/);
-  if (m) return `The square root of ${m[1]} is ${formatNumber(Math.sqrt(Number(m[1])))}.`;
+  let m = text.match(new RegExp(`^square root (?:of )?${N}$`)) || text.match(new RegExp(`^root (?:of )?${N}$`));
+  if (m) {
+    const n = Number(m[1]);
+    if (n < 0) return `The square root of ${m[1]} isn't a real number (it's ${formatNumber(Math.sqrt(-n))}i).`;
+    return `The square root of ${m[1]} is ${formatNumber(Math.sqrt(n))}.`;
+  }
 
-  m = text.match(/^(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)$/);
+  m = text.match(new RegExp(`^cube root (?:of )?${N}$`));
+  if (m) return `The cube root of ${m[1]} is ${formatNumber(Math.cbrt(Number(m[1])))}.`;
+
+  m = text.match(new RegExp(`^${N}\\s*% (?:of )?${N}$`));
   if (m) return `${m[1]}% of ${m[2]} is ${formatNumber((Number(m[1]) / 100) * Number(m[2]))}.`;
 
-  m = text.match(/^(?:the\s+)?(square|cube) of\s+(\d+(?:\.\d+)?)$/);
-  if (m) return `The ${m[1]} of ${m[2]} is ${formatNumber(Math.pow(Number(m[2]), m[1] === "square" ? 2 : 3))}.`;
+  m = text.match(new RegExp(`^(square|cube) (?:of )?${N}$`)) || text.match(new RegExp(`^${N} (squared|cubed)$`));
+  if (m) {
+    const [kind, num] = /^-?\d/.test(m[1]) ? [m[2] === "squared" ? "square" : "cube", m[1]] : [m[1], m[2]];
+    return `The ${kind} of ${num} is ${formatNumber(Math.pow(Number(num), kind === "square" ? 2 : 3))}.`;
+  }
 
   for (const [re, op] of WORD_OPS) text = text.replace(re, ` ${op} `);
   text = text.replace(/,/g, "").replace(/\s+/g, " ").trim();
