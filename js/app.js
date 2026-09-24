@@ -25,6 +25,7 @@ import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSen
 import { askGemini, aiErrorMessage } from "./ai.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, looksLikeKnowledgeQuestion } from "./wiki.js";
+import * as creator from "./creator.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -155,6 +156,7 @@ if (configured) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       profile = null;
+      awaitingCode = false;
       stopSync();
       showAuth();
       return;
@@ -182,11 +184,13 @@ function hasAccess() {
   return profile.expiresAt.toMillis() > Date.now();
 }
 
+const isCreator = () => profile?.creator === true;
+
 function renderTier() {
   clearInterval(trialTimer);
 
   if (profile.tier === "unlimited") {
-    tierBadge.textContent = "unlimited";
+    tierBadge.textContent = isCreator() ? "👑 creator · unlimited" : "unlimited";
     tierBadge.className = "tier-badge unlimited";
     return;
   }
@@ -208,7 +212,7 @@ function renderTier() {
     }
     const h = Math.floor(msLeft / 3600000);
     const m = Math.floor((msLeft % 3600000) / 60000);
-    tierBadge.textContent = `trial · ${h}h ${m}m left`;
+    tierBadge.textContent = `${isCreator() ? "👑 creator · " : ""}trial · ${h}h ${m}m left`;
     tierBadge.className = "tier-badge trial";
   };
 
@@ -528,6 +532,7 @@ function renderChatList() {
 }
 
 function openChat(id) {
+  awaitingCode = false;
   store.currentId = id;
   saveChats();
   renderThread();
@@ -536,6 +541,7 @@ function openChat(id) {
 }
 
 function newChat() {
+  awaitingCode = false;
   store.currentId = null;
   saveChats();
   renderThread();
@@ -713,6 +719,20 @@ async function answer(question, onText) {
   const nothingSaved = Promise.resolve(null);
   const contextual = dependsOnContext(question, history);
 
+  if (creator.claimsCreator(question)) {
+    logActivity(question, "creator");
+    if (isCreator()) return { answer: creator.replies.already(), saved: nothingSaved };
+    if (creator.lockedMinutes()) return { answer: creator.replies.locked(), saved: nothingSaved };
+    awaitingCode = true;
+    return { answer: creator.replies.askCode(), saved: nothingSaved };
+  }
+  if (creator.asksForDetails(question)) {
+    if (!isCreator()) return { answer: creator.replies.detailsLocked(), saved: nothingSaved };
+    logActivity(question, "creator");
+    const report = await creator.detailsReport({ user: auth.currentUser, profile, chats: store.chats.length });
+    return { answer: report, saved: nothingSaved };
+  }
+
   // Memory lookup, capped so a slow connection never delays the instant replies.
   let memory = null;
   let knowledge = { good: [], bad: [] };
@@ -739,7 +759,7 @@ async function answer(question, onText) {
 
   if (memory && memory.collection === "vault") return fromMemory();
 
-  const own = localAnswer(question);
+  const own = localAnswer(question, { creator: isCreator() });
   if (own) {
     logActivity(question, "local");
     return { answer: own, saved: nothingSaved };
@@ -760,7 +780,7 @@ async function answer(question, onText) {
   }
 
   try {
-    const result = await askGemini(question, history, knowledge, onText);
+    const result = await askGemini(question, history, knowledge, onText, { creator: isCreator() });
     if (!result.answer) throw new Error("empty answer");
     logActivity(question, "ai");
     // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
@@ -781,6 +801,20 @@ async function answer(question, onText) {
       teachable: !contextual,
     };
   }
+}
+
+// After "I created you", the next short message is the secret code. It is
+// never shown, saved, logged or sent anywhere except to the security rules.
+let awaitingCode = false;
+
+async function checkCreatorCode(code) {
+  const outcome = await creator.verifyCode(auth.currentUser.uid, code);
+  if (outcome === "ok") {
+    profile = { ...profile, creator: true };
+    renderTier();
+  }
+  const text = outcome === "ok" ? creator.replies.welcome() : outcome === "wrong" ? creator.replies.wrong() : creator.replies.error();
+  return { answer: text, saved: Promise.resolve(null) };
 }
 
 // The waiting message changes if Gemini is slow, so it never looks frozen.
@@ -818,9 +852,15 @@ composer.addEventListener("submit", async (e) => {
   const chatId = store.currentId;
   const stillHere = () => store.currentId === chatId;
 
+  const waitingForCode = awaitingCode;
+  awaitingCode = false;
+  const cancelled = waitingForCode && creator.isCancel(question);
+  const isCode = waitingForCode && !cancelled && creator.looksLikeCode(question);
+  const shown = isCode ? "•".repeat(Math.min(question.length, 12)) : question;
+
   emptyState.classList.add("hidden");
-  addUserMessage(question);
-  record(chatId, { role: "user", text: question });
+  addUserMessage(shown);
+  record(chatId, { role: "user", text: shown });
   $("chatTitle").textContent = currentChat()?.title || "New chat";
   questionInput.value = "";
   fitQuestion();
@@ -842,15 +882,19 @@ composer.addEventListener("submit", async (e) => {
   };
 
   try {
-    const result = await answer(question, (text) => {
-      showBubble().setText(text);
-      scrollToBottom();
-    });
+    const result = isCode
+      ? await checkCreatorCode(question)
+      : cancelled
+        ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
+        : await answer(question, (text) => {
+            showBubble().setText(text);
+            scrollToBottom();
+          });
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
     if (result.credit) msg.setCredit(result.credit);
     if (result.teachable) msg.enableTeaching(question);
-    else if (stillHere()) remember(question, result.answer);
+    else if (stillHere() && !isCode) remember(question, result.answer);
     const saved = record(chatId, { role: "bot", text: result.answer, credit: result.credit || null, teachable: !!result.teachable });
     result.saved.then((entryId) => {
       if (!entryId) return;

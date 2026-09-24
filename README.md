@@ -63,10 +63,12 @@ MK.ai gets better the more it's used:
    location near you and start in **production mode**.
 2. Open the **Rules** tab and replace everything with the contents of
    [`firestore.rules`](firestore.rules). Before publishing, change the
-   two lines near the top:
+   three lines near the top:
    - `your-email@example.com` → your own email, in lowercase (this
      makes you the admin)
    - `change-this-code` → a secret access code for unlimited use
+   - `change-this-creator-code` → the creator's secret code (see
+     "Creator mode" below)
 3. Tap **Publish**.
 
 ### 4. Turn on the AI
@@ -143,6 +145,19 @@ using the admin email from step 3. That's it.
 - **Users** and **activity:** everyone's account and every question
   asked.
 
+## Creator mode
+
+Say **"I created you"** (or "I'm your creator") in the chat and MK.ai asks
+for the secret creator code. The code is checked by the database rules, so
+it never appears in the public code; what you type is hidden as dots and
+never saved or logged. Three wrong tries lock the check for 15 minutes on
+that device.
+
+Once verified, the account is marked as the creator on every device:
+MK.ai greets you by name (`CREATOR_NAME`), the badge shows 👑, and
+**"show your details"** gives a full report: what it has learned (and from
+where), curated answers, saved AI services, and your account.
+
 ## Chats
 
 Each person's chats are listed in the sidebar and saved in the database
@@ -159,6 +174,7 @@ vault shows them.
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Simple knowledge questions from Wikipedia |
+| `js/creator.js` | Creator mode: the secret-code check and the details report |
 | `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |
 | `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project (and App Check) |

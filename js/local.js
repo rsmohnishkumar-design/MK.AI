@@ -5,6 +5,7 @@
 import { CREATOR_NAME } from "../firebase-config.js";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+const boss = () => CREATOR_NAME.split(/\s+/)[0];
 
 function normalize(text) {
   return text
@@ -183,6 +184,12 @@ const JOKES = [
 const RULES = [
   {
     test: /^(hi+|hey+|hello+|hii+|helo|hai|hola|yo|sup|heyy+|good (morning|afternoon|evening)|greetings|vanakkam|namaste|namaskar)\b[\s!.]*(mk(\.?ai)?)?[\s!.]*$/,
+    creator: () =>
+      pick([
+        `${greetingForNow()}, ${boss()}! 👑 Welcome back. What shall we do today?`,
+        `Hello ${boss()}! 😊 Always happy to see my creator. How can I help?`,
+        `Hey ${boss()}! 👋 Your MK.ai is ready and waiting. What's on your mind?`,
+      ]),
     reply: () =>
       pick([
         `${greetingForNow()}! 👋 I'm MK.ai. What would you like to know?`,
@@ -193,6 +200,11 @@ const RULES = [
   },
   {
     test: /^(how are you|how r u|how are u|how's it going|how do you do|how you doing|what'?s up|wassup|how is it going)\b/,
+    creator: () =>
+      pick([
+        `I'm doing wonderful, ${boss()} — thanks to you for building me! 😊 How are you?`,
+        `All systems happy, ${boss()}! 👑 How's your day going?`,
+      ]),
     reply: () =>
       pick([
         "I'm doing great, thanks for asking! 😊 How about you?",
@@ -214,10 +226,12 @@ const RULES = [
   },
   {
     test: /^(thanks?|thank you|thank u|thx|ty|tq|thanks a lot|thank you so much|nandri|dhanyavad)\b/,
+    creator: () => pick([`Anything for you, ${boss()}! 😊`, `Always a pleasure, ${boss()}! 👑`]),
     reply: () => pick(["You're welcome! 😊", "Happy to help! Anything else?", "Anytime! 🙌"]),
   },
   {
     test: /^(bye+|goodbye|good night|see you|see ya|cya|gn|take care|tata)\b/,
+    creator: () => pick([`Bye ${boss()}! 👋 I'll keep learning while you're away.`, `Take care, ${boss()}! 👑 See you soon.`]),
     reply: () => pick(["Goodbye! 👋 Come back anytime.", "See you soon! Take care. 😊", "Bye! Have a great day! ☀️"]),
   },
   {
@@ -226,11 +240,14 @@ const RULES = [
   },
   {
     test: /^(who are you|what are you|what is your name|what'?s your name|your name|introduce yourself|tell me about yourself)\b/,
+    creator: () =>
+      `I'm MK.ai 🤖 — your creation, ${boss()}! I chat, answer questions, do maths and conversions, look things up, and learn from everything people teach me. Say "show your details" to see my full report.`,
     reply: () =>
       "I'm MK.ai 🤖 — a friendly assistant that learns from every conversation. I can chat, answer simple questions, do maths and conversions, tell the time, and look things up. If I don't know something, you can teach me!",
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
+    creator: () => `You did, ${boss()}! 😄 You created me — and I'm proud of it. 👑`,
     reply: () => `I was created by ${CREATOR_NAME}. 🛠️`,
   },
   {
@@ -257,20 +274,24 @@ const RULES = [
   },
   {
     test: /^(i love you|love you|you are (great|awesome|smart|good|nice|the best)|you'?re (great|awesome|smart|good|nice|the best)|good (job|bot))\b/,
+    creator: () => pick([`Thank you, ${boss()}! 💛 It means a lot coming from my creator.`, `Aww, ${boss()}! 😊 I learned from the best — you!`]),
     reply: () => pick(["Aww, thank you! 😊 You're awesome too!", "That made my day! 💛", "Thank you! I'm always learning to be better."]),
   },
   {
     test: /^(you are (bad|stupid|useless|dumb)|you'?re (bad|stupid|useless|dumb)|bad bot)\b/,
+    creator: () =>
+      `Sorry, ${boss()}! 😔 I'll do better. Tap 👎 on a bad answer or teach me the right one, and I'll learn from it.`,
     reply: () =>
       "Sorry I let you down. 😔 I'm still learning — tap 👎 on a bad answer, or teach me the right one, and I'll get better.",
   },
 ];
 
-export function localAnswer(question) {
+// creator: the person is the verified creator, so some replies are warmer.
+export function localAnswer(question, { creator = false } = {}) {
   const q = normalize(question);
   if (!q) return null;
   for (const rule of RULES) {
-    if (rule.test.test(q)) return rule.reply();
+    if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
   }
   return convert(q) || maths(q);
 }
