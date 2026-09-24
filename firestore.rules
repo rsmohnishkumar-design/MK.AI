@@ -6,14 +6,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===== EDIT THESE TWO LINES BEFORE PUBLISHING =====
+    // ===== EDIT THESE THREE LINES BEFORE PUBLISHING =====
     // Your email, in lowercase: the admin who can open the vault. Sign up in
     // MK.ai with this email before publishing, so nobody else can claim it
     // (Firebase never allows two accounts with the same email).
     function adminEmails() { return ['your-email@example.com']; }
     // The access code that unlocks unlimited use. Keep it secret.
     function unlimitedCode() { return 'change-this-code'; }
-    // ==================================================
+    // The creator's secret code: saying "I created you" in the chat asks for it.
+    function creatorCode() { return 'change-this-creator-code'; }
+    // ====================================================
 
     // Trial length: 3 hours (180 minutes) plus 5 minutes for clock differences.
     // Must match TRIAL_HOURS in firebase-config.js.
@@ -54,13 +56,19 @@ service cloud.firestore {
         );
 
       // People can only upgrade themselves, and only with the right code.
-      allow update: if isAdmin() || (
+      // The creator mark needs the creator code, even for the admin.
+      allow update: if (isAdmin() && !changed().hasAny(['creator', 'creatorCode'])) || (
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['tier', 'expiresAt', 'accessCode'])
         && resource.data.tier == 'trial'
         && incoming().tier == 'unlimited'
         && incoming().expiresAt == null
         && incoming().accessCode == unlimitedCode()
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['creator', 'creatorCode'])
+        && incoming().creator == true
+        && incoming().creatorCode == creatorCode()
       );
 
       allow delete: if isAdmin();

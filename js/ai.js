@@ -243,10 +243,15 @@ async function plan(question) {
   return available(attempts);
 }
 
+// Answers may be saved to the shared memory, so the creator gets a warmer tone
+// but no personal details in the answer itself.
+const CREATOR_NOTE =
+  "(The person asking is your creator. Be extra warm, kind and respectful, but keep the answer itself general: don't mention their name or that they created you unless they ask.)";
+
 // history: [{ role: "user" | "assistant", content }], oldest first, ending on "assistant".
 // onText(textSoFar) is called as the answer streams in.
-export async function askGemini(question, history, knowledge, onText = () => {}) {
-  const note = knowledgeNote(knowledge);
+export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false } = {}) {
+  const note = [creator ? CREATOR_NOTE : "", knowledgeNote(knowledge)].filter(Boolean).join("\n\n");
   const userText = note ? `${note}\n\nQuestion: ${question}` : question;
   const ctx = {
     contents: [
