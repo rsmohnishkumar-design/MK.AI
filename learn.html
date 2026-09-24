@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MK.ai Code School</title>
+<meta name="description" content="Learn the fundamentals of coding with MK.ai: 11 short lessons with code you can run, demos and quizzes." />
+<meta name="theme-color" content="#14181c" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f4f1;
+    --surface: #ffffff;
+    --surface-2: #eaece6;
+    --ink: #161a1f;
+    --muted: #59616b;
+    --line: #d6d9d2;
+    --accent: #8a6a0e;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(138, 106, 14, 0.12);
+    --code-bg: #171c22;
+    --code-head: #20272f;
+    --code-ink: #ece7dc;
+    --code-dim: #8e98a3;
+    --code-key: #e0b84a;
+    --code-str: #9fcfae;
+    --code-com: #7c8792;
+    --good: #2f7350;
+    --good-soft: rgba(47, 115, 80, 0.12);
+    --bad: #ab4628;
+    --bad-soft: rgba(171, 70, 40, 0.1);
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #14181c;
+      --surface: #1b2127;
+      --surface-2: #232b33;
+      --ink: #ede9e0;
+      --muted: #a4acb6;
+      --line: #313b46;
+      --accent: #d4ad33;
+      --accent-ink: #14181c;
+      --accent-soft: rgba(212, 173, 51, 0.14);
+      --code-bg: #0f1317;
+      --code-head: #181e24;
+      --good: #8cc3a1;
+      --good-soft: rgba(140, 195, 161, 0.12);
+      --bad: #e38c6c;
+      --bad-soft: rgba(227, 140, 108, 0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #14181c;
+    --surface: #1b2127;
+    --surface-2: #232b33;
+    --ink: #ede9e0;
+    --muted: #a4acb6;
+    --line: #313b46;
+    --accent: #d4ad33;
+    --accent-ink: #14181c;
+    --accent-soft: rgba(212, 173, 51, 0.14);
+    --code-bg: #0f1317;
+    --code-head: #181e24;
+    --good: #8cc3a1;
+    --good-soft: rgba(140, 195, 161, 0.12);
+    --bad: #e38c6c;
+    --bad-soft: rgba(227, 140, 108, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  img { max-width: 100%; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    padding-inline: 16px;
+  }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---------- layout ---------- */
+  .shell {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 48px;
+    padding-block: 40px 80px;
+  }
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 20px 60px; }
+  }
+
+  /* ---------- sidebar / progress ---------- */
+  .rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .brand svg { width: 38px; height: 38px; flex-shrink: 0; }
+  .brand b { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.1; }
+  .brand span { display: block; font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: 0.04em; }
+  .progress { margin-bottom: 18px; }
+  .progress-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+  .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .toc a {
+    display: grid; grid-template-columns: 26px 1fr 16px; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: 8px; text-decoration: none; color: var(--muted); font-size: 14px; line-height: 1.3;
+  }
+  .toc a .n { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .toc a .tick { color: var(--good); font-size: 13px; visibility: hidden; }
+  .toc a.done .tick { visibility: visible; }
+  .toc a:hover { background: var(--surface-2); color: var(--ink); }
+  .toc a.active { background: var(--accent-soft); color: var(--ink); }
+  .toc a.active .n { color: var(--accent); }
+
+  @media (max-width: 860px) {
+    .rail { position: static; }
+    .brand { margin-bottom: 14px; }
+    .toc { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 8px; scrollbar-width: thin; }
+    .toc a { grid-template-columns: auto auto; white-space: nowrap; border: 1px solid var(--line); padding: 6px 12px; }
+    .toc a .tick { display: none; }
+    .toc a.done { border-color: var(--good); }
+  }
+
+  /* ---------- content ---------- */
+  main { min-width: 0; }
+  .intro { padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+  h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5vw, 48px); line-height: 1.08; margin: 0 0 14px; text-wrap: balance; letter-spacing: -0.01em; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 62ch; margin: 0; }
+  .howto { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .howto span::before { content: "▸ "; color: var(--accent); }
+
+  section.lesson { padding-block: 44px 8px; scroll-margin-top: 16px; }
+  .lesson-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .lesson-num { font-family: var(--mono); font-size: 13px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: clamp(26px, 3.4vw, 32px); line-height: 1.15; margin: 0; text-wrap: balance; }
+  h3 { font-size: 17px; font-weight: 600; margin: 26px 0 6px; }
+  p, li { max-width: 68ch; }
+  .lesson > p:first-of-type { font-size: 17px; }
+  code.i { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 5px; }
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; max-width: 68ch; }
+  .note b { color: var(--accent); }
+
+  /* table */
+  .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; background: var(--surface-2); }
+  tr:last-child td { border-bottom: 0; }
+
+  /* code blocks */
+  .code { background: var(--code-bg); border-radius: 10px; margin: 14px 0; overflow: hidden; border: 1px solid var(--line); }
+  .code-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 12px; background: var(--code-head); font-family: var(--mono); font-size: 12px; color: var(--code-dim); }
+  .code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.6; color: var(--code-ink); tab-size: 2; }
+  .code .k { color: var(--code-key); }
+  .code .s { color: var(--code-str); }
+  .code .c { color: var(--code-com); font-style: italic; }
+  .code .hl { background: rgba(212, 173, 51, 0.22); box-shadow: -16px 0 0 rgba(212, 173, 51, 0.22), 16px 0 0 rgba(212, 173, 51, 0.22); border-radius: 2px; }
+  .copy { background: transparent; border: 1px solid #3a4550; color: var(--code-dim); font: 12px var(--mono); padding: 2px 10px; border-radius: 6px; cursor: pointer; }
+  .copy:hover { color: var(--code-key); border-color: var(--code-key); }
+
+  /* runner */
+  .runner { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 18px 0; background: var(--code-bg); }
+  .runner-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: var(--code-head); font: 12px var(--mono); color: var(--code-dim); }
+  .runner textarea {
+    display: block; width: 100%; min-height: 120px; resize: vertical; border: 0; outline: 0;
+    background: var(--code-bg); color: var(--code-ink); font: 14px/1.6 var(--mono); padding: 14px 16px; tab-size: 2; white-space: pre; overflow-x: auto;
+  }
+  .runner textarea:focus-visible { box-shadow: inset 0 0 0 2px var(--code-key); }
+  .runner .out { border-top: 1px dashed #34404b; padding: 12px 16px; font: 14px/1.6 var(--mono); color: var(--code-str); white-space: pre-wrap; min-height: 46px; overflow-wrap: anywhere; }
+  .runner .out.err { color: #f0a58a; }
+  .runner .out:empty::before { content: "Output appears here after you press Run."; color: var(--code-dim); }
+  .btn {
+    font: 500 14px var(--body); border-radius: 8px; padding: 7px 16px; cursor: pointer; border: 1px solid transparent;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .runner .btn.ghost { border-color: #3a4550; color: var(--code-ink); }
+  .btns { display: flex; gap: 8px; }
+
+  /* demo panels */
+  .demo { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 18px; margin: 18px 0; }
+  .demo-label { font: 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+  .field { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+  .field input[type="text"], .field input[type="number"], .demo input.big {
+    font: 15px var(--body); padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; margin-bottom: 14px; }
+  .controls .field { flex: 1 1 150px; }
+  input[type="range"] { accent-color: var(--accent); width: 100%; }
+  input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 3px; }
+
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 720px) { .trio { grid-template-columns: minmax(0, 1fr); } }
+  .trio .code { margin: 0; }
+  .trio .code pre { font-size: 13px; min-height: 96px; }
+  .preview { border: 1px dashed var(--line); border-radius: 10px; display: grid; place-items: center; min-height: 128px; background: var(--bg); }
+  .preview button { font: 600 15px var(--body); padding: 10px 22px; border: 0; cursor: pointer; transition: transform 0.1s; }
+  .preview button:active { transform: scale(0.96); }
+  .pane-title { font: 12px var(--mono); color: var(--muted); margin-bottom: 6px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .pill { font: 12px var(--mono); padding: 3px 10px; border-radius: 20px; background: var(--surface-2); color: var(--muted); }
+  .result-line { font: 15px var(--mono); padding: 10px 14px; border-radius: 8px; background: var(--surface-2); margin-top: 12px; overflow-wrap: anywhere; }
+
+  /* pipeline */
+  .pipe { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; counter-reset: step; }
+  .pipe li {
+    counter-increment: step; display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+    padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); max-width: none; transition: background 0.25s, border-color 0.25s, opacity 0.25s;
+  }
+  .pipe li::before { content: counter(step); font: 600 13px var(--mono); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--surface-2); color: var(--muted); }
+  .pipe li b { display: block; font-size: 15px; }
+  .pipe li small { color: var(--muted); font-size: 13px; }
+  .pipe li .verdict { font: 12px var(--mono); color: var(--muted); }
+  .pipe li.skip { opacity: 0.5; }
+  .pipe li.skip .verdict { color: var(--muted); }
+  .pipe li.hit { border-color: var(--good); background: var(--good-soft); opacity: 1; }
+  .pipe li.hit::before { background: var(--good); color: var(--surface); }
+  .pipe li.hit .verdict { color: var(--good); font-weight: 500; }
+
+  /* architecture diagram */
+  .arch { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); gap: 12px; align-items: stretch; margin: 18px 0; }
+  .box { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+  .box h4 { margin: 0 0 4px; font-family: var(--display); font-size: 18px; font-weight: 600; }
+  .box p { margin: 0; font-size: 14px; color: var(--muted); }
+  .box ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+  .wire { display: grid; align-content: center; gap: 10px; font: 12px var(--mono); color: var(--muted); text-align: center; }
+  .wire div { border-top: 1px dashed var(--accent); padding-top: 4px; }
+  @media (max-width: 720px) { .arch { grid-template-columns: minmax(0, 1fr); } .wire { grid-auto-flow: column; } }
+
+  /* git graph */
+  .git { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px; }
+  .git svg { display: block; min-width: 560px; width: 100%; height: auto; }
+  .git text { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+  .git .lbl { fill: var(--ink); font-weight: 500; }
+
+  /* quiz */
+  .quiz { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--surface); margin: 26px 0 10px; }
+  .quiz .q { font-weight: 600; margin: 0 0 12px; }
+  .quiz .opts { display: grid; gap: 8px; }
+  .quiz button.opt {
+    text-align: left; font: 15px var(--body); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); cursor: pointer;
+  }
+  .quiz button.opt:hover { border-color: var(--accent); }
+  .quiz button.opt.right { border-color: var(--good); background: var(--good-soft); }
+  .quiz button.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+  .quiz .fb { margin: 10px 0 0; font-size: 14px; min-height: 1.4em; }
+  .quiz .fb.right { color: var(--good); }
+  .quiz .fb.wrong { color: var(--bad); }
+
+  .done-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .done-row input { width: 18px; height: 18px; accent-color: var(--good); }
+
+  .path { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 10px; }
+  .path li { display: grid; grid-template-columns: 108px 1fr; gap: 14px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); max-width: none; }
+  .path li span { font: 13px var(--mono); color: var(--accent); }
+  @media (max-width: 520px) { .path li { grid-template-columns: 1fr; gap: 2px; } }
+
+  .checklist { list-style: none; padding: 0; display: grid; gap: 8px; }
+  .checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .checklist input { margin-top: 5px; width: 17px; height: 17px; accent-color: var(--good); flex-shrink: 0; }
+
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); text-decoration: none; margin-bottom: 18px; }
+  .back:hover { color: var(--accent); }
+  .sync { font-size: 13px; color: var(--muted); margin: 10px 0 18px; line-height: 1.45; }
+  .sync.on { color: var(--good); }
+  .sync a { color: var(--accent); }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <a class="back" href="./">← Back to MK.ai chat</a>
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.6"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+      <div><b>Code School</b><span>by MK.ai</span></div>
+    </div>
+    <div class="progress">
+      <div class="progress-label"><span>Your progress</span><span id="progText">0 / 11</span></div>
+      <div class="bar"><i id="progBar"></i></div>
+      <p class="sync" id="syncStatus" aria-live="polite">Progress is saved in this browser.</p>
+    </div>
+    <ul class="toc" id="toc"></ul>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <p class="eyebrow">Lesson plan · 11 short lessons</p>
+      <h1>How coding works, explained with MK.ai</h1>
+      <p class="lede">Every idea here is shown using MK.ai itself: its chat box, its brain and its database. Edit the code on this page, press Run, and see what happens. You can't break anything.</p>
+      <div class="howto"><span>Read a lesson</span><span>Play with the demo</span><span>Answer the quiz</span><span>Tick "I finished this"</span></div>
+    </header>
+
+    <!-- 1 -->
+    <section class="lesson" id="what" data-title="What code is">
+      <div class="lesson-head"><span class="lesson-num">01</span><h2>What code is</h2></div>
+      <p>Code is a list of exact instructions for a computer. A computer is extremely fast, but it has no common sense. It does exactly what you write, in order, and nothing else.</p>
+      <p>The simplest instruction inside MK.ai reads like this in plain English:</p>
+      <div class="note">When someone types <b>hi</b>, reply <b>Hello!</b></div>
+      <p>Coding is writing sentences like that in a language the computer understands, called a <em>programming language</em>. MK.ai is written in <b>JavaScript</b>, the language every web browser can run. Python, Java and C are other languages; they use the same ideas with different spelling.</p>
+      <h3>Three things every program does</h3>
+      <ul>
+        <li><b>Input:</b> it receives something (your message).</li>
+        <li><b>Processing:</b> it follows its instructions (checks if it's a greeting, does the maths).</li>
+        <li><b>Output:</b> it shows a result (the reply bubble).</li>
+      </ul>
+      <div class="quiz" data-answer="1">
+        <p class="q">A computer gets an instruction with a spelling mistake in it. What happens?</p>
+        <div class="opts">
+          <button class="opt" type="button">It guesses what you meant and carries on</button>
+          <button class="opt" type="button">It stops or does the wrong thing, because it follows instructions exactly</button>
+          <button class="opt" type="button">It asks Google for help</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="what"> I finished this lesson</label>
+    </section>
+
+    <!-- 2 -->
+    <section class="lesson" id="trio" data-title="HTML, CSS, JavaScript">
+      <div class="lesson-head"><span class="lesson-num">02</span><h2>HTML, CSS and JavaScript</h2></div>
+      <p>Every website, including MK.ai, is built from three languages that each do one job.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Language</th><th>Its job</th><th>Like a house</th><th>In MK.ai</th></tr></thead>
+          <tbody>
+            <tr><td><b>HTML</b></td><td>What is on the page</td><td>Walls and rooms</td><td><code class="i">index.html</code>: chat box, send button, sidebar</td></tr>
+            <tr><td><b>CSS</b></td><td>How it looks</td><td>Paint and furniture</td><td><code class="i">style.css</code>: dark colours, gold logo, rounded boxes</td></tr>
+            <tr><td><b>JavaScript</b></td><td>What it does</td><td>Electricity and plumbing</td><td><code class="i">js/app.js</code>: sending messages, getting answers</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="demo">
+        <p class="demo-label">Try it: build MK.ai's send button</p>
+        <div class="controls">
+          <label class="field">Button text (HTML)<input type="text" id="btnText" value="Send" maxlength="24"></label>
+          <label class="field">Colour (CSS)<input type="color" id="btnColor" value="#c9a227"></label>
+          <label class="field">Roundness (CSS): <span id="btnRoundVal">10</span>px<input type="range" id="btnRound" min="0" max="30" value="10"></label>
+        </div>
+        <div class="trio">
+          <div><div class="pane-title">HTML: what it is</div><div class="code"><pre id="trioHtml"></pre></div></div>
+          <div><div class="pane-title">CSS: how it looks</div><div class="code"><pre id="trioCss"></pre></div></div>
+          <div><div class="pane-title">JavaScript: what it does</div><div class="code"><pre id="trioJs"></pre></div></div>
+        </div>
+        <div style="margin-top:12px"><div class="pane-title">The result (click it)</div><div class="preview"><button type="button" id="trioBtn">Send</button></div></div>
+        <div class="result-line" id="trioOut">The button hasn't been clicked yet.</div>
+      </div>
+      <div class="quiz" data-answer="2">
+        <p class="q">You want MK.ai's send button to be blue instead of gold. Which file do you change?</p>
+        <div class="opts">
+          <button class="opt" type="button">index.html (HTML)</button>
+          <button class="opt" type="button">js/app.js (JavaScript)</button>
+          <button class="opt" type="button">style.css (CSS)</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="trio"> I finished this lesson</label>
+    </section>
+
+    <!-- 3 -->
+    <section class="lesson" id="vars" data-title="Variables and data">
+      <div class="lesson-head"><span class="lesson-num">03</span><h2>Variables and kinds of data</h2></div>
+      <p>A <b>variable</b> is a labelled box that holds a piece of information. You create one with <code class="i">let</code>, give it a name, and put something in it with <code class="i">=</code>.</p>
+      <div class="code"><div class="code-top">javascript</div><pre><span class="k">let</span> name = <span class="s">"Mohnishkumar"</span>;
+<span class="k">let</span> age = 20;
+<span class="k">let</span> isCreator = <span class="k">true</span>;</pre></div>
+      <h3>The kinds of data</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Kind</th><th>Example</th><th>Used in MK.ai for</th></tr></thead>
+          <tbody>
+            <tr><td>String (text)</td><td><code class="i">"hello"</code></td><td>Your message, the reply</td></tr>
+            <tr><td>Number</td><td><code class="i">42</code>, <code class="i">3.14</code></td><td>Maths, trial hours left</td></tr>
+            <tr><td>Boolean (yes/no)</td><td><code class="i">true</code>, <code class="i">false</code></td><td>Are you the creator? Is the sidebar open?</td></tr>
+            <tr><td>Array (list)</td><td><code class="i">["hi", "hello"]</code></td><td>The list of your chats</td></tr>
+            <tr><td>Object (labelled facts)</td><td><code class="i">{ role: "user", text: "hi" }</code></td><td>Each message in a chat</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code class="i">console.log(...)</code> prints something so you can see it. Change the code below and press <b>Run</b>.</p>
+      <div class="runner" data-runner>
+        <div class="runner-top"><span>edit me · javascript</span><div class="btns"><button class="btn ghost" type="button" data-reset>Reset</button><button class="btn" type="button" data-run>Run ▸</button></div></div>
+        <textarea wrap="off" spellcheck="false" aria-label="Code to run">let name = "Mohnishkumar";
+let chats = ["maths help", "python game", "hello"];
+let message = { role: "user", text: "hi" };
+
+console.log("Hello " + name);
+console.log("You have " + chats.length + " chats");
+console.log("First chat: " + chats[0]);
+console.log("Message says: " + message.text);</textarea>
+        <div class="out" aria-live="polite"></div>
+      </div>
+      <div class="note"><b>Notice:</b> lists start counting at 0, so <code class="i">chats[0]</code> is the first item. Almost every programming language does this.</div>
+      <div class="quiz" data-answer="0">
+        <p class="q">Which kind of data is <code class="i">true</code>?</p>
+        <div class="opts">
+          <button class="opt" type="button">Boolean (yes/no)</button>
+          <button class="opt" type="button">String (text)</button>
+          <button class="opt" type="button">Number</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="vars"> I finished this lesson</label>
+    </section>
+
+    <!-- 4 -->
+    <section class="lesson" id="if" data-title="If / else: decisions">
+      <div class="lesson-head"><span class="lesson-num">04</span><h2>If / else: making decisions</h2></div>
+      <p>Programs choose what to do with <code class="i">if</code>. The computer checks a condition; if it's true, it runs that block, otherwise it moves on to the next check. MK.ai's own brain is mostly a long chain of these.</p>
+      <div class="demo">
+        <p class="demo-label">Try it: be MK.ai's brain</p>
+        <label class="field">Type a message (try: hi, bye, 5 + 5, pizza)<input class="big" type="text" id="ifInput" value="hi" autocomplete="off"></label>
+        <div class="code" style="margin-top:12px"><div class="code-top">which line runs? It lights up.</div><pre id="ifCode"></pre></div>
+        <div class="result-line" id="ifOut"></div>
+      </div>
+      <p><code class="i">===</code> means "is exactly equal to". A single <code class="i">=</code> puts a value into a box; three of them compare two values. Mixing them up is one of the most common beginner mistakes.</p>
+      <div class="quiz" data-answer="1">
+        <p class="q">Type <b>Bye</b> with a capital B in the demo. Why does MK.ai still reply "Goodbye!"?</p>
+        <div class="opts">
+          <button class="opt" type="button">Computers ignore capital letters anyway</button>
+          <button class="opt" type="button">The first line turns the message into lowercase before checking</button>
+          <button class="opt" type="button">It was luck</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="if"> I finished this lesson</label>
+    </section>
+
+    <!-- 5 -->
+    <section class="lesson" id="loops" data-title="Loops: repeating">
+      <div class="lesson-head"><span class="lesson-num">05</span><h2>Loops: doing something many times</h2></div>
+      <p>A <b>loop</b> repeats a block of code. When you open an old chat, MK.ai loops through every saved message and draws each one on the screen. It doesn't matter if there are 3 messages or 100: the same few lines of code handle them all.</p>
+      <div class="demo">
+        <p class="demo-label">Try it: how many messages?</p>
+        <label class="field">Messages in the chat: <b id="loopN">4</b><input type="range" id="loopRange" min="1" max="12" value="4"></label>
+        <div class="code" style="margin-top:12px"><div class="code-top">javascript</div><pre><span class="k">for</span> (<span class="k">let</span> i = 1; i &lt;= <span id="loopNCode">4</span>; i++) {
+  drawMessage(i);   <span class="c">// runs once for each message</span>
+}</pre></div>
+        <div class="result-line" id="loopOut"></div>
+      </div>
+      <p>Read the loop like this: start <code class="i">i</code> at 1; keep going while <code class="i">i</code> is at most N; after each round add 1 (<code class="i">i++</code>).</p>
+      <div class="runner" data-runner>
+        <div class="runner-top"><span>edit me · javascript</span><div class="btns"><button class="btn ghost" type="button" data-reset>Reset</button><button class="btn" type="button" data-run>Run ▸</button></div></div>
+        <textarea wrap="off" spellcheck="false" aria-label="Code to run">// The 7 times table
+for (let i = 1; i <= 10; i++) {
+  console.log("7 × " + i + " = " + (7 * i));
+}
+
+// Looping through a list
+let chats = ["maths help", "python game", "hello"];
+for (let chat of chats) {
+  console.log("Chat: " + chat);
+}</textarea>
+        <div class="out" aria-live="polite"></div>
+      </div>
+      <div class="quiz" data-answer="2">
+        <p class="q">A loop is written <code class="i">for (let i = 1; i &lt;= 3; i++)</code>. How many times does it run?</p>
+        <div class="opts">
+          <button class="opt" type="button">1</button>
+          <button class="opt" type="button">2</button>
+          <button class="opt" type="button">3</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="loops"> I finished this lesson</label>
+    </section>
+
+    <!-- 6 -->
+    <section class="lesson" id="functions" data-title="Functions: recipes">
+      <div class="lesson-head"><span class="lesson-num">06</span><h2>Functions: reusable recipes</h2></div>
+      <p>A <b>function</b> is a named recipe. Something goes in (the <em>inputs</em>, or parameters), the recipe runs, and something comes out (<code class="i">return</code>). You write it once and use it as often as you like.</p>
+      <p>MK.ai's brain is a function called <code class="i">localAnswer(question)</code>: a question goes in and either a reply or "I don't know" comes out.</p>
+      <div class="demo">
+        <p class="demo-label">Try it: a function machine</p>
+        <div class="controls">
+          <label class="field">Input number<input type="number" id="fnIn" value="16"></label>
+          <label class="field">Recipe
+            <select id="fnPick" style="font:15px var(--body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">
+              <option value="double">double(n)</option>
+              <option value="square">square(n)</option>
+              <option value="squareRoot" selected>squareRoot(n)</option>
+            </select>
+          </label>
+        </div>
+        <div class="code"><div class="code-top">javascript</div><pre id="fnCode"></pre></div>
+        <div class="result-line" id="fnOut"></div>
+      </div>
+      <div class="runner" data-runner>
+        <div class="runner-top"><span>edit me · javascript</span><div class="btns"><button class="btn ghost" type="button" data-reset>Reset</button><button class="btn" type="button" data-run>Run ▸</button></div></div>
+        <textarea wrap="off" spellcheck="false" aria-label="Code to run">function greet(name) {
+  return "Good morning, " + name + "! 👑";
+}
+
+function areaOfRectangle(width, height) {
+  return width * height;
+}
+
+console.log(greet("Mohnishkumar"));
+console.log(greet("Priya"));
+console.log("Area: " + areaOfRectangle(5, 3));</textarea>
+        <div class="out" aria-live="polite"></div>
+      </div>
+      <div class="quiz" data-answer="0">
+        <p class="q">What does <code class="i">return</code> do inside a function?</p>
+        <div class="opts">
+          <button class="opt" type="button">Hands the result back to whoever used the function</button>
+          <button class="opt" type="button">Restarts the function from the top</button>
+          <button class="opt" type="button">Prints the result on the screen</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="functions"> I finished this lesson</label>
+    </section>
+
+    <!-- 7 -->
+    <section class="lesson" id="events" data-title="Events: reacting">
+      <div class="lesson-head"><span class="lesson-num">07</span><h2>Events: reacting to people</h2></div>
+      <p>Most of the time a web page is just waiting. An <b>event</b> is something that happens: a click, a key press, the page finishing loading. You tell the page "when this event happens, run this function". That's called an <em>event listener</em>.</p>
+      <div class="code"><div class="code-top">from MK.ai's js/app.js (simplified)</div><pre>sendBtn.<span class="k">addEventListener</span>(<span class="s">"click"</span>, () => {
+  sendMessage();
+});
+
+question.<span class="k">addEventListener</span>(<span class="s">"keydown"</span>, (e) => {
+  <span class="k">if</span> (e.key === <span class="s">"Enter"</span> && !e.shiftKey) sendMessage();   <span class="c">// Enter sends, Shift+Enter adds a line</span>
+});</pre></div>
+      <div class="demo">
+        <p class="demo-label">Try it: events happening live</p>
+        <div class="row">
+          <button class="btn" type="button" id="evBtn">Click me</button>
+          <input class="big" type="text" id="evInput" placeholder="type here, then press Enter" style="flex:1 1 220px" autocomplete="off">
+        </div>
+        <div class="result-line" id="evLog">Nothing has happened yet.</div>
+      </div>
+      <div class="quiz" data-answer="1">
+        <p class="q">MK.ai's "tap the logo 7 times to open the vault" trick uses which idea?</p>
+        <div class="opts">
+          <button class="opt" type="button">A variable only</button>
+          <button class="opt" type="button">A click event plus a variable that counts the clicks</button>
+          <button class="opt" type="button">The database</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="events"> I finished this lesson</label>
+    </section>
+
+    <!-- 8 -->
+    <section class="lesson" id="mkai" data-title="How MK.ai answers">
+      <div class="lesson-head"><span class="lesson-num">08</span><h2>How MK.ai answers a question</h2></div>
+      <p>Now put it together. When you press Enter, an <b>event</b> fires, a <b>function</b> reads your message from a <b>variable</b>, and a chain of <b>if</b> checks decides who answers. It tries the fastest, free options first and falls back to the next one. Programmers call this a <em>pipeline</em>.</p>
+      <div class="demo">
+        <p class="demo-label">Try it: which step answers?</p>
+        <input class="big" type="text" id="pipeInput" value="squre root of 16" autocomplete="off" aria-label="Question for the pipeline">
+        <div class="row" style="margin-top:10px" id="pipeSamples"></div>
+        <ol class="pipe" id="pipe">
+          <li data-step="vault"><div><b>Curated answers</b><small>Answers the admin wrote in the vault</small></div><span></span><span class="verdict"></span></li>
+          <li data-step="brain"><div><b>Own brain</b> <small>(js/local.js)</small><br><small>Greetings, maths, conversions, time, jokes</small></div><span></span><span class="verdict"></span></li>
+          <li data-step="memory"><div><b>Memory</b><small> Anything learned or taught before</small></div><span></span><span class="verdict"></span></li>
+          <li data-step="wiki"><div><b>Wikipedia</b><small> "What is / who is" questions</small></div><span></span><span class="verdict"></span></li>
+          <li data-step="ai"><div><b>Outside AI</b><small> Groq, Gemini… the answer gets saved to memory</small></div><span></span><span class="verdict"></span></li>
+          <li data-step="teach"><div><b>"Teach me"</b><small> If nothing knows, you type the answer</small></div><span></span><span class="verdict"></span></li>
+        </ol>
+        <div class="result-line" id="pipeWhy"></div>
+        <p style="font-size:13px;color:var(--muted);margin:10px 0 0">This is a simplified copy for learning. The real rules live in <code class="i">js/app.js</code> and <code class="i">js/local.js</code>.</p>
+      </div>
+      <p><a href="./">Try it for real: ask MK.ai →</a></p>
+      <div class="note"><b>Why this order?</b> The first steps run on your device instantly and cost nothing. Outside AI is slow and has a daily free limit, so it comes last, and whatever it answers is saved so the next person gets it instantly from memory.</div>
+      <div class="quiz" data-answer="0">
+        <p class="q">Someone asks MK.ai a brand-new question and the outside AI answers it. What happens when a second person asks the same question?</p>
+        <div class="opts">
+          <button class="opt" type="button">It comes from memory, instantly and free</button>
+          <button class="opt" type="button">The outside AI is asked again</button>
+          <button class="opt" type="button">MK.ai says it doesn't know</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="mkai"> I finished this lesson</label>
+    </section>
+
+    <!-- 9 -->
+    <section class="lesson" id="stack" data-title="Front end and database">
+      <div class="lesson-head"><span class="lesson-num">09</span><h2>Front end, hosting and the database</h2></div>
+      <p>MK.ai has parts that run in different places.</p>
+      <div class="arch">
+        <div class="box"><h4>Front end</h4><p>Runs in your browser, on your phone or laptop.</p><ul><li>HTML, CSS, JavaScript</li><li>Everything in your GitHub repo</li><li>Anyone can read this code</li></ul></div>
+        <div class="wire"><div>save this chat →</div><div>← here are your chats</div></div>
+        <div class="box"><h4>Database</h4><p>Firestore, on Google's computers.</p><ul><li>Users, chats, learned answers</li><li>Survives refresh, syncs devices</li><li>Guarded by security rules</li></ul></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Part</th><th>What it does</th><th>MK.ai uses</th></tr></thead>
+          <tbody>
+            <tr><td><b>Hosting</b></td><td>Hands the website's files to every visitor</td><td>GitHub Pages (free)</td></tr>
+            <tr><td><b>Login</b></td><td>Checks who you are</td><td>Firebase Authentication</td></tr>
+            <tr><td><b>Database</b></td><td>Stores information permanently</td><td>Firestore</td></tr>
+            <tr><td><b>Security rules</b></td><td>Guards who can read or change what</td><td>The rules you paste into Firebase</td></tr>
+            <tr><td><b>AI</b></td><td>Answers what the brain can't</td><td>Gemini, Groq and others</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><b>Why the secret code lives in the rules:</b> anyone can open your website's code (press F12 on any site). Nobody can read the security rules. So secrets like your creator code go in the rules, never in the front end.</div>
+      <div class="quiz" data-answer="2">
+        <p class="q">Where is it safe to keep a secret password for your app?</p>
+        <div class="opts">
+          <button class="opt" type="button">In app.js, because it's hidden in a big file</button>
+          <button class="opt" type="button">In the HTML, inside a hidden element</button>
+          <button class="opt" type="button">In the database security rules, which visitors can't read</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="stack"> I finished this lesson</label>
+    </section>
+
+    <!-- 10 -->
+    <section class="lesson" id="git" data-title="Git and GitHub">
+      <div class="lesson-head"><span class="lesson-num">10</span><h2>Git and GitHub: how a change goes live</h2></div>
+      <p><b>Git</b> saves snapshots of your code called <b>commits</b>. Every change has a history and can be undone. <b>GitHub</b> is the website that stores that history online.</p>
+      <div class="git">
+        <svg viewBox="0 0 640 170" role="img" aria-label="A branch leaves main, gets two commits, and merges back through a pull request">
+          <line x1="30" y1="120" x2="610" y2="120" stroke="var(--muted)" stroke-width="3"/>
+          <path d="M150 120 C 190 120, 190 50, 230 50 L 420 50 C 460 50, 460 120, 500 120" fill="none" stroke="var(--accent)" stroke-width="3"/>
+          <circle cx="70" cy="120" r="9" fill="var(--surface)" stroke="var(--muted)" stroke-width="3"/>
+          <circle cx="150" cy="120" r="9" fill="var(--surface)" stroke="var(--muted)" stroke-width="3"/>
+          <circle cx="270" cy="50" r="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>
+          <circle cx="380" cy="50" r="9" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>
+          <circle cx="500" cy="120" r="11" fill="var(--accent)" stroke="var(--accent)" stroke-width="3"/>
+          <text x="30" y="150" class="lbl">main (your live site)</text>
+          <text x="232" y="28" class="lbl">branch (a draft copy)</text>
+          <text x="245" y="80">commit: logo</text>
+          <text x="352" y="80">commit: fix size</text>
+          <text x="455" y="152" class="lbl">merge (PR)</text>
+          <text x="540" y="108">site updates</text>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Word</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>Repository (repo)</b></td><td>The project folder with its whole history: <code class="i">rsmohnishkumar-design/MK.AI</code></td></tr>
+            <tr><td><b>Commit</b></td><td>One saved snapshot, with a message saying what changed</td></tr>
+            <tr><td><b>Branch</b></td><td>A separate draft copy to work on without touching the live site</td></tr>
+            <tr><td><b>Pull request (PR)</b></td><td>A proposal to merge a branch into main, where it can be reviewed</td></tr>
+            <tr><td><b>Merge</b></td><td>Accepting the PR. GitHub Pages then rebuilds your site within a minute</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Every MK.ai feature you asked for went through this: the chat sync was PR #22, the new logo #23 and #24, creator mode #25, code boxes #26, typo-proof maths #27. That's why after each one you wait a minute and press <b>Ctrl + Shift + R</b>.</p>
+      <div class="quiz" data-answer="1">
+        <p class="q">You want to try a risky change without breaking the live site. What do you do?</p>
+        <div class="opts">
+          <button class="opt" type="button">Edit main directly</button>
+          <button class="opt" type="button">Make a branch, commit there, then open a pull request</button>
+          <button class="opt" type="button">Delete the repo and start over</button>
+        </div>
+        <p class="fb" aria-live="polite"></p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="git"> I finished this lesson</label>
+    </section>
+
+    <!-- 11 -->
+    <section class="lesson" id="practice" data-title="Practice and next steps">
+      <div class="lesson-head"><span class="lesson-num">11</span><h2>Practice and what to learn next</h2></div>
+      <p>Coding is learned by doing, a little every day. Tick these off as you go; this page remembers them in your browser.</p>
+      <ul class="checklist" id="exercises">
+        <li><label><input type="checkbox" data-ex="1"> In the lesson 3 runner, change the name to yours and add a fourth chat to the list.</label></li>
+        <li><label><input type="checkbox" data-ex="2"> In the lesson 5 runner, print the 12 times table instead of 7.</label></li>
+        <li><label><input type="checkbox" data-ex="3"> In the lesson 6 runner, write a function <code class="i">triple(n)</code> that returns n × 3.</label></li>
+        <li><label><input type="checkbox" data-ex="4"> On your laptop, open any site, press F12, click Console, and type <code class="i">12 * 7</code>.</label></li>
+        <li><label><input type="checkbox" data-ex="5"> Write an if/else in the runner below that says "Good morning" before 12 and "Good evening" after.</label></li>
+      </ul>
+      <div class="runner" data-runner>
+        <div class="runner-top"><span>your playground · javascript</span><div class="btns"><button class="btn ghost" type="button" data-reset>Reset</button><button class="btn" type="button" data-run>Run ▸</button></div></div>
+        <textarea wrap="off" spellcheck="false" aria-label="Code to run">// Exercise 5: finish this
+let hour = new Date().getHours();
+console.log("The hour is " + hour);
+
+if (hour < 12) {
+  console.log("Good morning");
+}
+// add an else here</textarea>
+        <div class="out" aria-live="polite"></div>
+      </div>
+      <h3>Your learning path</h3>
+      <ol class="path">
+        <li><span>Weeks 1–2</span><div><b>HTML and CSS.</b> Build a one-page site about yourself. Free course: <a href="https://www.freecodecamp.org/learn/2022/responsive-web-design/" target="_blank" rel="noopener">freeCodeCamp Responsive Web Design</a>.</div></li>
+        <li><span>Weeks 3–5</span><div><b>JavaScript basics.</b> Variables, if, loops, functions, events: the lessons on this page, practised daily. Free: <a href="https://javascript.info" target="_blank" rel="noopener">javascript.info</a>.</div></li>
+        <li><span>Week 6</span><div><b>Change MK.ai yourself.</b> Add a new greeting to <code class="i">js/local.js</code>, commit it on a branch, open a pull request.</div></li>
+        <li><span>After that</span><div><b>Python.</b> The most popular language for AI and data. Free: <a href="https://www.freecodecamp.org/learn/scientific-computing-with-python/" target="_blank" rel="noopener">freeCodeCamp Python</a>.</div></li>
+      </ol>
+      <div class="note"><b>When you're stuck:</b> read the error message slowly (it usually says the line number), check spelling and brackets, then ask. Every programmer gets errors all day; fixing them is the job.</div>
+      <label class="done-row"><input type="checkbox" data-done="practice"> I finished this lesson</label>
+    </section>
+
+    <footer>Part of MK.ai. Stuck on something? Ask MK.ai in the chat, for example "what is a loop?". Signed in, your progress follows you to every device.</footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  // ---------- storage (optional) ----------
+  const KEY = "mk-code-school";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+  saved.done = saved.done || {};
+  saved.ex = saved.ex || {};
+  const persist = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {}
+    school.onSave?.(saved);
+  };
+  // The page's account sync (below) reads and merges progress through this.
+  const school = (window.mkSchool = { saved, onSave: null, apply: () => {} });
+
+  // ---------- table of contents + progress ----------
+  const lessons = $$("section.lesson");
+  const toc = $("#toc");
+  lessons.forEach((sec, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<a href="#${sec.id}" data-for="${sec.id}"><span class="n">${String(i + 1).padStart(2, "0")}</span><span>${esc(sec.dataset.title)}</span><span class="tick">✓</span></a>`;
+    toc.append(li);
+  });
+  function renderProgress() {
+    const n = lessons.filter((s) => saved.done[s.id]).length;
+    $("#progText").textContent = `${n} / ${lessons.length}`;
+    $("#progBar").style.width = `${(n / lessons.length) * 100}%`;
+    $$(".toc a").forEach((a) => a.classList.toggle("done", !!saved.done[a.dataset.for]));
+  }
+  $$("[data-done]").forEach((box) => {
+    box.checked = !!saved.done[box.dataset.done];
+    box.addEventListener("change", () => { saved.done[box.dataset.done] = box.checked; persist(); renderProgress(); });
+  });
+  $$("[data-ex]").forEach((box) => {
+    box.checked = !!saved.ex[box.dataset.ex];
+    box.addEventListener("change", () => { saved.ex[box.dataset.ex] = box.checked; persist(); });
+  });
+  renderProgress();
+  school.apply = (cloud) => {
+    for (const k of ["done", "ex"]) Object.assign(saved[k], cloud?.[k] || {});
+    $$("[data-done]").forEach((box) => (box.checked = !!saved.done[box.dataset.done]));
+    $$("[data-ex]").forEach((box) => (box.checked = !!saved.ex[box.dataset.ex]));
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {}
+    renderProgress();
+  };
+
+  if ("IntersectionObserver" in window) {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        $$(".toc a").forEach((a) => a.classList.toggle("active", a.dataset.for === e.target.id));
+        const active = $(`.toc a[data-for="${e.target.id}"]`);
+        if (active && window.matchMedia("(max-width: 860px)").matches) active.scrollIntoView({ block: "nearest", inline: "center" });
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    lessons.forEach((s) => obs.observe(s));
+  }
+
+  // ---------- quizzes ----------
+  $$(".quiz").forEach((quiz) => {
+    const right = Number(quiz.dataset.answer);
+    const fb = $(".fb", quiz);
+    const opts = $$(".opt", quiz);
+    opts.forEach((btn, i) => btn.addEventListener("click", () => {
+      opts.forEach((b) => b.classList.remove("right", "wrong"));
+      if (i === right) {
+        btn.classList.add("right");
+        fb.className = "fb right";
+        fb.textContent = "Correct! Well done.";
+      } else {
+        btn.classList.add("wrong");
+        fb.className = "fb wrong";
+        fb.textContent = "Not quite. Read that part again and try another answer.";
+      }
+    }));
+  });
+
+  // ---------- code runners ----------
+  const show = (v) => typeof v === "string" ? v : (() => { try { return JSON.stringify(v); } catch { return String(v); } })();
+  $$("[data-runner]").forEach((box) => {
+    const area = $("textarea", box);
+    const out = $(".out", box);
+    const original = area.value;
+    const fit = () => { area.style.height = "auto"; area.style.height = `${area.scrollHeight + 4}px`; };
+    fit();
+    area.addEventListener("input", fit);
+    area.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const s = area.selectionStart;
+        area.setRangeText("  ", s, area.selectionEnd, "end");
+      } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        run();
+      }
+    });
+    function run() {
+      const lines = [];
+      const fake = { log: (...a) => lines.push(a.map(show).join(" ")), error: (...a) => lines.push(a.map(show).join(" ")) };
+      out.classList.remove("err");
+      try {
+        const fn = new Function("console", `"use strict";\n${area.value}`);
+        const result = fn(fake);
+        if (result !== undefined) lines.push(`→ ${show(result)}`);
+        out.textContent = lines.length ? lines.join("\n") : "(Your code ran, but printed nothing. Use console.log(...) to print.)";
+      } catch (err) {
+        out.classList.add("err");
+        if (err instanceof EvalError || /unsafe-eval|content security/i.test(err.message)) {
+          out.textContent = "This viewer doesn't allow running code. Copy it into your browser console instead: press F12, click Console, paste, press Enter.";
+        } else {
+          out.textContent = (lines.length ? lines.join("\n") + "\n" : "") + `⚠ ${err.name}: ${err.message}\nCheck the spelling, quotes and brackets, then try again.`;
+        }
+      }
+    }
+    $("[data-run]", box).addEventListener("click", run);
+    $("[data-reset]", box).addEventListener("click", () => { area.value = original; out.textContent = ""; out.classList.remove("err"); fit(); });
+  });
+
+  // ---------- lesson 2: HTML / CSS / JS trio ----------
+  const btnText = $("#btnText"), btnColor = $("#btnColor"), btnRound = $("#btnRound"), trioBtn = $("#trioBtn");
+  let clicks = 0;
+  function contrast(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    return (r * 299 + g * 587 + b * 114) / 1000 > 140 ? "#14181c" : "#ffffff";
+  }
+  function renderTrio() {
+    const text = btnText.value || "Send";
+    const color = btnColor.value;
+    const round = btnRound.value;
+    $("#btnRoundVal").textContent = round;
+    trioBtn.textContent = text;
+    trioBtn.style.background = color;
+    trioBtn.style.color = contrast(color);
+    trioBtn.style.borderRadius = `${round}px`;
+    $("#trioHtml").innerHTML = `&lt;<span class="k">button</span> id=<span class="s">"sendBtn"</span>&gt;\n  ${esc(text)}\n&lt;/<span class="k">button</span>&gt;`;
+    $("#trioCss").innerHTML = `#sendBtn {\n  <span class="k">background</span>: ${color};\n  <span class="k">border-radius</span>: ${round}px;\n}`;
+    $("#trioJs").innerHTML = `sendBtn.<span class="k">addEventListener</span>(\n  <span class="s">"click"</span>, () => {\n    clicks = clicks + 1;\n});`;
+  }
+  [btnText, btnColor, btnRound].forEach((el) => el.addEventListener("input", renderTrio));
+  trioBtn.addEventListener("click", () => {
+    clicks += 1;
+    $("#trioOut").textContent = `JavaScript ran! The button has been clicked ${clicks} time${clicks === 1 ? "" : "s"}.`;
+  });
+  renderTrio();
+
+  // ---------- lesson 4: if / else brain ----------
+  const IF_LINES = [
+    `<span class="k">let</span> msg = message.toLowerCase();`,
+    ``,
+    `<span class="k">if</span> (msg === <span class="s">"hi"</span> || msg === <span class="s">"hello"</span>) {`,
+    `  reply(<span class="s">"Hello! 👋"</span>);`,
+    `} <span class="k">else if</span> (msg === <span class="s">"bye"</span>) {`,
+    `  reply(<span class="s">"Goodbye!"</span>);`,
+    `} <span class="k">else if</span> (looksLikeMaths(msg)) {`,
+    `  reply(calculate(msg));`,
+    `} <span class="k">else</span> {`,
+    `  reply(<span class="s">"I don't know that yet 🤔"</span>);`,
+    `}`,
+  ];
+  function renderIf() {
+    const msg = $("#ifInput").value.trim().toLowerCase();
+    let line, reply;
+    if (msg === "hi" || msg === "hello") { line = 3; reply = "Hello! 👋"; }
+    else if (msg === "bye") { line = 5; reply = "Goodbye!"; }
+    else if (/^[\d\s.+\-*/()x×÷]+$/.test(msg) && /\d/.test(msg) && /[+\-*/x×÷]/.test(msg)) {
+      line = 7;
+      const expr = msg.replace(/x|×/g, "*").replace(/÷/g, "/");
+      let value = "?";
+      if (/^[\d\s.+\-*/()]+$/.test(expr)) { try { value = Function(`"use strict";return (${expr})`)(); } catch {} }
+      reply = `${msg} = ${Number.isFinite(value) ? Math.round(value * 1e6) / 1e6 : "?"}`;
+    }
+    else { line = 9; reply = "I don't know that yet 🤔"; }
+    $("#ifCode").innerHTML = IF_LINES.map((l, i) => (i === line ? `<span class="hl">${l}</span>` : l)).join("\n");
+    $("#ifOut").textContent = msg ? `MK.ai replies: ${reply}` : "Type something above.";
+  }
+  $("#ifInput").addEventListener("input", renderIf);
+  renderIf();
+
+  // ---------- lesson 5: loops ----------
+  function renderLoop() {
+    const n = Number($("#loopRange").value);
+    $("#loopN").textContent = n;
+    $("#loopNCode").textContent = n;
+    $("#loopOut").textContent = Array.from({ length: n }, (_, i) => `💬 message ${i + 1}`).join("   ");
+  }
+  $("#loopRange").addEventListener("input", renderLoop);
+  renderLoop();
+
+  // ---------- lesson 6: function machine ----------
+  const FNS = {
+    double: { code: `<span class="k">function</span> double(n) {\n  <span class="k">return</span> n * 2;\n}`, run: (n) => n * 2 },
+    square: { code: `<span class="k">function</span> square(n) {\n  <span class="k">return</span> n * n;\n}`, run: (n) => n * n },
+    squareRoot: { code: `<span class="k">function</span> squareRoot(n) {\n  <span class="k">return</span> Math.sqrt(n);\n}`, run: (n) => Math.sqrt(n) },
+  };
+  function renderFn() {
+    const pick = $("#fnPick").value;
+    const n = Number($("#fnIn").value);
+    const out = FNS[pick].run(n);
+    $("#fnCode").innerHTML = `${FNS[pick].code}\n\n${pick}(${esc($("#fnIn").value || 0)});   <span class="c">// → ${Number.isFinite(out) ? Math.round(out * 1e6) / 1e6 : "not a real number"}</span>`;
+    $("#fnOut").textContent = `Input ${n || 0} → recipe ${pick} → output ${Number.isFinite(out) ? Math.round(out * 1e6) / 1e6 : "not a real number"}`;
+  }
+  $("#fnIn").addEventListener("input", renderFn);
+  $("#fnPick").addEventListener("change", renderFn);
+  renderFn();
+
+  // ---------- lesson 7: events ----------
+  const evLog = $("#evLog");
+  let evClicks = 0;
+  const logEvent = (t) => { evLog.textContent = t; };
+  $("#evBtn").addEventListener("click", () => { evClicks += 1; logEvent(`"click" event → the button was clicked (${evClicks} so far)`); });
+  $("#evInput").addEventListener("input", (e) => logEvent(`"input" event → you typed: ${e.target.value}`));
+  $("#evInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); logEvent(`"keydown" event with Enter → this is when MK.ai would send: "${e.target.value}"`); e.target.value = ""; }
+  });
+
+  // ---------- lesson 8: pipeline ----------
+  const SAMPLES = ["hi", "squre root of 16", "10 km to miles", "who is APJ Abdul Kalam", "weather in Chennai today", "write a poem about rain", "what does my cat dream about"];
+  const sampleRow = $("#pipeSamples");
+  SAMPLES.forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "pill"; b.textContent = s; b.style.cursor = "pointer"; b.style.border = "0";
+    b.addEventListener("click", () => { $("#pipeInput").value = s; renderPipe(); });
+    sampleRow.append(b);
+  });
+  function whoAnswers(q) {
+    const t = q.toLowerCase().trim();
+    if (!t) return null;
+    if (/^(hi+|hello|hey|vanakkam|namaste|good (morning|evening|afternoon)|bye|thanks?|how are you)\b/.test(t)) return ["brain", "a greeting: answered instantly"];
+    if (/\d/.test(t) && (/[+\-*/x×÷%]/.test(t) || /\b(squ?a?re?|sqrt|root|cube|squared|cubed|percent)\b/.test(t) || /\bto\b/.test(t))) return ["brain", "maths or a conversion: calculated instantly"];
+    if (/\b(time|date|joke)\b/.test(t)) return ["brain", "time, date or a joke: instant"];
+    if (/\b(today|now|latest|news|weather|price|score)\b/.test(t)) return ["ai", "changes over time, so it's always asked fresh"];
+    if (/^(what|who) (is|was|are)\b/.test(t)) return ["wiki", "a 'what is / who is' question: looked up"];
+    if (/cat dream/.test(t)) return ["teach", "nobody knows, so it asks you to teach it"];
+    return ["ai", "something new: the AI answers and it's saved to memory"];
+  }
+  const ORDER = ["vault", "brain", "memory", "wiki", "ai", "teach"];
+  function renderPipe() {
+    const res = whoAnswers($("#pipeInput").value);
+    const hitIndex = res ? ORDER.indexOf(res[0]) : -1;
+    $$("#pipe li").forEach((li, i) => {
+      li.classList.remove("hit", "skip");
+      const v = $(".verdict", li);
+      if (hitIndex === -1) { v.textContent = ""; return; }
+      if (i < hitIndex) { li.classList.add("skip"); v.textContent = "no match, next"; }
+      else if (i === hitIndex) { li.classList.add("hit"); v.textContent = "answers ✓"; }
+      else { li.classList.add("skip"); v.textContent = "not needed"; }
+    });
+  }
+  const renderWhy = () => {
+    const res = whoAnswers($("#pipeInput").value);
+    $("#pipeWhy").textContent = res ? `Why: ${res[1]}.` : "Type a question above.";
+  };
+  $("#pipeInput").addEventListener("input", renderWhy);
+  sampleRow.addEventListener("click", renderWhy);
+  renderWhy();
+  $("#pipeInput").addEventListener("input", renderPipe);
+  renderPipe();
+})();
+</script>
+
+<script type="module">
+  // Saves Code School progress to the signed-in MK.ai account, so it follows
+  // the person to every device. Without an account it stays in this browser.
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+  import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+  import { auth, db } from "./js/firebase.js";
+
+  const school = window.mkSchool;
+  const status = document.getElementById("syncStatus");
+  const setStatus = (html, on = false) => { status.innerHTML = html; status.classList.toggle("on", on); };
+  let timer = null;
+
+  if (auth) {
+    onAuthStateChanged(auth, async (user) => {
+      school.onSave = null;
+      if (!user) {
+        setStatus('Progress is saved in this browser. <a href="./">Sign in to MK.ai</a> to keep it on every device.');
+        return;
+      }
+      const ref = doc(db, "users", user.uid, "progress", "learn");
+      const save = () => setDoc(ref, { done: school.saved.done, ex: school.saved.ex, updatedAt: serverTimestamp() });
+      try {
+        const snap = await getDoc(ref);
+        school.apply(snap.exists() ? snap.data() : {});
+        await save();
+        setStatus("✓ Progress saved to your MK.ai account.", true);
+      } catch (err) {
+        console.warn("Couldn't load Code School progress:", err);
+        setStatus("Progress is saved in this browser (your account couldn't be reached).");
+        return;
+      }
+      school.onSave = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => save().catch((err) => {
+          console.warn("Couldn't save Code School progress:", err);
+          setStatus("Couldn't save to your account just now. It's kept in this browser.");
+        }), 600);
+      };
+    });
+  }
+</script>
+</body>
+</html>

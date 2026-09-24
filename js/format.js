@@ -1,18 +1,38 @@
-// Shows an answer with code blocks, `inline code` and **bold**, the way chat
+// Shows an answer with code blocks, `inline code`, **bold** and [links](url), the way chat
 // apps do. Everything is built as DOM nodes from text, so nothing in an
 // answer can ever run as HTML.
 
 const FENCE = /```([\w+#.-]*)[^\n]*\n?([\s\S]*?)(?:```|$)/g;
 
+// Only links to MK.ai's own lessons or to https sites become clickable.
+const SAFE_LINK = /^(learn\.html(#[\w-]+)?|https:\/\/[^\s]+)$/;
+
 function inline(parent, text) {
-  // `code` and **bold**; anything else stays plain text.
-  const re = /`([^`\n]+)`|\*\*([^*\n]+)\*\*/g;
+  // `code`, **bold** and [text](url); anything else stays plain text.
+  const re = /`([^`\n]+)`|\*\*([^*\n]+)\*\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
   let last = 0;
   for (const m of text.matchAll(re)) {
     if (m.index > last) parent.append(text.slice(last, m.index));
-    const el = document.createElement(m[1] !== undefined ? "code" : "strong");
-    el.textContent = m[1] ?? m[2];
-    if (m[1] !== undefined) el.className = "inline-code";
+    let el;
+    if (m[1] !== undefined) {
+      el = document.createElement("code");
+      el.className = "inline-code";
+      el.textContent = m[1];
+    } else if (m[2] !== undefined) {
+      el = document.createElement("strong");
+      el.textContent = m[2];
+    } else if (SAFE_LINK.test(m[4])) {
+      el = document.createElement("a");
+      el.className = "answer-link";
+      el.href = m[4];
+      el.textContent = m[3];
+      if (m[4].startsWith("https:")) {
+        el.target = "_blank";
+        el.rel = "noopener noreferrer";
+      }
+    } else {
+      el = document.createTextNode(m[3]);
+    }
     parent.append(el);
     last = m.index + m[0].length;
   }
