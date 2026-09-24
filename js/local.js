@@ -8,6 +8,7 @@ import { algebra } from "./algebra.js";
 import { cleanMaths, solveEquations, solveNumbers } from "./mathsolve.js";
 import { solveWordProblems } from "./mathword.js";
 import { solveHigherMaths } from "./mathplus.js";
+import { solveEveryday } from "./mathextra.js";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const boss = () => CREATOR_NAME.split(/\s+/)[0];
@@ -329,7 +330,8 @@ export function localAnswer(question, { creator = false } = {}) {
   if (!q) return null;
   // Word problems and equations need "=" and signs that normalize() drops.
   const m = cleanMaths(question);
-  const solved = algebra(question) || solveHigherMaths(m) || solveEquations(m) || solveNumbers(m) || solveWordProblems(m);
+  const solved =
+    algebra(question) || solveEveryday(m) || solveHigherMaths(m) || solveEquations(m) || solveNumbers(m) || solveWordProblems(m);
   if (solved) return solved;
   for (const rule of RULES) {
     if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
