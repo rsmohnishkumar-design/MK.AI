@@ -96,6 +96,12 @@ service cloud.firestore {
     }
 
     // --- Curated answers: everyone can read, only the admin can change ---
+    // Documents taught in the Training room, split into passages.
+    match /knowledge/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
     match /vault/{id} {
       allow read: if signedIn();
       allow write: if isAdmin();

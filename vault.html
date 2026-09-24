@@ -39,6 +39,69 @@
         <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
 
+      <section class="activity-section training" id="training">
+        <div class="activity-heading">
+          <h2>Training room</h2>
+        </div>
+        <p class="col-hint">MK.ai learns by analysing what people give it: the questions they ask, lists of answers, and documents. What it prepares waits here for you to approve, then it uses it straight away.</p>
+        <div class="train-tabs" role="tablist">
+          <button type="button" class="train-tab active" data-tab="users" role="tab" aria-selected="true">Learn from users</button>
+          <button type="button" class="train-tab" data-tab="bulk" role="tab" aria-selected="false">Bulk answers</button>
+          <button type="button" class="train-tab" data-tab="docs" role="tab" aria-selected="false">Learn from documents</button>
+        </div>
+
+        <div class="train-panel" id="tab-users">
+          <div class="train-stats" id="trainStats"></div>
+          <p class="train-topics" id="trainTopics"></p>
+          <h3 class="train-h3">Questions MK.ai should learn <span class="count" id="needsCount"></span></h3>
+          <p class="col-hint">Questions it couldn't answer come first, then the ones people ask again and again. Tick the ones to learn.</p>
+          <div id="needsList" class="needs-list"></div>
+          <div class="train-actions">
+            <button type="button" id="prepareBtn">Prepare answers with AI</button>
+            <button type="button" id="reanalyseBtn" class="secondary">analyse again</button>
+          </div>
+          <p class="train-status" id="prepareStatus" aria-live="polite"></p>
+        </div>
+
+        <div class="train-panel hidden" id="tab-bulk">
+          <p class="col-hint">Paste many questions and answers at once, or upload a .txt or .csv file. Any of these formats work:<br>
+            <code>Q: What time does school start?</code> then <code>A: 8:30 am</code> on the next line<br>
+            <code>What time does school start? | 8:30 am</code> (one per line)<br>
+            <code>"What time does school start?","8:30 am"</code> (CSV from a spreadsheet)</p>
+          <textarea id="bulkText" class="train-text" rows="8" placeholder="Q: What time does school start?&#10;A: 8:30 am&#10;&#10;Q: Who is the principal?&#10;A: …"></textarea>
+          <div class="train-actions">
+            <label class="file-btn">upload .txt or .csv<input type="file" id="bulkFile" accept=".txt,.csv,.md,text/plain,text/csv" hidden /></label>
+            <button type="button" id="bulkCheckBtn">Check and review</button>
+          </div>
+          <p class="train-status" id="bulkStatus" aria-live="polite"></p>
+        </div>
+
+        <div class="train-panel hidden" id="tab-docs">
+          <p class="col-hint">Give MK.ai notes, a textbook chapter, rules, a school handbook… It reads the document, remembers it in passages, and answers questions from it. It can also turn the document into questions and answers for you to approve.</p>
+          <input id="docTitle" class="train-input" type="text" maxlength="120" placeholder="Document name, e.g. Class 10 Science – Chapter 3" />
+          <textarea id="docText" class="train-text" rows="8" placeholder="Paste the document's text here, or upload a file below."></textarea>
+          <div class="train-actions">
+            <label class="file-btn">upload .txt, .md or .pdf<input type="file" id="docFile" accept=".txt,.md,.pdf,text/plain,application/pdf" hidden /></label>
+            <button type="button" id="docLearnBtn">Learn this document</button>
+            <button type="button" id="docQaBtn" class="secondary">Make Q&amp;A with AI</button>
+          </div>
+          <p class="train-status" id="docStatus" aria-live="polite"></p>
+          <h3 class="train-h3">Documents MK.ai knows <span class="count" id="docsCount"></span></h3>
+          <div id="docsList" class="docs-list"></div>
+        </div>
+
+        <div class="review hidden" id="review">
+          <h3 class="train-h3">Ready for you to approve <span class="count" id="reviewCount"></span></h3>
+          <p class="col-hint">Edit anything, untick what's wrong, then save. Saved answers go into the vault, and MK.ai answers from them straight away.</p>
+          <div id="reviewList" class="review-list"></div>
+          <div class="train-actions">
+            <button type="button" id="reviewSave">Save selected</button>
+            <button type="button" id="reviewDiscard" class="secondary">discard</button>
+          </div>
+          <p class="train-status" id="reviewStatus" aria-live="polite"></p>
+        </div>
+      </section>
+
       <section class="activity-section ai-settings">
         <div class="activity-heading">
           <h2>AI settings</h2>

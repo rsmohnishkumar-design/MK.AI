@@ -870,6 +870,12 @@ async function answer(question, onText, attachment = null) {
         saved: nothingSaved,
       };
     }
+    // No AI is free, but a taught document may still hold the answer.
+    const passage = knowledge.docs?.[0];
+    if (passage && passage.score >= 0.7) {
+      logActivity(question, "document");
+      return { answer: `Here's what my notes say:\n\n${passage.text}`, credit: `from "${passage.title}"`, saved: nothingSaved };
+    }
     logActivity(question, "unknown");
     return {
       answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
@@ -1131,7 +1137,7 @@ function renderBrain(s) {
   const text = $("brainText");
   const busy = s.status === "downloading" || s.status === "loading";
   const views = {
-    off: ["not downloaded", "", "A real AI model that runs on this device. It answers when the online AI is busy, and works offline."],
+    off: ["not downloaded", "", "You don't need this: MK.ai works without it. Like installing a game, it saves an AI onto this device once, so MK.ai can still answer with no internet or when the online AI is busy."],
     downloading: [`downloading ${s.progress}%`, "busy", "Keep MK.ai open while it downloads. Wi-Fi recommended."],
     loading: [`waking up ${s.progress}%`, "busy", "Loading from this device…"],
     ready: ["ready", "ready", "Answers when the online AI is busy, and when you're offline."],

@@ -145,6 +145,29 @@ using the admin email from step 3. That's it.
 - **Users** and **activity:** everyone's account and every question
   asked.
 
+## Training room (admin vault)
+
+MK.ai learns by analysing what people give it. At the top of the admin vault:
+
+- **Learn from users.** MK.ai analyses the last 1,000 questions people
+  asked: how many it answered by itself, what people ask about most, and a
+  list of questions it should learn (the ones it couldn't answer first,
+  then the ones asked again and again, grouped however they were worded).
+  Tick some and tap **Prepare answers with AI**: it writes an answer for
+  each, using what it already knows and your documents.
+- **Bulk answers.** Paste or upload many questions and answers at once:
+  `Q:` / `A:` blocks, `question | answer` lines, or a CSV from a
+  spreadsheet.
+- **Learn from documents.** Paste text or upload a .txt, .md or .pdf (notes,
+  a chapter, a handbook). **Learn this document** stores it in passages
+  (`knowledge` collection). MK.ai finds the passages that match a question
+  and answers from them; with no AI free, it quotes the passage. **Make Q&A
+  with AI** turns the document into question/answer pairs.
+
+Everything prepared waits in **Ready for you to approve**: edit, untick
+what's wrong, and save. Saved answers go into the vault and are used
+straight away.
+
 ## MK.ai's own brain (on-device AI)
 
 A real open neural language model (**Llama 3.2 1B**, via
@@ -231,6 +254,7 @@ vault shows them.
 | `js/ownbrain.js`, `js/meaning.js` | MK.ai's own on-device model, and neural (meaning) memory |
 | `js/voice.js` | Voice typing and reading answers aloud |
 | `js/attach.js` | Photos, PDFs and text files sent with a question |
+| `js/training.js` | The Training room: analysing questions, bulk answers, documents |
 | `js/creator.js` | Creator mode: the secret-code check and the details report |
 | `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |

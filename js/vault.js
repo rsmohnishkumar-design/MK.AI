@@ -20,9 +20,13 @@ import {
   deleteField,
   Timestamp,
   serverTimestamp,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
-import { keywords, votes } from "./brain.js";
+import { keywords, votes, lookup } from "./brain.js";
+import { askGemini, aiErrorMessage } from "./ai.js";
+import { readAttachment } from "./attach.js";
+import * as training from "./training.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
@@ -128,6 +132,8 @@ if (configured) {
     loadActivity();
     loadUsers();
     loadGroqKey();
+    loadTraining();
+    loadDocuments();
   });
 }
 
@@ -257,6 +263,9 @@ function badgeFor(mode) {
   if (mode === "wiki") return '<span class="badge badge-google">wikipedia</span>';
   if (mode === "taught") return '<span class="badge badge-learned">taught</span>';
   if (mode === "unknown") return '<span class="badge badge-error">didn\'t know</span>';
+  if (mode === "document") return '<span class="badge badge-learned">your documents</span>';
+  if (mode === "file") return '<span class="badge badge-google">photo / file</span>';
+  if (mode === "creator") return '<span class="badge badge-vault">creator</span>';
   return `<span class="badge badge-error">${escapeHtml(mode || "?")}</span>`;
 }
 
@@ -472,4 +481,295 @@ async function loadGroqKey() {
   }
   providerRows.innerHTML = "";
   PROVIDERS.forEach((p) => providerRows.appendChild(providerRow(p, data[keyField(p)])));
+}
+
+// ---------------------------------------------------------------------------
+// Training room: MK.ai learns from people's questions, bulk answer lists and
+// documents. Everything it prepares is reviewed here before it's saved.
+// ---------------------------------------------------------------------------
+const setStatus = (id, text, tone = "") => {
+  const el = $(id);
+  el.textContent = text;
+  el.className = `train-status ${tone}`;
+};
+
+document.querySelectorAll(".train-tab").forEach((tab) =>
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".train-tab").forEach((t) => {
+      t.classList.toggle("active", t === tab);
+      t.setAttribute("aria-selected", String(t === tab));
+    });
+    ["users", "bulk", "docs"].forEach((name) => $(`tab-${name}`).classList.toggle("hidden", name !== tab.dataset.tab));
+  })
+);
+
+// Saves many documents in batches (Firestore allows 500 writes per batch).
+async function saveInBatches(items, write) {
+  for (let i = 0; i < items.length; i += 400) {
+    const batch = writeBatch(db);
+    items.slice(i, i + 400).forEach((item) => write(batch, item));
+    await batch.commit();
+  }
+}
+
+// --- Review: approve what MK.ai prepared ---
+let reviewItems = [];
+function setReview(pairs, note = "") {
+  reviewItems = pairs.map((p) => ({ ...p, keep: true }));
+  const list = $("reviewList");
+  list.innerHTML = "";
+  reviewItems.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "review-row";
+    row.innerHTML = `<input type="checkbox" checked aria-label="Keep this answer" /><div class="fields"><input type="text" aria-label="Question" /><textarea aria-label="Answer"></textarea></div>`;
+    const [box, q, a] = row.querySelectorAll("input, textarea");
+    q.value = item.question;
+    a.value = item.answer;
+    box.addEventListener("change", () => {
+      item.keep = box.checked;
+      row.classList.toggle("off", !box.checked);
+      renderReviewCount();
+    });
+    q.addEventListener("input", () => (item.question = q.value));
+    a.addEventListener("input", () => (item.answer = a.value));
+    list.appendChild(row);
+  });
+  $("review").classList.toggle("hidden", !reviewItems.length);
+  setStatus("reviewStatus", note);
+  renderReviewCount();
+  if (reviewItems.length) $("review").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function renderReviewCount() {
+  $("reviewCount").textContent = `(${reviewItems.filter((i) => i.keep).length} of ${reviewItems.length})`;
+}
+$("reviewDiscard").addEventListener("click", () => setReview([]));
+$("reviewSave").addEventListener("click", async () => {
+  const keep = reviewItems.filter((i) => i.keep && i.question.trim() && i.answer.trim());
+  if (!keep.length) return setStatus("reviewStatus", "Nothing ticked to save.", "bad");
+  $("reviewSave").disabled = true;
+  try {
+    await saveInBatches(keep, (batch, item) =>
+      batch.set(doc(collection(db, "vault")), { ...vaultFields(item.question.trim(), item.answer.trim()), createdAt: serverTimestamp() })
+    );
+    setReview([]);
+    setStatus("prepareStatus", `✓ MK.ai learned ${keep.length} answer${keep.length === 1 ? "" : "s"}. It uses them from now on.`, "good");
+    setStatus("bulkStatus", "");
+    loadEntries();
+    loadTraining();
+  } catch (err) {
+    setStatus("reviewStatus", friendlyError(err), "bad");
+  } finally {
+    $("reviewSave").disabled = false;
+  }
+});
+
+// --- Learn from users: analyse what people asked ---
+let needs = [];
+async function loadTraining() {
+  try {
+    const [activitySnap, vaultSnap] = await Promise.all([
+      getDocs(query(collection(db, "activity"), orderBy("createdAt", "desc"), limit(1000))),
+      getDocs(collection(db, "vault")),
+    ]);
+    const analysis = training.analyseActivity(
+      activitySnap.docs.map((d) => d.data()),
+      vaultSnap.docs.map((d) => d.data().question || "")
+    );
+    const m = analysis.modes;
+    const selfAnswered = (m.local || 0) + (m.memory || 0) + (m.vault || 0) + (m.document || 0) + (m.creator || 0);
+    const stat = (value, label) => `<div class="train-stat"><b>${value}</b><span>${label}</span></div>`;
+    $("trainStats").innerHTML =
+      stat(analysis.total, "questions analysed") +
+      stat(analysis.distinct, "different questions") +
+      stat(analysis.total ? `${Math.round((selfAnswered / analysis.total) * 100)}%` : "–", "answered by MK.ai itself") +
+      stat(m.unknown || 0, "it didn't know");
+    $("trainTopics").innerHTML = analysis.topics.length
+      ? `What people ask about most: ${analysis.topics.map(([w, n]) => `<b>${escapeHtml(w)}</b> (${n})`).join(", ")}`
+      : "";
+    needs = analysis.needs.slice(0, 60);
+    $("needsCount").textContent = `(${needs.length})`;
+    const list = $("needsList");
+    list.innerHTML = needs.length ? "" : `<p class="empty-col-note">Nothing to learn right now. As people ask questions, MK.ai lists what it should learn here.</p>`;
+    needs.forEach((need, i) => {
+      const row = document.createElement("label");
+      row.className = "need-row";
+      row.innerHTML = `<input type="checkbox" ${i < 15 ? "checked" : ""} /><span class="need-q"></span><span class="need-meta"></span>`;
+      row.querySelector(".need-q").textContent = need.question;
+      const meta = row.querySelector(".need-meta");
+      meta.textContent = `${need.unknown ? "didn't know · " : ""}asked ${need.count}×${need.people > 1 ? ` by ${need.people}` : ""}`;
+      meta.classList.toggle("unknown", need.unknown > 0);
+      row.querySelector("input").addEventListener("change", (e) => (need.picked = e.target.checked));
+      need.picked = i < 15;
+      list.appendChild(row);
+    });
+  } catch (err) {
+    setStatus("prepareStatus", friendlyError(err), "bad");
+  }
+}
+$("reanalyseBtn").addEventListener("click", loadTraining);
+
+$("prepareBtn").addEventListener("click", async () => {
+  const picked = needs.filter((n) => n.picked);
+  if (!picked.length) return setStatus("prepareStatus", "Tick at least one question first.", "bad");
+  $("prepareBtn").disabled = true;
+  const ready = [];
+  let failed = 0;
+  for (const [i, need] of picked.entries()) {
+    setStatus("prepareStatus", `Writing answer ${i + 1} of ${picked.length}…`);
+    try {
+      // What MK.ai already knows (including taught documents) goes in as background.
+      const { knowledge } = await lookup(need.question).catch(() => ({ knowledge: { good: [], bad: [] } }));
+      const result = await askGemini(need.question, [], knowledge);
+      if (result.answer && !result.partial) ready.push({ question: need.question, answer: result.answer });
+      else failed++;
+    } catch (err) {
+      failed++;
+      console.warn("Couldn't prepare an answer:", aiErrorMessage(err));
+      if (/resting|quota|used up/i.test(aiErrorMessage(err))) break;
+    }
+  }
+  $("prepareBtn").disabled = false;
+  setStatus(
+    "prepareStatus",
+    ready.length
+      ? `${ready.length} answer${ready.length === 1 ? "" : "s"} ready below.${failed ? ` ${failed} couldn't be written (the AI may be busy) — try those again later.` : ""}`
+      : "The AI couldn't write answers right now (it may be busy or used up for today). Try again later.",
+    ready.length ? "good" : "bad"
+  );
+  setReview(ready);
+});
+
+// --- Bulk answers ---
+$("bulkFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  $("bulkText").value = await file.text();
+  e.target.value = "";
+  $("bulkCheckBtn").click();
+});
+$("bulkCheckBtn").addEventListener("click", () => {
+  const pairs = training.parsePairs($("bulkText").value);
+  if (!pairs.length) {
+    return setStatus("bulkStatus", "No questions and answers found. Check the format examples above.", "bad");
+  }
+  setStatus("bulkStatus", `Found ${pairs.length} question${pairs.length === 1 ? "" : "s"} and answers. Review them below.`, "good");
+  setReview(pairs);
+});
+
+// --- Learn from documents ---
+let docPdf = null;
+$("docFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (!$("docTitle").value.trim()) $("docTitle").value = file.name.replace(/\.[^.]+$/, "");
+  try {
+    if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
+      docPdf = await readAttachment(file);
+      $("docText").value = "";
+      $("docText").placeholder = `PDF ready: ${file.name}. MK.ai will read it when you tap a button below.`;
+      setStatus("docStatus", `PDF ready: ${file.name}`, "good");
+    } else {
+      docPdf = null;
+      $("docText").value = await file.text();
+      setStatus("docStatus", "");
+    }
+  } catch (err) {
+    setStatus("docStatus", err.friendly ? err.message : "That file couldn't be read.", "bad");
+  }
+});
+$("docText").addEventListener("input", () => {
+  if ($("docText").value.trim()) docPdf = null;
+});
+
+// The document's text: typed/pasted, or read out of the PDF by the AI.
+async function documentText() {
+  const typed = $("docText").value.trim();
+  if (typed) return typed;
+  if (!docPdf) return "";
+  setStatus("docStatus", "Reading the PDF…");
+  const result = await askGemini(training.TEXT_FROM_DOCUMENT, [], { good: [], bad: [] }, () => {}, { attachment: docPdf });
+  return result.answer.trim();
+}
+
+$("docLearnBtn").addEventListener("click", async () => {
+  const title = $("docTitle").value.trim() || "Untitled document";
+  $("docLearnBtn").disabled = true;
+  try {
+    const text = await documentText();
+    if (!text) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
+    const chunks = training.chunkText(text);
+    const docId = Date.now().toString(36);
+    await saveInBatches(chunks, (batch, chunk) =>
+      batch.set(doc(collection(db, "knowledge")), {
+        title: title.slice(0, 200),
+        text: chunk,
+        keywords: training.chunkKeywords(`${title} ${chunk}`),
+        docId,
+        createdAt: serverTimestamp(),
+      })
+    );
+    setStatus("docStatus", `✓ MK.ai learned "${title}" (${chunks.length} passage${chunks.length === 1 ? "" : "s"}). It answers questions about it from now on.`, "good");
+    loadDocuments();
+  } catch (err) {
+    setStatus("docStatus", /permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : aiErrorMessage(err), "bad");
+  } finally {
+    $("docLearnBtn").disabled = false;
+  }
+});
+
+$("docQaBtn").addEventListener("click", async () => {
+  const title = $("docTitle").value.trim() || "the document";
+  $("docQaBtn").disabled = true;
+  setStatus("docStatus", "MK.ai is reading the document and writing questions and answers…");
+  try {
+    const typed = $("docText").value.trim();
+    const attachment = typed ? { kind: "text", name: title, text: typed } : docPdf;
+    if (!attachment) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
+    const result = await askGemini(training.QA_FROM_DOCUMENT(20), [], { good: [], bad: [] }, () => {}, { attachment });
+    const pairs = training.readPairsJson(result.answer);
+    if (!pairs.length) return setStatus("docStatus", "The AI's reply couldn't be read as questions and answers. Try again.", "bad");
+    setStatus("docStatus", `${pairs.length} questions and answers ready below.`, "good");
+    setReview(pairs);
+  } catch (err) {
+    setStatus("docStatus", aiErrorMessage(err), "bad");
+  } finally {
+    $("docQaBtn").disabled = false;
+  }
+});
+
+async function loadDocuments() {
+  try {
+    const snap = await getDocs(query(collection(db, "knowledge"), orderBy("createdAt", "desc"), limit(2000)));
+    const docs = new Map();
+    snap.docs.forEach((d) => {
+      const data = d.data();
+      const key = data.docId || data.title;
+      const entry = docs.get(key) || { title: data.title, createdAt: data.createdAt, ids: [] };
+      entry.ids.push(d.id);
+      docs.set(key, entry);
+    });
+    $("docsCount").textContent = `(${docs.size})`;
+    const list = $("docsList");
+    list.innerHTML = docs.size ? "" : `<p class="empty-col-note">No documents yet.</p>`;
+    docs.forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = "doc-row";
+      row.innerHTML = `<span class="need-q"><b></b></span><span class="need-meta"></span><button type="button">delete</button>`;
+      row.querySelector("b").textContent = entry.title;
+      row.querySelector(".need-meta").textContent = `${entry.ids.length} passage${entry.ids.length === 1 ? "" : "s"} · ${formatTime(entry.createdAt)}`;
+      row.querySelector("button").addEventListener("click", async () => {
+        if (!confirm(`Make MK.ai forget "${entry.title}"?`)) return;
+        try {
+          await saveInBatches(entry.ids, (batch, id) => batch.delete(doc(db, "knowledge", id)));
+          loadDocuments();
+        } catch (err) {
+          showError(err);
+        }
+      });
+      list.appendChild(row);
+    });
+  } catch (err) {
+    $("docsList").innerHTML = `<p class="empty-col-note">${/permission/i.test(String(err?.code)) ? "Publish the updated database rules to use documents." : escapeHtml(friendlyError(err))}</p>`;
+  }
 }
