@@ -1,7 +1,7 @@
 // MK.ai service worker: makes the app installable and lets it open offline.
 // Bump CACHE when shipping changes that must reach installed apps right away.
 // Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
-const CACHE = "mkai-v39";
+const CACHE = "mkai-v40";
 const SHELL = [
   "./",
   "style.css?v=37",
@@ -27,6 +27,8 @@ const SHELL = [
   "js/mathword.js",
   "js/mathplus.js",
   "js/mathextra.js",
+  "js/symbolic.js",
+  "js/mathadvanced.js",
   "data/kb/index.json",
   "learn.html",
   "firebase-config.js",

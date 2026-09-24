@@ -3,6 +3,8 @@
 // question and returns a written answer, or null when it isn't its kind of
 // problem. No outside service is used.
 
+import { complexRootsText } from "./mathadvanced.js";
+
 // --- Numbers and formatting ---------------------------------------------------------
 
 const NUM = String.raw`-?\d+(?:\.\d+)?`;
@@ -227,7 +229,7 @@ function solveOneVariable(eq) {
     `Written as a quadratic: ${lead(a, v)}²${close(b, 0) ? "" : then(b, v)}${close(c, 0) ? "" : ` ${c < 0 ? "−" : "+"} ${fmt(Math.abs(c))}`} = 0`,
     `Discriminant: b² − 4ac = ${fmt(disc)}`
   );
-  if (disc < -1e-12) return [...lines, "", "The discriminant is negative, so there are no real solutions."].join("\n");
+  if (disc < -1e-12) return [...lines, "", "The discriminant is negative, so there are no real solutions.", "", complexRootsText(a, b, c, v)].join("\n");
   if (Math.abs(disc) <= 1e-12) return [...lines, "", `One repeated solution: ${v} = ${exact(-b / (2 * a))}.`].join("\n");
   const r1 = (-b + Math.sqrt(disc)) / (2 * a);
   const r2 = (-b - Math.sqrt(disc)) / (2 * a);

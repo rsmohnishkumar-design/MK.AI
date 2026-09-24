@@ -17,6 +17,8 @@ import { db } from "./firebase.js";
 import { PROVIDERS, keyField } from "./providers.js";
 import { CREATOR_NAME, TRIAL_HOURS } from "../firebase-config.js";
 import { meaningReady } from "./meaning.js";
+import { MODEL_NAME } from "./local.js";
+import { knowledgeSize } from "./kb.js";
 
 const QUESTION_START = /^(who|whom|whose|did|do|does|what|can|could|how|why|when|where|which|is|are|was|were)\b/;
 
@@ -149,8 +151,9 @@ export async function detailsReport({ user, profile, chats }) {
     "",
     "🤖 About me",
     `- Name: MK.ai`,
+    `- Model: ${MODEL_NAME} 🦙 (maths engine + ${knowledgeSize() ? knowledgeSize().toLocaleString("en-IN") + " built-in answers" : "built-in knowledge base"} + coding help + memory)`,
     `- Creator: ${CREATOR_NAME}`,
-    `- Answer order: curated answers → my own brain → memory → your documents → Wikipedia → "teach me" (unknown questions go on my learning list)`,
+    `- Answer order: curated answers → my own brain (maths, coding) → built-in knowledge → memory → your documents → Wikipedia → "teach me" (unknown questions go on my learning list)`,
     `- Outside AI: never used in chat, only as a helper in the Training room`,
     "",
     "🧠 My brain",

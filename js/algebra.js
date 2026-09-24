@@ -2,6 +2,8 @@
 // numbers is 5 and their product is -2") and quadratic equations
 // ("solve x^2 - 5x + 6 = 0"), solved step by step with exact roots.
 
+import { complexRootsText } from "./mathadvanced.js";
+
 const N = String.raw`(-?\d+(?:\.\d+)?)`;
 
 function clean(question) {
@@ -174,7 +176,7 @@ function quadraticEquation(q) {
   const r = quadraticRoots(a, b, c);
   const lines = [`${eq}`, `Here a = ${num(a)}, b = ${num(b)}, c = ${num(c)}.`, `Discriminant: b² − 4ac = ${num(b * b)} ${signed(-4 * a * c)} = ${num(r.disc)}`];
   if (!r.real) {
-    lines.push("", "The discriminant is negative, so there are no real roots.");
+    lines.push("", "The discriminant is negative, so there are no real roots.", "", complexRootsText(a, b, c));
   } else if (r.disc === 0) {
     lines.push("", `The discriminant is 0, so there is one repeated root: x = ${r.exact[0]}.`);
   } else {

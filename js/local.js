@@ -4,11 +4,15 @@
 
 import { CREATOR_NAME } from "../firebase-config.js";
 import { codingAnswer } from "./knowledge.js";
+import { solveAdvanced, solveAdvancedFirst } from "./mathadvanced.js";
 import { algebra } from "./algebra.js";
 import { cleanMaths, solveEquations, solveNumbers } from "./mathsolve.js";
 import { solveWordProblems } from "./mathword.js";
 import { solveHigherMaths } from "./mathplus.js";
 import { solveEveryday } from "./mathextra.js";
+
+// The name of MK.ai's own model (its brain: solvers + knowledge + memory).
+export const MODEL_NAME = "Alpaca";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const boss = () => CREATOR_NAME.split(/\s+/)[0];
@@ -279,9 +283,16 @@ const RULES = [
   {
     test: /^(who are you|what are you|what is your name|what'?s your name|your name|introduce yourself|tell me about yourself)\b/,
     creator: () =>
-      `I'm MK.ai 🤖 — your creation, ${boss()}! I chat, answer questions, do maths and conversions, look things up, and learn from everything people teach me. Say "show your details" to see my full report.`,
+      `I'm MK.ai 🤖 (running the ${MODEL_NAME} model) — your creation, ${boss()}! I chat, answer questions, do maths and conversions, look things up, and learn from everything people teach me. Say "show your details" to see my full report.`,
     reply: () =>
-      "I'm MK.ai 🤖 — a friendly assistant that learns from every conversation. I can chat, answer simple questions, do maths and conversions, tell the time, and look things up. If I don't know something, you can teach me!",
+      `I'm MK.ai 🤖, running the ${MODEL_NAME} model — a friendly assistant that learns from every conversation. I can chat, answer questions, solve maths from basics to calculus, do conversions, tell the time, and look things up. If I don't know something, you can teach me!`,
+  },
+  {
+    test: /^(what|which) (ai )?(model|version|brain|llm|engine) (are you|is this|do you (use|run( on)?)|powers you|are you (using|running|built on))|^(what is|tell me about|who is) (the )?alpaca( model)?\b|^(your|mk ?ai'?s?) (model|version)\b/,
+    creator: () =>
+      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 It's all my own: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and memory that grows as people teach me. No outside AI in chat.`,
+    reply: () =>
+      `I run on ${MODEL_NAME} 🦙, MK.ai's own model: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and a memory that learns from people. No outside AI is used in chat.`,
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
@@ -331,7 +342,7 @@ export function localAnswer(question, { creator = false } = {}) {
   // Word problems and equations need "=" and signs that normalize() drops.
   const m = cleanMaths(question);
   const solved =
-    algebra(question) || solveEveryday(m) || solveHigherMaths(m) || solveEquations(m) || solveNumbers(m) || solveWordProblems(m);
+    solveAdvancedFirst(m) || algebra(question) || solveEveryday(m) || solveHigherMaths(m) || solveEquations(m) || solveNumbers(m) || solveWordProblems(m) || solveAdvanced(m);
   if (solved) return solved;
   for (const rule of RULES) {
     if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
