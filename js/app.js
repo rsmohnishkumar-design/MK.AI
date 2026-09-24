@@ -156,7 +156,7 @@ if (configured) {
       const result = await loadProfile(user, pendingAccessCode);
       pendingAccessCode = "";
       profile = result.profile;
-      showChat(user.email, result.notice);
+      showChat(user, result.notice);
     } catch (err) {
       authError.textContent = friendlyError(err);
       await signOut(auth);
@@ -215,10 +215,12 @@ function lockChat(message) {
   questionInput.placeholder = message;
 }
 
-function showChat(email, notice) {
+function showChat(user, notice) {
   authScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
-  signOutBtn.textContent = `sign out (${email})`;
+  signOutBtn.textContent = "sign out";
+  signOutBtn.title = `Signed in as ${user.email}`;
+  restoreConversation(user.uid);
   questionInput.disabled = false;
   sendBtn.disabled = false;
   questionInput.placeholder = "Ask me anything…";
@@ -258,6 +260,64 @@ function remember(question, answer) {
   history.push({ role: "user", content: question }, { role: "assistant", content: answer.slice(0, 8000) });
   if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
 }
+
+// --- The conversation, saved on this device per account so a refresh keeps it ---
+const MAX_SAVED = 100;
+let conversation = [];
+let conversationKey = null;
+
+function saveConversation() {
+  if (!conversationKey) return;
+  try {
+    localStorage.setItem(conversationKey, JSON.stringify(conversation.slice(-MAX_SAVED)));
+  } catch {} // storage full or blocked: the chat still works, it just won't survive a refresh
+}
+
+function record(item) {
+  conversation.push(item);
+  if (conversation.length > MAX_SAVED) conversation.splice(0, conversation.length - MAX_SAVED);
+  saveConversation();
+  return item;
+}
+
+function clearThread() {
+  thread.querySelectorAll(".msg").forEach((n) => n.remove());
+  emptyState.classList.remove("hidden");
+  history.length = 0;
+}
+
+function restoreConversation(uid) {
+  conversationKey = `mkai-chat-${uid}`;
+  try {
+    conversation = JSON.parse(localStorage.getItem(conversationKey)) || [];
+  } catch {
+    conversation = [];
+  }
+  clearThread();
+  let lastQuestion = null;
+  for (const item of conversation) {
+    if (item.role === "user") {
+      addUserMessage(item.text);
+      lastQuestion = item.text;
+    } else if (item.role === "bot") {
+      const msg = createAiMessage();
+      msg.finish(item.text, null);
+      if (item.credit) msg.setCredit(item.credit);
+      if (item.entryId) msg.enableVotes(item.entryId);
+      if (lastQuestion && !item.teachable) remember(lastQuestion, item.text);
+      lastQuestion = null;
+    }
+  }
+  if (conversation.length) emptyState.classList.add("hidden");
+  scrollToBottom();
+}
+
+$("newChatBtn").addEventListener("click", () => {
+  conversation = [];
+  saveConversation();
+  clearThread();
+  questionInput.focus();
+});
 
 function addUserMessage(text) {
   const node = tUser.content.cloneNode(true);
@@ -472,8 +532,9 @@ composer.addEventListener("submit", async (e) => {
     return;
   }
 
-  if (emptyState) emptyState.remove();
+  emptyState.classList.add("hidden");
   addUserMessage(question);
+  record({ role: "user", text: question });
   questionInput.value = "";
   sendBtn.disabled = true;
   scrollToBottom();
@@ -499,7 +560,13 @@ composer.addEventListener("submit", async (e) => {
     if (result.credit) msg.setCredit(result.credit);
     if (result.teachable) msg.enableTeaching(question);
     else remember(question, result.answer);
-    result.saved.then((entryId) => entryId && msg.enableVotes(entryId));
+    const saved = record({ role: "bot", text: result.answer, credit: result.credit || null, teachable: !!result.teachable });
+    result.saved.then((entryId) => {
+      if (!entryId) return;
+      msg.enableVotes(entryId);
+      saved.entryId = entryId;
+      saveConversation();
+    });
   } catch (err) {
     console.error(err);
     loading.remove();

@@ -377,7 +377,9 @@ body {
 @media (max-width: 520px) {
   .header { padding: 16px 0 12px; gap: 10px; }
   .header-text p { display: none; }
-  .signout-btn { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .header { flex-wrap: wrap; row-gap: 8px; }
+  .signout-btn { white-space: nowrap; padding: 6px 10px; }
+  #signOutBtn { margin-left: auto; }
   .desk { padding: 12px 0 16px; }
   .app { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
   .card { max-width: 100%; }
