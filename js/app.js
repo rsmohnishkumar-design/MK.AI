@@ -29,6 +29,7 @@ import * as creator from "./creator.js";
 import { renderAnswer } from "./format.js";
 import { onBrainChange, enableBrain, removeBrain, startBrain, checkSupport, wanted as brainWanted } from "./ownbrain.js";
 import { startMeaning } from "./meaning.js";
+import * as voice from "./voice.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -647,6 +648,11 @@ function createAiMessage() {
         host.classList.remove("hidden");
         host.attachShadow({ mode: "open" }).innerHTML = searchSuggestions;
       }
+      const speakBtn = actions.querySelector(".speak-btn");
+      if (voice.canSpeak) {
+        speakBtn.classList.remove("hidden");
+        speakBtn.addEventListener("click", () => toggleSpeaking(speakBtn, answer));
+      }
       const copyBtn = actions.querySelector(".copy-btn");
       copyBtn.addEventListener("click", async () => {
         try {
@@ -656,6 +662,11 @@ function createAiMessage() {
         } catch {}
       });
       actions.classList.remove("hidden");
+    },
+    // Reads the answer aloud (after a spoken question).
+    speakNow(answer) {
+      const speakBtn = actions.querySelector(".speak-btn");
+      if (voice.canSpeak) toggleSpeaking(speakBtn, answer);
     },
     setCredit(text) {
       const credit = el.querySelector(".answer-credit");
@@ -697,6 +708,28 @@ function createAiMessage() {
       });
     },
   };
+}
+
+// --- Voice ---
+let speakingBtn = null;
+function resetSpeakingBtn() {
+  speakingBtn?.classList.remove("speaking");
+  if (speakingBtn) speakingBtn.textContent = "listen";
+  speakingBtn = null;
+}
+function toggleSpeaking(btn, text) {
+  const wasThis = speakingBtn === btn;
+  voice.stopSpeaking();
+  resetSpeakingBtn();
+  if (wasThis) return;
+  speakingBtn = btn;
+  btn.classList.add("speaking");
+  btn.textContent = "stop";
+  voice.speak(text, {
+    onEnd: () => {
+      if (speakingBtn === btn) resetSpeakingBtn();
+    },
+  });
 }
 
 function addErrorMessage(message) {
@@ -870,6 +903,11 @@ composer.addEventListener("submit", async (e) => {
   const chatId = store.currentId;
   const stillHere = () => store.currentId === chatId;
 
+  voice.stopSpeaking();
+  resetSpeakingBtn();
+  const spoken = askedByVoice;
+  askedByVoice = false;
+
   const waitingForCode = awaitingCode;
   awaitingCode = false;
   const cancelled = waitingForCode && creator.isCancel(question);
@@ -910,6 +948,7 @@ composer.addEventListener("submit", async (e) => {
           });
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
+    if (spoken && stillHere()) msg.speakNow(result.answer);
     if (result.credit) msg.setCredit(result.credit);
     if (result.teachable) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
@@ -944,6 +983,55 @@ secretMark.addEventListener("click", () => {
   if (clickCount >= 7) {
     clickCount = 0;
     window.location.href = "vault.html";
+  }
+});
+
+// --- Voice typing: tap the mic, speak, and the question is sent ---
+const micBtn = $("micBtn");
+let askedByVoice = false;
+let stopVoiceTyping = null;
+function setListening(on) {
+  micBtn.classList.toggle("listening", on);
+  micBtn.setAttribute("aria-pressed", String(on));
+  micBtn.title = on ? "Stop listening" : "Speak your question";
+  questionInput.placeholder = on ? "Listening… speak now" : "Ask me anything…";
+}
+if (voice.canListen) micBtn.classList.remove("hidden");
+micBtn.addEventListener("click", () => {
+  if (stopVoiceTyping) {
+    stopVoiceTyping();
+    return;
+  }
+  voice.stopSpeaking();
+  resetSpeakingBtn();
+  const lastWritten = [...(currentChat()?.messages || [])].reverse().find((m) => m.role === "user")?.text || questionInput.value;
+  setListening(true);
+  try {
+    stopVoiceTyping = voice.listen({
+      lang: voice.languageOf(lastWritten),
+      onText: (text) => {
+        questionInput.value = text;
+        fitQuestion();
+      },
+      onEnd: (text) => {
+        stopVoiceTyping = null;
+        setListening(false);
+        if (text && !sendBtn.disabled) {
+          questionInput.value = text;
+          askedByVoice = true;
+          composer.requestSubmit();
+        }
+      },
+      onError: (code) => {
+        stopVoiceTyping = null;
+        setListening(false);
+        if (code !== "aborted") addErrorMessage(voice.listenErrorMessage(code));
+      },
+    });
+  } catch (err) {
+    stopVoiceTyping = null;
+    setListening(false);
+    addErrorMessage(voice.listenErrorMessage(err?.name));
   }
 });
 

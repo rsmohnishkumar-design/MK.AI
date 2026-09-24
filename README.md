@@ -167,6 +167,15 @@ Look-alike questions are kept apart: they must share half their key words
 and the same numbers. On data-saver connections it stays off, and memory
 uses word matching.
 
+## Voice
+
+Tap the **mic** next to the send button and speak: the words appear as you
+talk and the question is sent when you stop. Answers to spoken questions are
+read aloud, and every answer has a **listen** button. Tamil is used when the
+conversation is in Tamil. Code is described ("the code is shown on screen")
+rather than read out. The mic only shows in browsers that support voice
+typing (Chrome, Edge, Safari).
+
 ## Code School
 
 `learn.html` (the **Learn to code** button in the sidebar) teaches coding
@@ -209,6 +218,7 @@ vault shows them.
 | `js/wiki.js` | Simple knowledge questions from Wikipedia |
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
 | `js/ownbrain.js`, `js/meaning.js` | MK.ai's own on-device model, and neural (meaning) memory |
+| `js/voice.js` | Voice typing and reading answers aloud |
 | `js/creator.js` | Creator mode: the secret-code check and the details report |
 | `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |
