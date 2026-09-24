@@ -23,6 +23,7 @@ import {
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
 import { bestSentences, summarise, wantsSummary } from "./reader.js";
+import { knowledgeAnswer, loadKnowledge } from "./kb.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
@@ -245,7 +246,10 @@ function showChat(user, notice) {
   questionInput.focus();
   forgetOfflineBrain();
   // Neural memory loads quietly once the page is idle.
-  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2000)))(() => startMeaning());
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2000)))(() => {
+    startMeaning();
+    loadKnowledge().catch(() => {});
+  });
 }
 
 function showAuth() {
@@ -754,7 +758,7 @@ const DONT_KNOW = [
 // MK.ai answers everything itself, in this order, stopping at the first that works:
 // 1. Curated answers (the vault: taught and approved in the Training room)
 // 2. Its own brain (greetings, small talk, time, maths, conversions, coding)
-// 3. Memory (everything learned or taught before, matched by meaning)
+// 3. The built-in knowledge base, then memory (everything learned or taught, matched by meaning)
 // 4. Documents taught in the Training room (it picks out the sentences that answer)
 // 5. Wikipedia, for simple "what is / who is" questions
 // 6. "I don't know yet": the question goes on its learning list for the Training room
@@ -832,6 +836,13 @@ async function answer(question, onText, attachment = null) {
   if (own) {
     logActivity(question, "local");
     return { answer: own, saved: nothingSaved };
+  }
+
+  // The built-in knowledge base (checked answers that ship with MK.ai).
+  const known = await knowledgeAnswer(searchFor);
+  if (known) {
+    logActivity(question, "knowledge");
+    return { answer: known.answer, saved: nothingSaved };
   }
 
   if (memory) return fromMemory();

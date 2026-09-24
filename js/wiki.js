@@ -3,7 +3,7 @@
 // factual questions ("how tall is Mount Everest?") are answered by reading
 // the best article and picking out the sentences that answer them.
 
-import { keywords } from "./brain.js";
+import { keywords } from "./words.js";
 import { bestSentences } from "./reader.js";
 
 const TRIGGER =
