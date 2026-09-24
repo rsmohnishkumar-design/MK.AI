@@ -392,6 +392,9 @@ body {
 
 /* Auth gate */
 .hidden { display: none !important; }
+/* Signed in before on this device: the chat shows while the app starts */
+html.has-session #authScreen { display: none !important; }
+html.has-session #chatScreen.hidden { display: flex !important; }
 
 .auth-screen {
   min-height: 100vh;
