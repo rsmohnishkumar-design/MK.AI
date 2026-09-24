@@ -25,7 +25,11 @@ answers in this order, stopping at the first that works:
    Roman numerals, Pythagoras, areas and volumes, clock angles, cubic and
    quartic equations, inequalities, differentiation and integration of
    polynomials, matrices, probability, expanding brackets, identities and
-   numbers in words,
+   numbers in words, multiplication tables, calendar (day of the week, days
+   between dates, leap years), decimals/fractions/percentages, rounding,
+   surds and roots, coordinate geometry, time/data/area/volume units, and
+   exam classics (unitary method, successive discounts, trains, boats,
+   ages, average speed),
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
 3. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
    with the app, then **memory**: everything it has learned or been taught
@@ -260,7 +264,7 @@ vault shows them.
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
-| `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
+| `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |
 | `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
 | `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |

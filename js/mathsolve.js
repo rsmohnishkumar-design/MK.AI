@@ -490,7 +490,10 @@ export function cleanMaths(question) {
     .replace(/÷/g, "/")
     .replace(/²/g, "^2")
     .replace(/³/g, "^3")
-    .replace(/\b\d{1,3}(?:,\d{2,3})+\b/g, (m) => (/^\d{1,3}(,\d{3})+$|^\d{1,2}(,\d{2})*,\d{3}$/.test(m) ? m.replace(/,/g, "") : m))
+    // 1,000 or 1,00,000 → plain digits, but not a point like (10,200)
+    .replace(/\b\d{1,3}(?:,\d{2,3})+\b/g, (m, at, all) =>
+      /^\d{1,3}(,\d{3})+$|^\d{1,2}(,\d{2})*,\d{3}$/.test(m) && !(all[at - 1] === "(" || /^\s*\)/.test(all.slice(at + m.length))) ? m.replace(/,/g, "") : m
+    )
     .replace(/\s+/g, " ")
     .replace(/\?+$/, "")
     .replace(/(\D)!+$/, "$1") // "!" after a number is a factorial
