@@ -297,6 +297,7 @@ vault shows them.
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
 | `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
 | `js/thirukkural.js` | Famous kurals in Tamil with meanings: "give me a thirukkural", "kural on friendship", "kural 391" |
+| `kb-src/` | The scripts that write the knowledge packs in `data/kb/` (one per topic): edit one and run `python3 kb-src/<topic>.py` |
 | `js/deepthink.js` | Deep think: question type, splitting multi-part questions, double-checking maths |
 | `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
