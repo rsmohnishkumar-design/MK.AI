@@ -942,9 +942,12 @@ async function answer(question, onText, attachment = null, think = () => {}) {
   if (!isTimeSensitive(question)) {
     think("Looking it up on Wikipedia");
     const asked = contextual ? searchFor : question;
+    const core = deep.coreQuery(asked);
     const wiki =
       (looksLikeKnowledgeQuestion(asked) && (await wikiAnswer(asked).catch(() => null))) ||
-      (await wikiFind(asked).catch(() => null));
+      (await wikiFind(asked).catch(() => null)) ||
+      // Not found as asked: search again with just the key words
+      (core && core.split(" ").length <= 6 && core !== asked.toLowerCase() ? await wikiFind(core).catch(() => null) : null);
     if (wiki) {
       logActivity(question, "wiki");
       return {

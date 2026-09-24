@@ -49,6 +49,8 @@ answers in this order, stopping at the first that works:
    or "rock paper scissors in python" and it writes a complete, tested
    program. Web apps get a **▶ run** button (they run in a sealed-off frame
    that can't touch MK.ai's data) and **⬇ download** saves any code as a file.
+   Asked for an app it has no template for ("make a hospital management
+   app"), it looks the subject up and builds a titled starter app instead.
 4. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
    with the app, then **memory**: everything it has learned or been taught
    before, matched by meaning.
@@ -294,6 +296,7 @@ vault shows them.
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
 | `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
+| `js/thirukkural.js` | Famous kurals in Tamil with meanings: "give me a thirukkural", "kural on friendship", "kural 391" |
 | `js/deepthink.js` | Deep think: question type, splitting multi-part questions, double-checking maths |
 | `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |

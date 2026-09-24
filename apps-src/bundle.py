@@ -35,6 +35,8 @@ H = [
  ("piano","piano.html","Piano",["piano","keyboard instrument","music keyboard"],"A playable piano with sound (tap or use your keyboard)."),
  ("pomodoro","pomodoro.html","Pomodoro Study Timer",["pomodoro","study timer","focus timer"],"25-minute focus sessions with 5- and 15-minute breaks."),
  ("hangman","hangman.html","Hangman",["hangman","word guessing","guess the word"],"Guess the word letter by letter with 6 lives."),
+ ("goldengate","goldengate.html","Oracle GoldenGate Simulator",["goldengate","golden gate","oracle golden gate","oracle goldengate","ogg","replication simulator","database replication","cdc simulator","change data capture"],"Simulates Oracle GoldenGate replication: change rows in a source database and watch Extract → Data Pump → Replicat copy them to the target, with a GGSCI console (INFO ALL, START/STOP, STATS, LAG) and an out-of-sync ABEND you can fix with SKIPTRANSACTION."),
+ ("starter","_starter.html","Starter App",[],"A starter app with a dashboard, an item list and an activity log."),
  ("webpage","webpage.html","Simple Web Page",["web page","webpage","html page","website","basic website","simple website","first website","html website"],"A starter page showing headings, a list, a table, a link and a button."),
 ]
 P = [
