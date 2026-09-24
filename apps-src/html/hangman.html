@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hangman</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fff7ed; font-family: system-ui, sans-serif; text-align: center; padding: 12px; box-sizing: border-box; }
+  #word { font-size: 36px; letter-spacing: 12px; margin: 16px 0; font-family: monospace; }
+  #lives { font-size: 24px; }
+  .letters { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 480px; margin: 0 auto; }
+  .letters button { width: 40px; height: 40px; font-size: 18px; border: 0; border-radius: 8px; background: #fb923c; color: #fff; cursor: pointer; }
+  .letters button:disabled { background: #d6d3d1; }
+  #msg { font-size: 22px; min-height: 30px; margin: 12px; }
+  #again { padding: 10px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #0ea5e9; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div>
+  <h1>🪢 Hangman</h1>
+  <div id="hint"></div>
+  <div id="word"></div>
+  <div id="lives"></div>
+  <div id="msg"></div>
+  <div class="letters" id="letters"></div>
+  <br><button id="again">New word</button>
+</div>
+<script>
+  const WORDS = [["ELEPHANT", "A big animal"], ["COMPUTER", "You code on it"], ["MANGO", "India's national fruit"], ["CHENNAI", "Capital of Tamil Nadu"], ["PYTHON", "A programming language"], ["RAINBOW", "Seven colours in the sky"]];
+  let word, hint, guessed, lives;
+
+  function start() {
+    [word, hint] = WORDS[Math.floor(Math.random() * WORDS.length)];
+    guessed = new Set();
+    lives = 6;
+    document.getElementById("hint").textContent = `Hint: ${hint}`;
+    const box = document.getElementById("letters");
+    box.innerHTML = "";
+    for (const ch of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+      const b = document.createElement("button");
+      b.textContent = ch;
+      b.onclick = () => guess(ch, b);
+      box.append(b);
+    }
+    draw();
+  }
+
+  function guess(ch, button) {
+    button.disabled = true;
+    guessed.add(ch);
+    if (!word.includes(ch)) lives--;
+    draw();
+  }
+
+  function draw() {
+    document.getElementById("word").textContent = [...word].map((c) => (guessed.has(c) ? c : "_")).join("");
+    document.getElementById("lives").textContent = "❤️".repeat(lives) + "🖤".repeat(6 - lives);
+    const won = [...word].every((c) => guessed.has(c));
+    const msg = document.getElementById("msg");
+    msg.textContent = won ? "🎉 You got it!" : lives === 0 ? `💀 The word was ${word}` : "";
+    if (won || lives === 0) document.querySelectorAll(".letters button").forEach((b) => (b.disabled = true));
+  }
+
+  document.getElementById("again").onclick = start;
+  document.addEventListener("keydown", (e) => {
+    const b = [...document.querySelectorAll(".letters button")].find((x) => x.textContent === e.key.toUpperCase());
+    if (b && !b.disabled) b.click();
+  });
+  start();
+</script>
+</body>
+</html>

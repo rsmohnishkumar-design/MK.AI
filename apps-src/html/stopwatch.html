@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stopwatch</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; }
+  .box { text-align: center; }
+  #time { font-size: clamp(48px, 14vw, 96px); font-variant-numeric: tabular-nums; margin-bottom: 24px; }
+  button { font-size: 18px; padding: 12px 22px; margin: 4px; border: 0; border-radius: 999px; cursor: pointer; }
+  #start { background: #22c55e; } #lap { background: #38bdf8; } #reset { background: #f87171; }
+  ol { text-align: left; max-height: 40vh; overflow-y: auto; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div id="time">00:00.00</div>
+  <button id="start">Start</button>
+  <button id="lap">Lap</button>
+  <button id="reset">Reset</button>
+  <ol id="laps"></ol>
+</div>
+<script>
+  const timeEl = document.getElementById("time");
+  const startBtn = document.getElementById("start");
+  let startedAt = 0, elapsed = 0, timer = null;
+
+  // 83456 ms → "01:23.45"
+  function format(ms) {
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const cs = Math.floor((ms % 1000) / 10);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+  }
+  const current = () => elapsed + (timer ? Date.now() - startedAt : 0);
+
+  startBtn.onclick = () => {
+    if (timer) {            // pause
+      elapsed = current();
+      clearInterval(timer);
+      timer = null;
+      startBtn.textContent = "Start";
+    } else {                // start / resume
+      startedAt = Date.now();
+      timer = setInterval(() => (timeEl.textContent = format(current())), 10);
+      startBtn.textContent = "Pause";
+    }
+  };
+  document.getElementById("lap").onclick = () => {
+    const li = document.createElement("li");
+    li.textContent = format(current());
+    document.getElementById("laps").prepend(li);
+  };
+  document.getElementById("reset").onclick = () => {
+    clearInterval(timer);
+    timer = null;
+    elapsed = 0;
+    startBtn.textContent = "Start";
+    timeEl.textContent = format(0);
+    document.getElementById("laps").innerHTML = "";
+  };
+</script>
+</body>
+</html>

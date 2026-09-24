@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fffbeb; font-family: system-ui, sans-serif; padding: 20px 12px; }
+  h1 { text-align: center; margin: 0 0 16px; }
+  .new { max-width: 600px; margin: 0 auto 20px; display: flex; flex-direction: column; gap: 8px; }
+  .new input, .new textarea { padding: 10px; font-size: 16px; border: 2px solid #fde68a; border-radius: 10px; font-family: inherit; }
+  .new textarea { min-height: 80px; }
+  .new button { padding: 12px; font-size: 16px; border: 0; border-radius: 10px; background: #f59e0b; color: #fff; cursor: pointer; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
+  .note { background: #fef08a; padding: 14px; border-radius: 10px; box-shadow: 0 3px 8px #0001; white-space: pre-wrap; position: relative; }
+  .note h3 { margin: 0 0 6px; }
+  .note small { color: #78716c; display: block; margin-top: 8px; }
+  .note button { position: absolute; top: 6px; right: 6px; border: 0; background: none; font-size: 16px; cursor: pointer; }
+  #search { display: block; margin: 0 auto 16px; width: min(600px, 100%); padding: 10px; font-size: 16px; border-radius: 10px; border: 2px solid #fde68a; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<h1>🗒️ My Notes</h1>
+<form class="new" id="form">
+  <input id="title" placeholder="Title">
+  <textarea id="body" placeholder="Write your note…"></textarea>
+  <button>Save note</button>
+</form>
+<input id="search" placeholder="🔍 Search notes">
+<div class="grid" id="grid"></div>
+<script>
+  let notes = [];
+  try { notes = JSON.parse(localStorage.getItem("notes")) || []; } catch {}
+  const save = () => { try { localStorage.setItem("notes", JSON.stringify(notes)); } catch {} };
+
+  function render() {
+    const find = document.getElementById("search").value.toLowerCase();
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    notes
+      .filter((n) => (n.title + n.body).toLowerCase().includes(find))
+      .forEach((n) => {
+        const card = document.createElement("div");
+        card.className = "note";
+        const h = document.createElement("h3");
+        h.textContent = n.title || "Untitled";
+        const p = document.createElement("div");
+        p.textContent = n.body;
+        const when = document.createElement("small");
+        when.textContent = new Date(n.time).toLocaleString();
+        const del = document.createElement("button");
+        del.textContent = "🗑️";
+        del.title = "Delete";
+        del.onclick = () => { notes = notes.filter((x) => x !== n); save(); render(); };
+        card.append(del, h, p, when);
+        grid.append(card);
+      });
+  }
+
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById("title").value.trim();
+    const body = document.getElementById("body").value.trim();
+    if (!title && !body) return;
+    notes.unshift({ title, body, time: Date.now() });
+    save();
+    e.target.reset();
+    render();
+  });
+  document.getElementById("search").addEventListener("input", render);
+  render();
+</script>
+</body>
+</html>

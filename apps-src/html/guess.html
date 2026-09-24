@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Number Guessing Game</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: linear-gradient(135deg, #0ea5e9, #6366f1); font-family: system-ui, sans-serif; }
+  .card { width: min(380px, 92vw); background: #fff; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 10px 30px #0003; }
+  input { width: 110px; font-size: 24px; padding: 8px; text-align: center; border: 2px solid #ddd; border-radius: 10px; }
+  button { font-size: 18px; padding: 10px 18px; margin: 8px 4px; border: 0; border-radius: 10px; background: #6366f1; color: #fff; cursor: pointer; }
+  #hint { font-size: 20px; min-height: 28px; margin: 12px 0; }
+  #tries { color: #666; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🎯 Guess the Number</h1>
+  <p>I'm thinking of a number between 1 and 100.</p>
+  <input id="guess" type="number" min="1" max="100">
+  <br><button id="check">Guess</button><button id="again">New game</button>
+  <div id="hint"></div>
+  <div id="tries"></div>
+</div>
+<script>
+  let secret, tries;
+  const hint = document.getElementById("hint");
+  const input = document.getElementById("guess");
+
+  function newGame() {
+    secret = Math.floor(Math.random() * 100) + 1;
+    tries = 0;
+    hint.textContent = "";
+    document.getElementById("tries").textContent = "";
+    input.value = "";
+    input.focus();
+  }
+
+  function check() {
+    const n = Number(input.value);
+    if (!n || n < 1 || n > 100) { hint.textContent = "Type a number from 1 to 100"; return; }
+    tries++;
+    if (n === secret) hint.textContent = `🎉 Correct! It was ${secret}.`;
+    else if (Math.abs(n - secret) <= 5) hint.textContent = n < secret ? "🔥 Very close — a bit higher!" : "🔥 Very close — a bit lower!";
+    else hint.textContent = n < secret ? "⬆️ Higher" : "⬇️ Lower";
+    document.getElementById("tries").textContent = `Tries: ${tries}`;
+    input.select();
+  }
+
+  document.getElementById("check").onclick = check;
+  input.addEventListener("keydown", (e) => e.key === "Enter" && check());
+  document.getElementById("again").onclick = newGame;
+  newGame();
+</script>
+</body>
+</html>

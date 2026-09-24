@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drawing App</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: #e5e7eb; overflow: hidden; }
+  .bar { display: flex; gap: 10px; align-items: center; padding: 10px; background: #111827; color: #fff; flex-wrap: wrap; }
+  .bar button { padding: 8px 14px; border: 0; border-radius: 8px; cursor: pointer; }
+  canvas { display: block; background: #fff; touch-action: none; }
+</style>
+</head>
+<body>
+<div class="bar">
+  🎨 <input type="color" id="color" value="#2563eb">
+  Size <input type="range" id="size" min="1" max="40" value="6">
+  <button id="eraser">Eraser</button>
+  <button id="clear">Clear</button>
+  <button id="save">Save picture</button>
+</div>
+<canvas id="canvas"></canvas>
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  let drawing = false, erasing = false, last = null;
+
+  function resize() {
+    const copy = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.width = innerWidth;
+    canvas.height = innerHeight - document.querySelector(".bar").offsetHeight;
+    ctx.putImageData(copy, 0, 0);
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  // Pointer events work for mouse, finger and stylus
+  canvas.addEventListener("pointerdown", (e) => { drawing = true; last = [e.offsetX, e.offsetY]; });
+  canvas.addEventListener("pointerup", () => (drawing = false));
+  canvas.addEventListener("pointerleave", () => (drawing = false));
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drawing) return;
+    ctx.strokeStyle = erasing ? "#ffffff" : document.getElementById("color").value;
+    ctx.lineWidth = document.getElementById("size").value;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(...last);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+    last = [e.offsetX, e.offsetY];
+  });
+
+  document.getElementById("eraser").onclick = (e) => {
+    erasing = !erasing;
+    e.target.textContent = erasing ? "Pen" : "Eraser";
+  };
+  document.getElementById("clear").onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("save").onclick = () => {
+    const a = document.createElement("a");
+    a.download = "drawing.png";
+    a.href = canvas.toDataURL();
+    a.click();
+  };
+</script>
+</body>
+</html>

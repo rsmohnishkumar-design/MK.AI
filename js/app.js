@@ -24,6 +24,7 @@ import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
 import { bestSentences, summarise, wantsSummary } from "./reader.js";
 import { knowledgeAnswer, loadKnowledge } from "./kb.js";
+import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
@@ -836,6 +837,13 @@ async function answer(question, onText, attachment = null) {
   if (own) {
     logActivity(question, "local");
     return { answer: own, saved: nothingSaved };
+  }
+
+  // Apps and programs MK.ai builds from its tested templates (data/apps.json).
+  const built = await appAnswer(question);
+  if (built) {
+    logActivity(question, "app");
+    return { answer: built, saved: nothingSaved };
   }
 
   // The built-in knowledge base (checked answers that ship with MK.ai).

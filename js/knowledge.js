@@ -188,6 +188,8 @@ export function codingAnswer(question) {
   if (/^(teach me (to )?(code|coding|programming)|how (do i|to|can i) (learn|start) (to )?(code|coding|programming)|i want to learn (to )?(code|coding|programming)|learn (to )?(code|coding|programming)|code school)\b/.test(q)) {
     return LEARN;
   }
+  // Another language named ("loops in python"): the knowledge base has examples in that language.
+  if (/\b(python|java(?!script)|c\+\+|cpp|c#|php|sql|kotlin|swift|ruby|rust|golang|dart|typescript)\b|\bin c\b/.test(q)) return null;
   const hasContext = CODING_CONTEXT.test(q);
   for (const topic of TOPICS) {
     if (topic.needsContext && !hasContext) continue;

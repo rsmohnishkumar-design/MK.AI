@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit Converter</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f0f9ff; font-family: system-ui, sans-serif; }
+  .card { width: min(420px, 92vw); background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #0002; }
+  select, input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 17px; margin: 6px 0; border: 2px solid #bae6fd; border-radius: 10px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  #result { font-size: 24px; margin-top: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📏 Unit Converter</h1>
+  <select id="kind"></select>
+  <input id="value" type="number" value="1">
+  <div class="row"><select id="from"></select> → <select id="to"></select></div>
+  <div id="result"></div>
+</div>
+<script>
+  // Each unit's size in a base unit (metre, kilogram, second …)
+  const UNITS = {
+    Length: { metre: 1, kilometre: 1000, centimetre: 0.01, millimetre: 0.001, mile: 1609.344, yard: 0.9144, foot: 0.3048, inch: 0.0254 },
+    Weight: { kilogram: 1, gram: 0.001, tonne: 1000, pound: 0.45359237, ounce: 0.028349523 },
+    Time: { second: 1, minute: 60, hour: 3600, day: 86400, week: 604800 },
+    Volume: { litre: 1, millilitre: 0.001, "cubic metre": 1000, gallon: 3.78541, cup: 0.24 },
+    Temperature: { celsius: "C", fahrenheit: "F", kelvin: "K" },
+  };
+  const $ = (id) => document.getElementById(id);
+
+  function toCelsius(v, u) { return u === "C" ? v : u === "F" ? (v - 32) * 5 / 9 : v - 273.15; }
+  function fromCelsius(c, u) { return u === "C" ? c : u === "F" ? c * 9 / 5 + 32 : c + 273.15; }
+
+  function fillUnits() {
+    const names = Object.keys(UNITS[$("kind").value]);
+    for (const id of ["from", "to"]) $(id).innerHTML = names.map((n) => `<option>${n}</option>`).join("");
+    $("to").selectedIndex = 1;
+    convert();
+  }
+
+  function convert() {
+    const table = UNITS[$("kind").value];
+    const v = Number($("value").value);
+    const a = table[$("from").value], b = table[$("to").value];
+    const result = typeof a === "string" ? fromCelsius(toCelsius(v, a), b) : (v * a) / b;
+    $("result").textContent = `${v} ${$("from").value} = ${Number(result.toPrecision(8))} ${$("to").value}`;
+  }
+
+  $("kind").innerHTML = Object.keys(UNITS).map((k) => `<option>${k}</option>`).join("");
+  $("kind").onchange = fillUnits;
+  for (const id of ["value", "from", "to"]) $(id).addEventListener("input", convert);
+  fillUnits();
+</script>
+</body>
+</html>

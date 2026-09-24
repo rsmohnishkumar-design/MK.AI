@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Portfolio</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; color: #1f2937; line-height: 1.6; }
+  nav { position: sticky; top: 0; background: #111827; padding: 14px 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  nav b { color: #fbbf24; }
+  nav a { color: #e5e7eb; text-decoration: none; margin-left: 16px; }
+  header { background: linear-gradient(135deg, #1e3a8a, #7c3aed); color: #fff; text-align: center; padding: 80px 20px; }
+  header h1 { font-size: clamp(32px, 7vw, 56px); margin: 0; }
+  .btn { display: inline-block; margin-top: 18px; padding: 12px 24px; background: #fbbf24; color: #111827; border-radius: 999px; text-decoration: none; font-weight: 600; }
+  section { max-width: 900px; margin: 0 auto; padding: 50px 20px; }
+  h2 { border-bottom: 3px solid #7c3aed; display: inline-block; }
+  .skills span { display: inline-block; background: #ede9fe; color: #5b21b6; padding: 6px 14px; border-radius: 999px; margin: 4px; }
+  .projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .project { border: 1px solid #e5e7eb; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px #0001; }
+  footer { background: #111827; color: #9ca3af; text-align: center; padding: 24px; }
+</style>
+</head>
+<body>
+<nav><b>Your Name</b><div><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a><a href="#contact">Contact</a></div></nav>
+<header>
+  <h1>Hi, I'm Your Name 👋</h1>
+  <p>Student · Developer · Creator</p>
+  <a class="btn" href="#projects">See my work</a>
+</header>
+<section id="about">
+  <h2>About me</h2>
+  <p>Write a few lines about yourself: where you study or work, what you love building, and what you're learning next.</p>
+</section>
+<section id="skills">
+  <h2>Skills</h2>
+  <div class="skills"><span>HTML</span><span>CSS</span><span>JavaScript</span><span>Python</span><span>Firebase</span><span>Git & GitHub</span></div>
+</section>
+<section id="projects">
+  <h2>Projects</h2>
+  <div class="projects">
+    <div class="project"><h3>MK.ai</h3><p>My own AI assistant that answers questions, solves maths and learns.</p></div>
+    <div class="project"><h3>To-Do App</h3><p>A task list that saves in the browser.</p></div>
+    <div class="project"><h3>Snake Game</h3><p>The classic game, playable on phone and computer.</p></div>
+  </div>
+</section>
+<section id="contact">
+  <h2>Contact</h2>
+  <p>📧 you@example.com<br>🐙 github.com/your-username</p>
+</section>
+<footer>© <span id="year"></span> Your Name · Made with HTML & CSS</footer>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

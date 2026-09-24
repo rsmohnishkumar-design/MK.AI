@@ -86,7 +86,7 @@ export function passageScore(question, passageKeywords) {
 
 // --- Learning from users ----------------------------------------------------------
 
-const SKIP_MODES = new Set(["local", "creator", "file", "taught", "knowledge"]);
+const SKIP_MODES = new Set(["local", "creator", "file", "taught", "knowledge", "app"]);
 
 // Groups the activity log into distinct questions and finds what MK.ai should
 // learn: questions it couldn't answer, and questions people ask again and again.

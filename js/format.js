@@ -39,6 +39,60 @@ function inline(parent, text) {
   if (last < text.length) parent.append(text.slice(last));
 }
 
+const EXT = { html: "html", python: "py", py: "py", javascript: "js", js: "js", css: "css", java: "java", c: "c", cpp: "cpp", "c++": "cpp", sql: "sql", json: "json", bash: "sh", sh: "sh" };
+
+function button(label, cls, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = cls;
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+// "my-to-do-list.html" from the <title>, else "code.py" and so on
+function fileName(lang, code) {
+  const title = lang === "html" && code.match(/<title>([^<]{1,60})<\/title>/i);
+  const base = (title ? title[1] : "code").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "code";
+  return `${base}.${EXT[lang] || "txt"}`;
+}
+
+function download(lang, code) {
+  const url = URL.createObjectURL(new Blob([code], { type: lang === "html" ? "text/html" : "text/plain" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName(lang, code);
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+// Runs an HTML app in a sealed-off frame: its own blank origin, so it can't
+// touch MK.ai's login, storage or pages.
+export function runPreview(code) {
+  const overlay = document.createElement("div");
+  overlay.className = "preview-overlay";
+  const bar = document.createElement("div");
+  bar.className = "preview-bar";
+  const title = document.createElement("span");
+  title.textContent = "▶ Running your app";
+  const frame = document.createElement("iframe");
+  frame.className = "preview-frame";
+  frame.setAttribute("sandbox", "allow-scripts allow-modals allow-forms allow-popups allow-pointer-lock");
+  frame.setAttribute("title", "App preview");
+  frame.srcdoc = code;
+  const close = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => e.key === "Escape" && close();
+  bar.append(title, button("reload", "code-copy", () => (frame.srcdoc = code)), button("✕ close", "code-copy", close));
+  overlay.append(bar, frame);
+  document.body.append(overlay);
+  document.addEventListener("keydown", onKey);
+}
+
 function codeBlock(lang, code) {
   const box = document.createElement("div");
   box.className = "code-block";
@@ -46,18 +100,21 @@ function codeBlock(lang, code) {
   head.className = "code-head";
   const label = document.createElement("span");
   label.textContent = lang || "code";
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "code-copy";
-  copy.textContent = "copy";
-  copy.addEventListener("click", async () => {
+  const actions = document.createElement("span");
+  actions.className = "code-actions";
+  if (lang === "html" && /<(html|body|script|div|button)\b/i.test(code)) {
+    actions.append(button("▶ run", "code-copy code-run", () => runPreview(code)));
+  }
+  if (EXT[lang] && code.split("\n").length > 3) actions.append(button("⬇ download", "code-copy", () => download(lang, code)));
+  const copy = button("copy", "code-copy", async () => {
     try {
       await navigator.clipboard.writeText(code);
       copy.textContent = "copied";
       setTimeout(() => (copy.textContent = "copy"), 1500);
     } catch {}
   });
-  head.append(label, copy);
+  actions.append(copy);
+  head.append(label, actions);
   const pre = document.createElement("pre");
   const el = document.createElement("code");
   el.textContent = code;

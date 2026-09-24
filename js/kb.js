@@ -12,13 +12,15 @@ let entries = [];
 const byWord = new Map(); // key word → indexes of entries whose phrasings use it
 let loading = null;
 
+// "c++" and "c#" would lose their symbols and look like plain "c"
+const prep = (text) => text.replace(/c\+\+/gi, " cpp ").replace(/c#/gi, " csharp ");
 const numbersIn = (text) => (text.match(/\d+(?:\.\d+)?/g) || []).sort().join(",");
 
 // Builds the search index from pack objects (also used by the tests).
 export function addPacks(packs) {
   for (const pack of packs) {
     for (const [q, a, alts = []] of pack.entries) {
-      const phrasings = [q, ...alts].map((p) => ({ words: keywords(p), numbers: numbersIn(p) }));
+      const phrasings = [q, ...alts].map((p) => ({ words: keywords(prep(p)), numbers: numbersIn(prep(p)) }));
       const index = entries.push({ q, a, topic: pack.topic, phrasings }) - 1;
       for (const p of phrasings) {
         for (const w of p.words) {
@@ -60,9 +62,9 @@ function score(words, phrasing) {
 
 // The best entry for a question, or null. Pure lookup once loaded.
 export function bestEntry(question, minScore = 0.8) {
-  const words = keywords(question);
+  const words = keywords(prep(question));
   if (!words.length) return null;
-  const numbers = numbersIn(question);
+  const numbers = numbersIn(prep(question));
   const candidates = new Set();
   for (const w of words) for (const i of byWord.get(w) || []) candidates.add(i);
   let best = null;

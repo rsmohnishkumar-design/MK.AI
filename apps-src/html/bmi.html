@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BMI Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #ecfdf5; font-family: system-ui, sans-serif; }
+  .card { width: min(360px, 92vw); background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #0002; }
+  label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 18px; border: 2px solid #d1fae5; border-radius: 10px; }
+  button { width: 100%; margin-top: 16px; padding: 12px; font-size: 18px; border: 0; border-radius: 10px; background: #10b981; color: #fff; cursor: pointer; }
+  #out { margin-top: 16px; font-size: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>⚖️ BMI Calculator</h1>
+  <label for="weight">Weight (kg)</label>
+  <input id="weight" type="number" placeholder="e.g. 60">
+  <label for="height">Height (cm)</label>
+  <input id="height" type="number" placeholder="e.g. 170">
+  <button id="calc">Calculate</button>
+  <div id="out"></div>
+</div>
+<script>
+  document.getElementById("calc").onclick = () => {
+    const kg = Number(document.getElementById("weight").value);
+    const m = Number(document.getElementById("height").value) / 100;
+    const out = document.getElementById("out");
+    if (!kg || !m) { out.textContent = "Please enter your weight and height."; return; }
+    const bmi = kg / (m * m);   // BMI = weight ÷ height²
+    let group = "Healthy weight ✅";
+    if (bmi < 18.5) group = "Underweight";
+    else if (bmi >= 30) group = "Obese";
+    else if (bmi >= 25) group = "Overweight";
+    out.innerHTML = `Your BMI is <b>${bmi.toFixed(1)}</b><br>${group}`;
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz App</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fef3c7; font-family: system-ui, sans-serif; padding: 12px; box-sizing: border-box; }
+  .quiz { width: min(480px, 100%); background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #0002; }
+  .count { color: #92400e; font-size: 14px; }
+  h2 { margin: 8px 0 18px; }
+  .options button { display: block; width: 100%; margin: 8px 0; padding: 12px; font-size: 16px; text-align: left; border: 2px solid #e5e7eb; border-radius: 10px; background: #fff; cursor: pointer; }
+  .options button.right { background: #bbf7d0; border-color: #22c55e; }
+  .options button.wrong { background: #fecaca; border-color: #ef4444; }
+  #next { margin-top: 12px; padding: 12px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #f59e0b; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="quiz" id="quiz"></div>
+<script>
+  // Add your own questions here: the answer is the index of the right option (0 = first).
+  const questions = [
+    { q: "What is the capital of India?", options: ["Mumbai", "New Delhi", "Chennai", "Kolkata"], answer: 1 },
+    { q: "How many planets are in the solar system?", options: ["7", "8", "9", "10"], answer: 1 },
+    { q: "What is 12 × 12?", options: ["124", "144", "132", "156"], answer: 1 },
+    { q: "Which gas do plants take in?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], answer: 2 },
+    { q: "Who wrote Thirukkural?", options: ["Kambar", "Thiruvalluvar", "Bharathiyar", "Avvaiyar"], answer: 1 },
+  ];
+  const box = document.getElementById("quiz");
+  let index = 0, score = 0;
+
+  function showQuestion() {
+    const item = questions[index];
+    box.innerHTML = `<div class="count">Question ${index + 1} of ${questions.length} · Score ${score}</div><h2></h2><div class="options"></div>`;
+    box.querySelector("h2").textContent = item.q;
+    item.options.forEach((text, i) => {
+      const b = document.createElement("button");
+      b.textContent = text;
+      b.onclick = () => choose(i, b);
+      box.querySelector(".options").append(b);
+    });
+  }
+
+  function choose(i, button) {
+    const item = questions[index];
+    const buttons = box.querySelectorAll(".options button");
+    buttons.forEach((b) => (b.disabled = true));
+    buttons[item.answer].classList.add("right");
+    if (i === item.answer) score++;
+    else button.classList.add("wrong");
+    const next = document.createElement("button");
+    next.id = "next";
+    next.textContent = index + 1 < questions.length ? "Next →" : "See result";
+    next.onclick = () => (++index < questions.length ? showQuestion() : showResult());
+    box.append(next);
+  }
+
+  function showResult() {
+    const percent = Math.round((score / questions.length) * 100);
+    box.innerHTML = `<h2>🎉 You scored ${score} out of ${questions.length} (${percent}%)</h2><button id="next">Play again</button>`;
+    box.querySelector("#next").onclick = () => { index = 0; score = 0; showQuestion(); };
+  }
+
+  showQuestion();
+</script>
+</body>
+</html>
