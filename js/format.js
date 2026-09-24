@@ -66,15 +66,53 @@ function codeBlock(lang, code) {
   return box;
 }
 
+// Some saved answers write maths in LaTeX ($\\frac{-5 \\pm \\sqrt{17}}{2}$).
+// Turn it into readable text: (−5 ± √17)/2. Plain "$5" prices are left alone.
+const SYMBOLS = {
+  pm: "±", mp: "∓", times: "×", cdot: "·", div: "÷", approx: "≈", neq: "≠", ne: "≠", leq: "≤", le: "≤",
+  geq: "≥", ge: "≥", infty: "∞", pi: "π", theta: "θ", alpha: "α", beta: "β", degree: "°", circ: "°",
+  rightarrow: "→", Rightarrow: "⇒", to: "→", quad: " ", qquad: " ", ldots: "…", dots: "…",
+};
+const SUPERS = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", n: "ⁿ", "-": "⁻", "+": "⁺" };
+const simple = (t) => /^[\w.√²³]+$/.test(t);
+export function mathToText(tex) {
+  let t = tex;
+  for (let i = 0; i < 6; i++) {
+    const before = t;
+    t = t
+      .replace(/\\d?frac\{([^{}]*)\}\{([^{}]*)\}/g, (_, a, b) => `${simple(a) ? a : `(${a})`}/${simple(b) ? b : `(${b})`}`)
+      .replace(/\\sqrt\{([^{}]*)\}/g, (_, a) => (simple(a) ? `√${a}` : `√(${a})`))
+      .replace(/\\(?:text|mathrm|mathbf|operatorname)\{([^{}]*)\}/g, "$1")
+      .replace(/\^\{([^{}]*)\}/g, (_, e) => ([...e].every((c) => SUPERS[c]) ? [...e].map((c) => SUPERS[c]).join("") : `^(${e})`));
+    if (t === before) break;
+  }
+  return t
+    .replace(/\^([0-9n])/g, (_, c) => SUPERS[c])
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\([A-Za-z]+)/g, (_, name) => SYMBOLS[name] ?? name)
+    .replace(/\\[,;!: ]/g, " ")
+    .replace(/[{}]/g, "")
+    .replace(/-/g, "−")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+export function readableMath(text) {
+  return text
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => mathToText(m))
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, m) => mathToText(m))
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => mathToText(m))
+    .replace(/\$([^$\n]+?)\$/g, (whole, m) => (/\\[a-zA-Z]|[\^_=]|^[a-z]$/.test(m) ? mathToText(m) : whole));
+}
+
 export function renderAnswer(container, text) {
   container.replaceChildren();
   let last = 0;
   for (const m of text.matchAll(FENCE)) {
     // The box has its own spacing, so blank lines around it are dropped.
-    if (m.index > last) inline(container, text.slice(last, m.index).replace(/\s+$/, ""));
+    if (m.index > last) inline(container, readableMath(text.slice(last, m.index)).replace(/\s+$/, ""));
     container.append(codeBlock(m[1].toLowerCase(), m[2].replace(/\n$/, "")));
     last = m.index + m[0].length;
     while (text[last] === "\n") last++;
   }
-  if (last < text.length) inline(container, text.slice(last));
+  if (last < text.length) inline(container, readableMath(text.slice(last)));
 }

@@ -17,6 +17,8 @@ answers in this order, stopping at the first that works:
 2. **Its own brain**, instantly and on the device: greetings (including
    vanakkam and namaste), small talk, who it is, jokes, the time and date,
    maths ("12 x 7", "15% of 200", "squre root of 81") with typos allowed,
+   algebra solved step by step ("the difference of two numbers is 5 and
+   their product is -2", "solve x^2 - 5x + 6 = 0"),
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
 3. **Memory**: everything it has learned or been taught before, matched by
    meaning.
@@ -250,6 +252,7 @@ vault shows them.
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
+| `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
 | `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
 | `js/meaning.js` | Neural (meaning) memory |

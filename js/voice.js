@@ -2,6 +2,8 @@
 // synthesis), using the browser's built-in speech features. English and
 // Tamil are recognised from what the person last wrote or said.
 
+import { readableMath } from "./format.js";
+
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 export const canListen = !!Recognition;
 export const canSpeak = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
@@ -55,7 +57,7 @@ export function listenErrorMessage(code) {
 
 // What's worth reading aloud: code and links are described, not spelled out.
 export function speakable(text) {
-  return text
+  return readableMath(text)
     .replace(/```[\s\S]*?(```|$)/g, " (the code is shown on screen) ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/[`*_#>]/g, "")

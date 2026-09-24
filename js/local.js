@@ -4,6 +4,7 @@
 
 import { CREATOR_NAME } from "../firebase-config.js";
 import { codingAnswer } from "./knowledge.js";
+import { algebra } from "./algebra.js";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const boss = () => CREATOR_NAME.split(/\s+/)[0];
@@ -323,6 +324,9 @@ const RULES = [
 export function localAnswer(question, { creator = false } = {}) {
   const q = normalize(question);
   if (!q) return null;
+  // Word problems and equations need "=" and signs that normalize() drops.
+  const solved = algebra(question);
+  if (solved) return solved;
   for (const rule of RULES) {
     if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
   }
