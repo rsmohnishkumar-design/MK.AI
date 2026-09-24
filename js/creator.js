@@ -15,7 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { db } from "./firebase.js";
 import { PROVIDERS, keyField } from "./providers.js";
-import { CREATOR_NAME, GEMINI_MODELS, TRIAL_HOURS } from "../firebase-config.js";
+import { CREATOR_NAME, TRIAL_HOURS } from "../firebase-config.js";
 import { meaningReady } from "./meaning.js";
 
 const QUESTION_START = /^(who|whom|whose|did|do|does|what|can|could|how|why|when|where|which|is|are|was|were)\b/;
@@ -150,7 +150,8 @@ export async function detailsReport({ user, profile, chats }) {
     "🤖 About me",
     `- Name: MK.ai`,
     `- Creator: ${CREATOR_NAME}`,
-    `- Answer order: curated answers → my own brain → memory → Wikipedia → outside AI → "teach me"`,
+    `- Answer order: curated answers → my own brain → memory → your documents → Wikipedia → "teach me" (unknown questions go on my learning list)`,
+    `- Outside AI: never used in chat, only as a helper in the Training room`,
     "",
     "🧠 My brain",
     `- Things I've learned: ${show(total)}`,
@@ -159,9 +160,8 @@ export async function detailsReport({ user, profile, chats }) {
     `  - taught by people: ${show(taught)}`,
     `- Curated answers in the vault: ${show(curated)}`,
     "",
-    "⚡ AI services",
-    `- Saved keys: ${services}`,
-    `- Gemini backup models: ${GEMINI_MODELS.join(", ")}`,
+    "⚡ Training helpers",
+    `- Training-room helpers: ${services === "none saved yet" ? "Gemini" : `${services}, Gemini`}`,
     `- Neural memory (meaning matching): ${meaningReady() ? "on" : "starting / word matching for now"}`,
     "",
     "👤 Your account",

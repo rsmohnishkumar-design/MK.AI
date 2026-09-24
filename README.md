@@ -1,39 +1,50 @@
 # MK.ai — an AI assistant that learns from every conversation
 
 An installable web app (PWA) that runs entirely on free services, no card
-needed: the site is hosted on **GitHub Pages**, **Firebase** (free Spark
-plan) handles logins and the database, and answers come from free AI
-services — **Groq, Cerebras, OpenRouter or GitHub Models**, whichever you
-add a key for — with **Google Gemini** as a backup.
+needed: the site is hosted on **GitHub Pages**, and **Firebase** (free Spark
+plan) handles logins and the database.
+
+**MK.ai answers everything itself.** People never talk to an outside AI:
+answers come only from what MK.ai knows and can read. Outside AI services
+(Gemini, and Groq, Cerebras, OpenRouter or GitHub Models if you add a key)
+are used only in the admin **Training room**, as a helper that drafts
+answers for you to approve.
 
 People sign up with an email and password and ask anything. MK.ai
 answers in this order, stopping at the first that works:
 
-1. **Curated answers** you added in the admin vault.
+1. **Curated answers** in the vault (taught and approved in the Training room).
 2. **Its own brain**, instantly and on the device: greetings (including
    vanakkam and namaste), small talk, who it is, jokes, the time and date,
-   maths ("12 x 7", "15% of 200", "square root of 81") and unit
-   conversions ("10 km to miles", "37 c to f").
-3. **Memory**: everything it has learned or been taught before.
-4. **Wikipedia**, for simple "what is / who is / explain" questions (free,
-   no account; answers are credited "from Wikipedia").
-5. **Outside AI services**, if any are set up and have free allowance left.
-6. Otherwise it says it doesn't know yet and shows a **"Teach MK.ai"** box.
-   Whatever someone teaches it is remembered for everyone.
+   maths ("12 x 7", "15% of 200", "squre root of 81") with typos allowed,
+   unit conversions ("10 km to miles") and coding basics ("what is a loop?").
+3. **Memory**: everything it has learned or been taught before, matched by
+   meaning.
+4. **Your documents**: it reads the documents taught in the Training room and
+   picks out the sentences that answer the question.
+5. **Wikipedia**: "what is / who is" questions get the article's opening;
+   other factual questions ("how tall is Mount Everest?") are answered by
+   reading the best article and picking out the answering sentences.
+6. Otherwise it says it doesn't know yet, puts the question on its
+   **learning list** (Training room → Learn from users), and shows a
+   **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
+
+Follow-up questions ("what about its population?") are looked up together
+with the topic of the previous question. Text and code files sent with the
+paperclip are read by MK.ai itself (it finds the answering sentences, or
+summarises the file).
 
 MK.ai gets better the more it's used:
 
-- **Remembers answers.** Every new answer is saved. When someone asks
-  the same thing again (typos and rewording are fine), it answers
-  instantly from memory without calling the AI.
+- **Remembers answers.** Taught and Wikipedia answers are saved. When
+  someone asks the same thing again (typos and rewording are fine), it
+  answers instantly from memory.
 - **Learns from 👍 / 👎.** Upvoted answers are trusted more and never
-  expire. A downvoted answer is never reused; next time, the AI is
-  shown the bad answer and told to do better.
-- **Uses what it knows.** Related things it has learned, and anything
-  you teach it in the vault, are handed to the AI as background.
+  expire. A downvoted answer is never reused.
+- **Learns from people's questions.** The Training room lists what it
+  couldn't answer, grouped however it was worded, so you can teach it.
 - **Knows what goes stale.** Questions about "today", prices, weather,
-  news and so on are always answered fresh, and unconfirmed memories are
-  re-checked after 45 days.
+  news and so on are never answered from old memory.
 
 ## One-time setup (about 15 minutes, all free)
 
@@ -93,11 +104,11 @@ website. This uses a free reCAPTCHA key (reCAPTCHA Enterprise).
 4. In **App Check → APIs**, find **Firebase AI Logic** and tap
    **Enforce**.
 
-### 6. Add a free AI key (recommended — the main AI)
+### 6. Add a free AI key (optional — a helper for the Training room)
 
-Gemini's free tier allows only a few dozen answers a day. Add a key from
-at least one of these free services (no card needed); MK.ai uses every
-key you save, in this order:
+The Training room uses an AI to draft answers for you to approve. Gemini's
+free tier allows only a few dozen a day; a key from one of these free
+services (no card needed) gives it more. The chat never uses them:
 
 | Service | How to get a key |
 | --- | --- |
@@ -238,14 +249,15 @@ vault shows them.
 | `index.html`, `style.css`, `js/app.js` | The chat app |
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
-| `js/wiki.js` | Simple knowledge questions from Wikipedia |
+| `js/wiki.js` | Knowledge questions from Wikipedia |
+| `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
 | `js/meaning.js` | Neural (meaning) memory |
 | `js/voice.js` | Voice typing and reading answers aloud |
 | `js/attach.js` | Photos, PDFs and text files sent with a question |
 | `js/training.js` | The Training room: analysing questions, bulk answers, documents |
 | `js/creator.js` | Creator mode: the secret-code check and the details report |
-| `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
+| `js/ai.js` | Outside AI helpers, used only in the Training room |
 | `js/providers.js` | The free AI services and their models |
 | `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project (and App Check) |
 | `vault.html`, `vault.css`, `js/vault.js` | The admin vault |

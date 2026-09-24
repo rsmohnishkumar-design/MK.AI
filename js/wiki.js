@@ -1,5 +1,10 @@
-// Answers simple knowledge questions ("what is photosynthesis?", "who is
-// APJ Abdul Kalam?") from Wikipedia's free public API: no account, no key.
+// Answers knowledge questions from Wikipedia's free public API (no account,
+// no key): "what is / who is" questions get the article's opening, and other
+// factual questions ("how tall is Mount Everest?") are answered by reading
+// the best article and picking out the sentences that answer them.
+
+import { keywords } from "./brain.js";
+import { bestSentences } from "./reader.js";
 
 const TRIGGER =
   /^(?:what|who|where)\s+(?:is|was|are|were)\s+(?:an?\s+|the\s+)?(.+)|^(?:tell me about|explain|define|describe|meaning of|what does)\s+(?:an?\s+|the\s+)?(.+?)(?:\s+mean)?$|^(?:who invented|who discovered|who founded|who wrote)\s+(.+)/;
@@ -63,4 +68,23 @@ export async function wikiAnswer(question) {
   const page = await getJson(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`);
   if (!page?.extract || page.type === "disambiguation") return null;
   return { answer: shorten(page.extract), title: page.title };
+}
+
+// Any factual question: search, read the article's introduction, and keep
+// the sentences that contain the question's key words.
+export async function wikiFind(question) {
+  const q = question.toLowerCase();
+  const words = keywords(q);
+  if (!words.length || SKIP.test(q)) return null;
+  const search = await getJson(
+    `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(words.join(" "))}&srlimit=1&format=json&origin=*`
+  );
+  const title = search?.query?.search?.[0]?.title;
+  if (!title) return null;
+  const page = await getJson(
+    `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*`
+  );
+  const extract = Object.values(page?.query?.pages || {})[0]?.extract;
+  const found = extract && bestSentences(question, extract, 2);
+  return found ? { answer: found, title } : null;
 }

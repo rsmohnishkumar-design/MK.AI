@@ -9,6 +9,7 @@ const MAX_IMAGE_SIDE = 1600;
 const TEXT_TYPES = /\.(txt|md|csv|json|js|mjs|ts|py|java|c|cpp|h|cs|html|css|xml|yml|yaml|sql|sh|log)$/i;
 
 export const ACCEPT = "image/*,application/pdf,.txt,.md,.csv,.json,.js,.ts,.py,.java,.c,.cpp,.html,.css,.xml,.yml,.yaml,.sql,.log";
+export const TEXT_ACCEPT = ".txt,.md,.csv,.json,.js,.ts,.py,.java,.c,.cpp,.html,.css,.xml,.yml,.yaml,.sql,.log,text/plain";
 
 function fail(message) {
   const err = new Error(message);

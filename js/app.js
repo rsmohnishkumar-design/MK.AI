@@ -21,10 +21,10 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
-import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive } from "./brain.js";
-import { askGemini, aiErrorMessage } from "./ai.js";
+import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
+import { bestSentences, summarise, wantsSummary } from "./reader.js";
 import { localAnswer } from "./local.js";
-import { wikiAnswer, looksLikeKnowledgeQuestion } from "./wiki.js";
+import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer } from "./format.js";
 import { startMeaning } from "./meaning.js";
@@ -747,39 +747,36 @@ function scrollToBottom() {
 }
 
 const DONT_KNOW = [
-  "I don't know that one yet 🤔 — I'm still learning. If you know the answer, teach me below and I'll remember it.",
-  "Hmm, that's new to me! 🧠 Teach me the answer below and I'll know it next time.",
+  "I don't know that one yet 🤔 I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
+  "Hmm, that's new to me! 🧠 It's on my learning list now. If you know the answer, teach me below.",
 ];
 
-// Answers in this order, stopping at the first that works:
-// 1. Curated answers the admin put in the vault
-// 2. MK.ai's own brain (greetings, small talk, time, maths, conversions)
-// 3. Memory (everything learned or taught before)
-// 4. Wikipedia, for simple "what is / who is" questions
-// 5. Outside AI services, when available
-// 6. "I don't know yet — teach me"
+// MK.ai answers everything itself, in this order, stopping at the first that works:
+// 1. Curated answers (the vault: taught and approved in the Training room)
+// 2. Its own brain (greetings, small talk, time, maths, conversions, coding)
+// 3. Memory (everything learned or taught before, matched by meaning)
+// 4. Documents taught in the Training room (it picks out the sentences that answer)
+// 5. Wikipedia, for simple "what is / who is" questions
+// 6. "I don't know yet": the question goes on its learning list for the Training room
+// Outside AI is never used here; it only helps the admin in the Training room.
 async function answer(question, onText, attachment = null) {
   const nothingSaved = Promise.resolve(null);
-  const contextual = dependsOnContext(question, history);
+  // The question asked before this one in the chat (answered or not).
+  const asked = (currentChat()?.messages || []).filter((m) => m.role === "user").map((m) => m.text);
+  const lastAsked = asked.length > 1 ? asked[asked.length - 2] : "";
+  const contextual = dependsOnContext(question, lastAsked ? [lastAsked] : []);
 
-  // Questions about a photo or file go straight to the AI and aren't saved:
-  // the answer depends on the file.
+  // A text file sent with the question: MK.ai reads it itself.
   if (attachment) {
-    try {
-      const result = await askGemini(question, history, { good: [], bad: [] }, onText, { creator: isCreator(), attachment });
-      if (!result.answer) throw new Error("empty answer");
-      logActivity(question, "file");
-      return { ...result, saved: nothingSaved };
-    } catch (err) {
-      console.warn("Couldn't answer about the attachment:", aiErrorMessage(err));
-      const what = attachment.kind === "image" ? "photo" : "file";
-      return {
-        answer: !navigator.onLine
-          ? `Reading a ${what} needs the internet. Please connect and try again.`
-          : `I couldn't read that ${what} right now: the AI that reads ${what}s is busy or used up for today. Please try again in a few minutes.`,
-        saved: nothingSaved,
-      };
-    }
+    logActivity(question, "file");
+    const found = wantsSummary(question) ? summarise(attachment.text) : bestSentences(question, attachment.text);
+    return {
+      answer: found
+        ? `${wantsSummary(question) ? "Here's a summary of" : "Here's what"} ${attachment.name}${wantsSummary(question) ? ":" : " says about that:"}\n\n${found}`
+        : `I couldn't find that in ${attachment.name}. Try asking with words that appear in the file, or say "summarise this file".`,
+      credit: `read by MK.ai from ${attachment.name}`,
+      saved: nothingSaved,
+    };
   }
 
   if (creator.claimsCreator(question)) {
@@ -796,14 +793,20 @@ async function answer(question, onText, attachment = null) {
     return { answer: report, saved: nothingSaved };
   }
 
+  const own = localAnswer(question, { creator: isCreator() });
+
+  // A follow-up ("what about its population?") is looked up together with
+  // the topic of the previous question.
+  const searchFor = contextual ? `${question} ${keywords(lastAsked).join(" ")}` : question;
+
   // Memory lookup, capped so a slow connection never delays the instant replies.
   let memory = null;
-  let knowledge = { good: [], bad: [] };
-  if (!contextual) {
+  let knowledge = { good: [], bad: [], docs: [] };
+  if (!own || /^(what|who|how|why|when|where|which|explain|define)\b/i.test(question.trim())) {
     try {
       ({ memory, knowledge } = await Promise.race([
-        lookup(question),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("memory lookup timed out")), 2500)),
+        lookup(searchFor),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("memory lookup timed out")), 3000)),
       ]));
     } catch (err) {
       console.warn("Memory lookup failed:", err);
@@ -826,7 +829,6 @@ async function answer(question, onText, attachment = null) {
 
   if (memory && memory.collection === "vault") return fromMemory();
 
-  const own = localAnswer(question, { creator: isCreator() });
   if (own) {
     logActivity(question, "local");
     return { answer: own, saved: nothingSaved };
@@ -834,52 +836,39 @@ async function answer(question, onText, attachment = null) {
 
   if (memory) return fromMemory();
 
-  if (!contextual && !isTimeSensitive(question) && looksLikeKnowledgeQuestion(question)) {
-    const wiki = await wikiAnswer(question).catch(() => null);
+  // Documents taught in the Training room: MK.ai picks out the sentences that answer.
+  for (const passage of knowledge.docs || []) {
+    const found = passage.score >= 0.6 && bestSentences(searchFor, passage.text);
+    if (found) {
+      logActivity(question, "document");
+      return { answer: found, credit: `from "${passage.title}"`, saved: nothingSaved };
+    }
+  }
+
+  if (!isTimeSensitive(question)) {
+    const asked = contextual ? searchFor : question;
+    const wiki =
+      (looksLikeKnowledgeQuestion(asked) && (await wikiAnswer(asked).catch(() => null))) ||
+      (await wikiFind(asked).catch(() => null));
     if (wiki) {
       logActivity(question, "wiki");
       return {
         answer: wiki.answer,
         credit: "from Wikipedia",
-        saved: learn(question, wiki.answer, "wikipedia").catch(() => null),
+        saved: contextual ? nothingSaved : learn(question, wiki.answer, "wikipedia").catch(() => null),
       };
     }
   }
 
-  try {
-    const result = await askGemini(question, history, knowledge, onText, { creator: isCreator() });
-    if (!result.answer) throw new Error("empty answer");
-    logActivity(question, "ai");
-    // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
-    const saved =
-      contextual || isTimeSensitive(question) || result.partial
-        ? nothingSaved
-        : learn(question, result.answer).catch((err) => {
-            console.warn("Couldn't save to memory:", err);
-            return null;
-          });
-    return { ...result, saved };
-  } catch (err) {
-    console.warn("No AI service could answer:", aiErrorMessage(err));
-    if (!navigator.onLine) {
-      return {
-        answer: "You're offline. 📴 Connect to the internet and ask me again.",
-        saved: nothingSaved,
-      };
-    }
-    // No AI is free, but a taught document may still hold the answer.
-    const passage = knowledge.docs?.[0];
-    if (passage && passage.score >= 0.7) {
-      logActivity(question, "document");
-      return { answer: `Here's what my notes say:\n\n${passage.text}`, credit: `from "${passage.title}"`, saved: nothingSaved };
-    }
-    logActivity(question, "unknown");
-    return {
-      answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
-      saved: nothingSaved,
-      teachable: !contextual,
-    };
+  if (!navigator.onLine) {
+    return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved };
   }
+  logActivity(question, "unknown");
+  return {
+    answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
+    saved: nothingSaved,
+    teachable: !contextual,
+  };
 }
 
 // After "I created you", the next short message is the secret code. It is
@@ -896,14 +885,13 @@ async function checkCreatorCode(code) {
   return { answer: text, saved: Promise.resolve(null) };
 }
 
-// The waiting message changes if Gemini is slow, so it never looks frozen.
+// The waiting message changes if a lookup is slow, so it never looks frozen.
 function startLoading() {
   const el = addLoading();
   const label = el.querySelector(".pulling");
   const steps = [
-    [8000, "still thinking…"],
-    [20000, "Google's AI is busy — trying another model…"],
-    [45000, "still trying…"],
+    [5000, "still looking…"],
+    [15000, "searching a bit longer…"],
   ].map(([ms, text]) =>
     setTimeout(() => {
       if (label) label.lastChild.textContent = ` ${text}`;
@@ -1002,7 +990,7 @@ composer.addEventListener("submit", async (e) => {
   } catch (err) {
     console.error(err);
     loading.remove();
-    if (stillHere()) addErrorMessage(aiErrorMessage(err));
+    if (stillHere()) addErrorMessage("Something went wrong while answering. Please try again.");
   } finally {
     answering = false;
     sendBtn.disabled = !hasAccess();
@@ -1030,7 +1018,8 @@ const attachInput = $("attachInput");
 const attachChip = $("attachChip");
 let pendingAttachment = null;
 const lastAttachment = new Map(); // chat id → its most recent file, for follow-ups
-attachInput.accept = attach.ACCEPT;
+// MK.ai reads text and code files itself; photos and PDFs would need outside AI.
+attachInput.accept = attach.TEXT_ACCEPT;
 
 function clearAttachment() {
   pendingAttachment = null;
@@ -1043,7 +1032,11 @@ async function useFile(file) {
   $("attachThumb").classList.add("hidden");
   attachChip.classList.remove("hidden");
   try {
-    pendingAttachment = await attach.readAttachment(file);
+    const read = await attach.readAttachment(file);
+    if (read.kind !== "text") {
+      throw Object.assign(new Error("I read text and code files by myself (.txt, .md, .csv, code…). I can't read photos or PDFs yet: copy the text in and ask me about it."), { friendly: true });
+    }
+    pendingAttachment = read;
     $("attachName").textContent = pendingAttachment.name;
     if (pendingAttachment.previewUrl) {
       $("attachThumb").src = pendingAttachment.previewUrl;
