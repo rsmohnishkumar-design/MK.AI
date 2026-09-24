@@ -1,6 +1,8 @@
 {
  "packs": [
   "countries.json",
-  "maths.json"
+  "maths.json",
+  "elements.json",
+  "science.json"
  ]
 }
