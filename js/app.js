@@ -26,6 +26,7 @@ import { askGemini, aiErrorMessage } from "./ai.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
+import { renderAnswer } from "./format.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -631,10 +632,10 @@ function createAiMessage() {
 
   return {
     setText(text) {
-      body.textContent = text;
+      renderAnswer(body, text);
     },
     finish(answer, searchSuggestions) {
-      body.textContent = answer;
+      renderAnswer(body, answer);
       if (searchSuggestions) {
         // Shadow DOM keeps Google's own styling from clashing with the page.
         const host = el.querySelector(".search-suggestions");
@@ -785,7 +786,7 @@ async function answer(question, onText) {
     logActivity(question, "ai");
     // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
     const saved =
-      contextual || isTimeSensitive(question)
+      contextual || isTimeSensitive(question) || result.partial
         ? nothingSaved
         : learn(question, result.answer).catch((err) => {
             console.warn("Couldn't save to memory:", err);

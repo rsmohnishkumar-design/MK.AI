@@ -12,7 +12,8 @@ import { PROVIDERS, keyField, listModels, chooseModels, streamChat } from "./pro
 const BASE_PROMPT = `You are MK.ai, a helpful, knowledgeable AI assistant.
 Answer the user's question directly and clearly, like a knowledgeable friend.
 Give only the answer: never mention your sources, search results, websites or citations, and never write reference numbers like [1].
-Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings, tables or bold.
+Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings or tables.
+When you write code, give the complete program with correct indentation inside a fenced code block that names the language (for example \`\`\`python), then explain it briefly in plain text.
 Reply in the same language the user writes in.`;
 const SEARCH_PROMPT = `${BASE_PROMPT}
 Search the web whenever the question needs current or specific facts.`;
@@ -165,6 +166,7 @@ async function geminiAnswer(model, search, contents, onText) {
   let text = "";
   try {
     const result = await m.generateContentStream({ contents }, { timeout: TIMEOUT_MS });
+    result.response.catch(() => {}); // a broken stream is handled below; don't report it twice
     for await (const chunk of result.stream) {
       try {
         text += chunk.text() || "";
@@ -172,7 +174,8 @@ async function geminiAnswer(model, search, contents, onText) {
       if (text) onText(clean(text));
     }
     const response = await result.response;
-    return { answer: clean(text), searchSuggestions: suggestionsOf(response) };
+    const finish = response.candidates?.[0]?.finishReason;
+    return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestionsOf(response) }, finish === "STOP");
   } catch (err) {
     // Some networks drop streaming connections: ask again the ordinary way.
     if (!text && /failed to fetch|network|load failed|connection/i.test(errorText(err))) {
@@ -217,11 +220,11 @@ async function plan(question) {
   const external = (provider, model, search) => ({
     key: `${provider.id}:${model}`,
     run: async (ctx, onText) => {
-      const raw = await streamChat(provider, keys[provider.id], model, ctx.messages(search), (t) => {
+      const { text, complete } = await streamChat(provider, keys[provider.id], model, ctx.messages(search), (t) => {
         const shown = clean(t);
         if (shown) onText(shown);
       }, TIMEOUT_MS);
-      return { answer: clean(raw), searchSuggestions: null };
+      return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: null }, complete);
     },
   });
   const gemini = (model, search) => ({
@@ -241,6 +244,17 @@ async function plan(question) {
   GEMINI_MODELS.forEach((m) => attempts.push(gemini(m, false)));
 
   return available(attempts);
+}
+
+const CUT_OFF = "\n\n(The answer was cut off — say \"continue\" and I'll finish it.)";
+
+// Closes a code block left open by the cut, so the note shows as text.
+function withCutOff(text) {
+  const openFence = (text.match(/```/g) || []).length % 2 === 1;
+  return `${text}${openFence ? "\n```" : ""}${CUT_OFF}`;
+}
+function cutOffIfIncomplete(result, complete) {
+  return complete || !result.answer ? result : { ...result, answer: withCutOff(result.answer), partial: true };
 }
 
 // Answers may be saved to the shared memory, so the creator gets a warmer tone
@@ -279,8 +293,10 @@ export async function askGemini(question, history, knowledge, onText = () => {},
       lastError = err;
       console.warn(`${attempt.key} failed:`, err);
       coolDown(attempt, err);
-      // Once part of the answer is on screen, starting over would be confusing.
-      if (text || !worthRetrying(err)) break;
+      // Once part of the answer is on screen, starting over would be confusing:
+      // keep what arrived and say it was cut off.
+      if (text) return { answer: withCutOff(text), searchSuggestions: null, partial: true };
+      if (!worthRetrying(err)) break;
     }
   }
   throw lastError;
