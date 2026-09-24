@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
+import { embed, closeness } from "./meaning.js";
 
 // ---------------------------------------------------------------------------
 // Word matching. Each stored question keeps a list of its keywords, so the
@@ -72,15 +73,44 @@ function sameWord(a, b) {
   return a === b || (a.length >= 5 && b.length >= 5 && editDistanceAtMostOne(a, b));
 }
 
-// 0..1: blends "share most of their words" with "one contains the other".
-export function similarity(questionA, questionB) {
+function overlap(questionA, questionB) {
   const a = keywords(questionA);
   const b = keywords(questionB);
-  if (!a.length || !b.length) return normalize(questionA) === normalize(questionB) ? 1 : 0;
+  if (!a.length || !b.length) return null;
   const shared = a.filter((w) => b.some((x) => sameWord(w, x))).length;
-  const jaccard = shared / (a.length + b.length - shared);
-  const containment = shared / Math.min(a.length, b.length);
-  return 0.5 * jaccard + 0.5 * containment;
+  return { jaccard: shared / (a.length + b.length - shared), containment: shared / Math.min(a.length, b.length) };
+}
+
+// 0..1: blends "share most of their words" with "one contains the other".
+export function similarity(questionA, questionB) {
+  const o = overlap(questionA, questionB);
+  if (!o) return normalize(questionA) === normalize(questionB) ? 1 : 0;
+  return 0.5 * o.jaccard + 0.5 * o.containment;
+}
+
+// Neural memory: the same meaning in different words ("how tall is Everest" /
+// "height of Mount Everest"). Guards keep look-alikes apart: the questions
+// must share at least half their key words and mention the same numbers.
+const MEANING_SAME = 0.88;
+const numbersIn = (q) => (q.match(/\d+(?:\.\d+)?/g) || []).sort().join(",");
+function sameMeaning(question, candidate) {
+  if (!(candidate.meaning >= MEANING_SAME)) return false;
+  const o = overlap(question, candidate.entry.question);
+  return !!o && o.containment >= 0.5 && numbersIn(question) === numbersIn(candidate.entry.question);
+}
+function bestByMeaning(question, list, usable = () => true) {
+  return list
+    .filter((c) => usable(c.entry) && sameMeaning(question, c))
+    .sort((x, y) => y.meaning - x.meaning)[0];
+}
+async function addMeaning(question, list) {
+  if (!list.length) return;
+  try {
+    const vecs = await embed([question, ...list.map((c) => c.entry.question)]);
+    if (vecs) list.forEach((c, i) => (c.meaning = closeness(vecs[0], vecs[i + 1])));
+  } catch (err) {
+    console.warn("Neural memory failed:", err);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -142,21 +172,39 @@ async function candidates(collectionName, question) {
 // Looks up the vault and learned memory together (one read each).
 export async function lookup(question) {
   const [vault, learned] = await Promise.all([candidates("vault", question), candidates("learned", question)]);
+  await addMeaning(question, [...vault, ...learned]);
 
   let memory = null;
-  if (vault[0] && vault[0].score >= THRESHOLD.vault) {
+  let similarTo = null;
+  const byMeaning = (c) => {
+    memory = c.entry;
+    if (normalize(c.entry.question) !== normalize(question)) similarTo = c.entry.question;
+  };
+  // "…in 2001" and "…in 2011" are different questions, whatever the words.
+  const sameNumbers = (c) => numbersIn(question) === numbersIn(c.entry.question);
+  if (vault[0] && vault[0].score >= THRESHOLD.vault && sameNumbers(vault[0])) {
     memory = vault[0].entry;
+  } else if (bestByMeaning(question, vault)) {
+    byMeaning(bestByMeaning(question, vault));
   } else if (!isTimeSensitive(question)) {
     const best = learned.find(({ entry }) => isUsable(entry));
     const bar = best ? THRESHOLD.learned - Math.min(votes(best.entry).up, 3) * 0.03 : 1;
-    if (best && best.score >= bar) memory = best.entry;
+    if (best && best.score >= bar && sameNumbers(best)) memory = best.entry;
+    else {
+      const close = bestByMeaning(question, learned, isUsable);
+      if (close) byMeaning(close);
+    }
   }
+  if (memory && similarTo) memory = { ...memory, similarTo };
 
   // Related knowledge handed to the AI, plus one similar answer people disliked.
+  // Neural closeness counts too, a little below an equal word match.
+  const rank = (c) => Math.max(c.score, (c.meaning ?? 0) - 0.25);
   const good = [];
   const bad = [];
-  for (const { entry, score } of [...vault, ...learned].sort((x, y) => y.score - x.score)) {
-    if (score < THRESHOLD.related) break;
+  for (const c of [...vault, ...learned].sort((x, y) => rank(y) - rank(x))) {
+    const { entry } = c;
+    if (rank(c) < THRESHOLD.related) break;
     if (entry.collection === "learned" && isBad(entry)) {
       if (!bad.length) bad.push(entry);
     } else if (good.length < 3 && !(entry.collection === "learned" && entry.timeSensitive)) {

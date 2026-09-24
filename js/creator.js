@@ -16,6 +16,8 @@ import {
 import { db } from "./firebase.js";
 import { PROVIDERS, keyField } from "./providers.js";
 import { CREATOR_NAME, GEMINI_MODELS, TRIAL_HOURS } from "../firebase-config.js";
+import { brainState } from "./ownbrain.js";
+import { meaningReady } from "./meaning.js";
 
 const QUESTION_START = /^(who|whom|whose|did|do|does|what|can|could|how|why|when|where|which|is|are|was|were)\b/;
 
@@ -161,6 +163,8 @@ export async function detailsReport({ user, profile, chats }) {
     "⚡ AI services",
     `- Saved keys: ${services}`,
     `- Gemini backup models: ${GEMINI_MODELS.join(", ")}`,
+    `- Own brain on this device (Llama 3.2 1B): ${{ ready: "ready", downloading: "downloading", loading: "waking up", unsupported: "not supported here", error: "failed to load" }[brainState().status] || "not downloaded"}`,
+    `- Neural memory (meaning matching): ${meaningReady() ? "on" : "starting / word matching for now"}`,
     "",
     "👤 Your account",
     `- Email: ${user.email}`,
