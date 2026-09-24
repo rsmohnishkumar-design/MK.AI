@@ -6,9 +6,20 @@ plan) handles logins and the database, and answers come from free AI
 services — **Groq, Cerebras, OpenRouter or GitHub Models**, whichever you
 add a key for — with **Google Gemini** as a backup.
 
-People sign up with an email and password and ask anything. Only the
-answer is shown. Questions about news, prices, weather and other current
-events go to a model that can search the web.
+People sign up with an email and password and ask anything. MK.ai
+answers in this order, stopping at the first that works:
+
+1. **Curated answers** you added in the admin vault.
+2. **Its own brain**, instantly and on the device: greetings (including
+   vanakkam and namaste), small talk, who it is, jokes, the time and date,
+   maths ("12 x 7", "15% of 200", "square root of 81") and unit
+   conversions ("10 km to miles", "37 c to f").
+3. **Memory**: everything it has learned or been taught before.
+4. **Wikipedia**, for simple "what is / who is / explain" questions (free,
+   no account; answers are credited "from Wikipedia").
+5. **Outside AI services**, if any are set up and have free allowance left.
+6. Otherwise it says it doesn't know yet and shows a **"Teach MK.ai"** box.
+   Whatever someone teaches it is remembered for everyone.
 
 MK.ai gets better the more it's used:
 
@@ -138,7 +149,9 @@ using the admin email from step 3. That's it.
 | --- | --- |
 | `index.html`, `style.css`, `js/app.js` | The chat app |
 | `js/brain.js` | Memory: matching questions, learning, votes |
-| `js/ai.js` | Asking the AI (saved services first, then Gemini as a backup) |
+| `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
+| `js/wiki.js` | Simple knowledge questions from Wikipedia |
+| `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |
 | `js/firebase.js`, `firebase-config.js` | Connecting to your Firebase project (and App Check) |
 | `vault.html`, `vault.css`, `js/vault.js` | The admin vault |

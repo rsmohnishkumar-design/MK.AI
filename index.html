@@ -58,7 +58,7 @@
       <main class="reading-room" id="thread" aria-live="polite">
         <div class="empty-state" id="emptyState">
           <div class="empty-glyph">⌕</div>
-          <p>Ask me anything to get started.</p>
+          <p>Say hi, ask a question, try some maths — or teach me something new.</p>
         </div>
       </main>
 
@@ -91,6 +91,11 @@
         <div class="card-content">
           <div class="msg-label">mk.ai</div>
           <div class="msg-body ai-answer"></div>
+          <div class="answer-credit hidden"></div>
+          <form class="teach-form hidden">
+            <textarea rows="2" placeholder="Type the answer and I'll remember it…"></textarea>
+            <button type="submit">Teach MK.ai</button>
+          </form>
           <div class="search-suggestions hidden"></div>
           <div class="answer-actions">
             <button type="button" class="vote-btn" data-vote="up" title="Helpful" aria-label="Helpful">👍</button>

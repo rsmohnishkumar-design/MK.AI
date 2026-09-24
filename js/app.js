@@ -17,6 +17,8 @@ import {
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive } from "./brain.js";
 import { askGemini, aiErrorMessage } from "./ai.js";
+import { localAnswer } from "./local.js";
+import { wikiAnswer, looksLikeKnowledgeQuestion } from "./wiki.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -302,6 +304,36 @@ function createAiMessage() {
       });
       actions.classList.remove("hidden");
     },
+    setCredit(text) {
+      const credit = el.querySelector(".answer-credit");
+      credit.textContent = text;
+      credit.classList.remove("hidden");
+    },
+    // "I don't know yet" answers get a box to teach MK.ai the right answer.
+    enableTeaching(question) {
+      const form = el.querySelector(".teach-form");
+      const box = form.querySelector("textarea");
+      const button = form.querySelector("button");
+      form.classList.remove("hidden");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const taught = box.value.trim();
+        if (!taught) return;
+        button.disabled = true;
+        try {
+          await learn(question, taught, "taught");
+          logActivity(question, "taught");
+          form.replaceWith(Object.assign(document.createElement("p"), {
+            className: "answer-credit",
+            textContent: "Thanks! 🧠 I'll remember that from now on.",
+          }));
+        } catch (err) {
+          console.warn("Couldn't save what was taught:", err);
+          button.disabled = false;
+          button.textContent = "Couldn't save — try again";
+        }
+      });
+    },
     enableVotes(entryId) {
       voteButtons.forEach((btn) => {
         btn.classList.remove("hidden");
@@ -324,45 +356,90 @@ function scrollToBottom() {
   thread.scrollTop = thread.scrollHeight;
 }
 
-// Memory first; otherwise Gemini answers (streaming into onText) and MK.ai
-// remembers the answer in the background (saved → entryId resolves).
+const DONT_KNOW = [
+  "I don't know that one yet 🤔 — I'm still learning. If you know the answer, teach me below and I'll remember it.",
+  "Hmm, that's new to me! 🧠 Teach me the answer below and I'll know it next time.",
+];
+
+// Answers in this order, stopping at the first that works:
+// 1. Curated answers the admin put in the vault
+// 2. MK.ai's own brain (greetings, small talk, time, maths, conversions)
+// 3. Memory (everything learned or taught before)
+// 4. Wikipedia, for simple "what is / who is" questions
+// 5. Outside AI services, when available
+// 6. "I don't know yet — teach me"
 async function answer(question, onText) {
+  const nothingSaved = Promise.resolve(null);
   const contextual = dependsOnContext(question, history);
+
+  // Memory lookup, capped so a slow connection never delays the instant replies.
   let memory = null;
   let knowledge = { good: [], bad: [] };
-
   if (!contextual) {
     try {
-      ({ memory, knowledge } = await lookup(question));
+      ({ memory, knowledge } = await Promise.race([
+        lookup(question),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("memory lookup timed out")), 2500)),
+      ]));
     } catch (err) {
       console.warn("Memory lookup failed:", err);
     }
   }
-
-  if (memory) {
+  const fromMemory = () => {
     const isLearned = memory.collection === "learned";
     if (isLearned) markUsed(memory.id).catch(() => {});
     logActivity(question, isLearned ? "memory" : "vault");
     return {
       answer: memory.answer,
-      searchSuggestions: null,
+      credit: memory.source === "wikipedia" ? "from Wikipedia" : null,
       saved: Promise.resolve(isLearned ? memory.id : null),
     };
+  };
+
+  if (memory && memory.collection === "vault") return fromMemory();
+
+  const own = localAnswer(question);
+  if (own) {
+    logActivity(question, "local");
+    return { answer: own, saved: nothingSaved };
   }
 
-  const result = await askGemini(question, history, knowledge, onText);
-  if (!result.answer) throw new Error("empty answer");
-  logActivity(question, "ai");
+  if (memory) return fromMemory();
 
-  // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
-  const saved =
-    contextual || isTimeSensitive(question)
-      ? Promise.resolve(null)
-      : learn(question, result.answer).catch((err) => {
-          console.warn("Couldn't save to memory:", err);
-          return null;
-        });
-  return { ...result, saved };
+  if (!contextual && !isTimeSensitive(question) && looksLikeKnowledgeQuestion(question)) {
+    const wiki = await wikiAnswer(question).catch(() => null);
+    if (wiki) {
+      logActivity(question, "wiki");
+      return {
+        answer: wiki.answer,
+        credit: "from Wikipedia",
+        saved: learn(question, wiki.answer, "wikipedia").catch(() => null),
+      };
+    }
+  }
+
+  try {
+    const result = await askGemini(question, history, knowledge, onText);
+    if (!result.answer) throw new Error("empty answer");
+    logActivity(question, "ai");
+    // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
+    const saved =
+      contextual || isTimeSensitive(question)
+        ? nothingSaved
+        : learn(question, result.answer).catch((err) => {
+            console.warn("Couldn't save to memory:", err);
+            return null;
+          });
+    return { ...result, saved };
+  } catch (err) {
+    console.warn("No AI service could answer:", aiErrorMessage(err));
+    logActivity(question, "unknown");
+    return {
+      answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
+      saved: nothingSaved,
+      teachable: !contextual,
+    };
+  }
 }
 
 // The waiting message changes if Gemini is slow, so it never looks frozen.
@@ -419,7 +496,9 @@ composer.addEventListener("submit", async (e) => {
     });
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
-    remember(question, result.answer);
+    if (result.credit) msg.setCredit(result.credit);
+    if (result.teachable) msg.enableTeaching(question);
+    else remember(question, result.answer);
     result.saved.then((entryId) => entryId && msg.enableVotes(entryId));
   } catch (err) {
     console.error(err);

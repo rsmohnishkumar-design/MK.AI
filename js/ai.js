@@ -91,9 +91,8 @@ function coolDown(attempt, err) {
 }
 function available(attempts) {
   const cooldowns = loadCooldowns();
-  const ready = attempts.filter((a) => !(cooldowns[a.key] > Date.now()));
-  // If everything is cooling down, try them all anyway rather than refusing.
-  return ready.length ? ready : attempts;
+  // Anything cooling down is skipped; if that's everything, MK.ai answers on its own.
+  return attempts.filter((a) => !(cooldowns[a.key] > Date.now()));
 }
 
 // ---------------------------------------------------------------------------
@@ -261,7 +260,7 @@ export async function askGemini(question, history, knowledge, onText = () => {})
     ],
   };
 
-  let lastError = null;
+  let lastError = httpError(503, "all AI services are resting (used up or unavailable) — try again later");
   for (const attempt of await plan(question)) {
     let text = "";
     try {

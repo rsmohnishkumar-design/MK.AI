@@ -29,5 +29,8 @@ export const GEMINI_MODELS = [
 ];
 export const GEMINI_MODEL = GEMINI_MODELS[0];
 
+// Shown when someone asks "who made you?".
+export const CREATOR_NAME = "Mohnishkumar";
+
 // Must match TRIAL_HOURS in firestore.rules.
 export const TRIAL_HOURS = 3;
