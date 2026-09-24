@@ -143,6 +143,14 @@ using the admin email from step 3. That's it.
 - **Users** and **activity:** everyone's account and every question
   asked.
 
+## Chats
+
+Each person's chats are listed in the sidebar and saved in the database
+(`users/<uid>/chats`), so they follow them to any device and update live
+across open devices. A copy is kept on the device so chats appear
+instantly. Only the owner can read their chats — not even the admin
+vault shows them.
+
 ## Files
 
 | File | What it does |

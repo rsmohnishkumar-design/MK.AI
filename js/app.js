@@ -11,6 +11,12 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  orderBy,
+  limit,
+  onSnapshot,
   Timestamp,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
@@ -149,6 +155,7 @@ if (configured) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       profile = null;
+      stopSync();
       showAuth();
       return;
     }
@@ -267,7 +274,7 @@ function remember(question, answer) {
 // has its own messages; the sidebar lists them newest first.
 // ---------------------------------------------------------------------------
 const MAX_CHATS = 60;
-const MAX_MESSAGES = 200;
+const MAX_MESSAGES = 100;
 let store = { chats: [], currentId: null };
 let storeKey = null;
 
@@ -311,6 +318,109 @@ function loadChats(uid) {
   saveChats();
   renderThread();
   renderChatList();
+  startSync(uid);
+}
+
+// ---------------------------------------------------------------------------
+// Cloud sync: every chat is also kept in the database (users/<uid>/chats), so
+// the chat list follows the person to any device. The copy on this device
+// shows instantly; the database copy wins when it's newer. Only the owner can
+// read or write their chats (see firestore.rules).
+// ---------------------------------------------------------------------------
+let syncUid = null;
+let stopListening = null;
+let answering = false;
+const uploadTimers = new Map();
+
+function stopSync() {
+  if (stopListening) stopListening();
+  stopListening = null;
+  syncUid = null;
+  uploadTimers.forEach(clearTimeout);
+  uploadTimers.clear();
+}
+
+function cloudCopy(chat) {
+  return {
+    title: chat.title.slice(0, 200),
+    updatedAt: chat.updatedAt,
+    messages: chat.messages.slice(-MAX_MESSAGES).map((m) => ({
+      role: m.role,
+      text: (m.text || "").slice(0, 8000),
+      ...(m.credit ? { credit: m.credit } : {}),
+      ...(m.entryId ? { entryId: m.entryId } : {}),
+      ...(m.teachable ? { teachable: true } : {}),
+    })),
+  };
+}
+
+// Uploads a chat shortly after it changes (several quick changes → one write).
+function uploadChat(id) {
+  if (!syncUid) return;
+  clearTimeout(uploadTimers.get(id));
+  uploadTimers.set(
+    id,
+    setTimeout(async () => {
+      uploadTimers.delete(id);
+      const chat = store.chats.find((c) => c.id === id);
+      if (!chat || !syncUid) return;
+      try {
+        await setDoc(doc(db, "users", syncUid, "chats", id), cloudCopy(chat));
+        if (!chat.synced) {
+          chat.synced = true;
+          saveChats();
+        }
+      } catch (err) {
+        console.warn("Couldn't sync this chat (it's still saved on this device):", err);
+      }
+    }, 700)
+  );
+}
+
+function startSync(uid) {
+  stopSync();
+  syncUid = uid;
+  let firstLoad = true;
+  const chatsQuery = query(collection(db, "users", uid, "chats"), orderBy("updatedAt", "desc"), limit(MAX_CHATS));
+  stopListening = onSnapshot(
+    chatsQuery,
+    (snap) => {
+      let changed = false;
+      const remote = new Map(snap.docs.map((d) => [d.id, d.data()]));
+      for (const [id, data] of remote) {
+        const local = store.chats.find((c) => c.id === id);
+        if (!local) {
+          store.chats.push({ id, ...data, synced: true });
+          changed = true;
+        } else if (data.updatedAt > local.updatedAt) {
+          Object.assign(local, data, { synced: true });
+          changed = true;
+        }
+      }
+      if (firstLoad) {
+        firstLoad = false;
+        for (const chat of [...store.chats]) {
+          const r = remote.get(chat.id);
+          if (!r && chat.synced && remote.size < MAX_CHATS) {
+            // Deleted on another device.
+            store.chats = store.chats.filter((c) => c !== chat);
+            if (store.currentId === chat.id) store.currentId = null;
+            changed = true;
+          } else if (!r || chat.updatedAt > r.updatedAt) {
+            uploadChat(chat.id); // only on this device so far, or newer here
+          }
+        }
+      }
+      if (!changed) return;
+      store.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      store.chats.length = Math.min(store.chats.length, MAX_CHATS);
+      if (!currentChat() && !answering) store.currentId = store.chats[0]?.id || null;
+      saveChats();
+      if (!answering) renderThread();
+      renderChatList();
+    },
+    (err) => console.warn("Chat sync is off (chats stay on this device):", err)
+  );
 }
 
 // Adds a message to a chat (creating the chat on its first message).
@@ -327,6 +437,7 @@ function record(chatId, item) {
   store.chats.sort((a, b) => b.updatedAt - a.updatedAt);
   store.chats.length = Math.min(store.chats.length, MAX_CHATS);
   saveChats();
+  uploadChat(chat.id);
   renderChatList();
   return item;
 }
@@ -439,6 +550,8 @@ function deleteChat(id) {
   store.chats = store.chats.filter((c) => c.id !== id);
   if (store.currentId === id) store.currentId = null;
   saveChats();
+  clearTimeout(uploadTimers.get(id));
+  if (syncUid) deleteDoc(doc(db, "users", syncUid, "chats", id)).catch((err) => console.warn("Couldn't delete the synced copy:", err));
   renderThread();
   renderChatList();
 }
@@ -712,6 +825,7 @@ composer.addEventListener("submit", async (e) => {
   questionInput.value = "";
   fitQuestion();
   sendBtn.disabled = true;
+  answering = true;
   scrollToBottom();
 
   const loading = startLoading();
@@ -743,12 +857,14 @@ composer.addEventListener("submit", async (e) => {
       msg.enableVotes(entryId);
       saved.entryId = entryId;
       saveChats();
+      uploadChat(chatId);
     });
   } catch (err) {
     console.error(err);
     loading.remove();
     if (stillHere()) addErrorMessage(aiErrorMessage(err));
   } finally {
+    answering = false;
     sendBtn.disabled = !hasAccess();
     questionInput.focus();
     scrollToBottom();
