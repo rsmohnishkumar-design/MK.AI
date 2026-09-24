@@ -3,7 +3,6 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase
 import { ai, db } from "./firebase.js";
 import { GEMINI_MODELS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, streamChat } from "./providers.js";
-import { wanted as ownBrainWanted, ownAnswer } from "./ownbrain.js";
 import { needsVision, withFileText } from "./attach.js";
 
 // Answers come from the free AI services whose keys the admin saved in the
@@ -218,20 +217,6 @@ function knowledgeNote({ good = [], bad = [], docs = [] }) {
   return parts.join("\n\n");
 }
 
-// MK.ai's own on-device model, if the person downloaded it. Its answers are
-// shown but not saved to the shared memory: it's small and can be wrong.
-const ownBrain = {
-  key: "own-brain",
-  run: async (ctx, onText) => {
-    const { text, complete } = await ownAnswer(ctx.messages(false), (t) => {
-      const shown = clean(t);
-      if (shown) onText(shown);
-    });
-    const result = { answer: clean(text), searchSuggestions: null, own: true, credit: "answered by MK.ai's own brain, on this device" };
-    return cutOffIfIncomplete(result, complete);
-  },
-};
-
 // Photos and PDFs: only Gemini can see them.
 function visionPlan() {
   if (!navigator.onLine) return [];
@@ -245,9 +230,7 @@ function visionPlan() {
 
 // The ordered list of things to try for this question.
 async function plan(question) {
-  const own = ownBrainWanted() ? [ownBrain] : [];
-  // Offline, only the on-device brain can answer.
-  if (!navigator.onLine) return own;
+  if (!navigator.onLine) return [];
   const keys = await savedKeys();
   const smallTalk = SMALL_TALK.test(question.trim());
   const fresh = !smallTalk && NEEDS_FRESH.test(question);
@@ -279,8 +262,7 @@ async function plan(question) {
   if (!smallTalk && !fresh && !withKeys.length) attempts.push(gemini(GEMINI_MODELS[0], true));
   GEMINI_MODELS.forEach((m) => attempts.push(gemini(m, false)));
 
-  // The own brain comes last: it's the backup when the outside services rest.
-  return [...available(attempts), ...own];
+  return available(attempts);
 }
 
 const CUT_OFF = "\n\n(The answer was cut off — say \"continue\" and I'll finish it.)";
