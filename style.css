@@ -705,6 +705,18 @@ body.chat-page { overflow: hidden; }
   cursor: pointer;
 }
 .new-chat-btn:hover { border-color: var(--brass); }
+.learn-btn { margin-top: 8px; text-decoration: none; background: transparent; }
+.learn-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--brass);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.empty-learn { margin-top: 14px; }
+.empty-learn a { color: var(--brass); }
 
 .chat-search {
   display: flex;
@@ -1063,3 +1075,10 @@ body.chat-page { overflow: hidden; }
   border-radius: 5px;
   padding: 1px 5px;
 }
+
+.answer-link {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.answer-link:hover { color: var(--paper); }

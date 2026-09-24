@@ -74,6 +74,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
 
       // Each person's saved chats: only they can read or change them.
+      // Code School progress: which lessons and exercises are ticked.
+      match /progress/{docId} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && docId == 'learn'
+          && incoming().keys().hasOnly(['done', 'ex', 'updatedAt'])
+          && incoming().done is map && incoming().done.size() <= 30
+          && incoming().ex is map && incoming().ex.size() <= 30
+          && incoming().updatedAt == request.time;
+      }
+
       match /chats/{chatId} {
         allow read, delete: if signedIn() && request.auth.uid == uid;
         allow create, update: if signedIn() && request.auth.uid == uid

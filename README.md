@@ -145,6 +145,17 @@ using the admin email from step 3. That's it.
 - **Users** and **activity:** everyone's account and every question
   asked.
 
+## Code School
+
+`learn.html` (the **Learn to code** button in the sidebar) teaches coding
+fundamentals in 11 short lessons, explained through how MK.ai itself works:
+code you can edit and run, live demos and a quiz per lesson. Signed-in
+people's progress is saved to their account (`users/<uid>/progress/learn`).
+
+MK.ai's own brain also answers coding questions instantly, like "what is a
+variable?", "explain loops" or "what is git?", with a small example and a
+link to the matching lesson (`js/knowledge.js`).
+
 ## Creator mode
 
 Say **"I created you"** (or "I'm your creator") in the chat and MK.ai asks
@@ -174,6 +185,7 @@ vault shows them.
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Simple knowledge questions from Wikipedia |
+| `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
 | `js/creator.js` | Creator mode: the secret-code check and the details report |
 | `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |

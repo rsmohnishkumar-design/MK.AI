@@ -3,6 +3,7 @@
 // Returns a reply string, or null when it's not something this brain handles.
 
 import { CREATOR_NAME } from "../firebase-config.js";
+import { codingAnswer } from "./knowledge.js";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const boss = () => CREATOR_NAME.split(/\s+/)[0];
@@ -325,5 +326,5 @@ export function localAnswer(question, { creator = false } = {}) {
   for (const rule of RULES) {
     if (rule.test.test(q)) return creator && rule.creator ? rule.creator() : rule.reply();
   }
-  return convert(q) || maths(q);
+  return convert(q) || maths(q) || codingAnswer(question);
 }
