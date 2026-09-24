@@ -1,5 +1,6 @@
 {
  "packs": [
-  "countries.json"
+  "countries.json",
+  "maths.json"
  ]
 }
