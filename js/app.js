@@ -218,9 +218,10 @@ function lockChat(message) {
 function showChat(user, notice) {
   authScreen.classList.add("hidden");
   chatScreen.classList.remove("hidden");
-  signOutBtn.textContent = "sign out";
   signOutBtn.title = `Signed in as ${user.email}`;
-  restoreConversation(user.uid);
+  $("accountEmail").textContent = user.email;
+  $("accountAvatar").textContent = (user.email || "?").charAt(0);
+  loadChats(user.uid);
   questionInput.disabled = false;
   sendBtn.disabled = false;
   questionInput.placeholder = "Ask me anything…";
@@ -261,22 +262,72 @@ function remember(question, answer) {
   if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
 }
 
-// --- The conversation, saved on this device per account so a refresh keeps it ---
-const MAX_SAVED = 100;
-let conversation = [];
-let conversationKey = null;
+// ---------------------------------------------------------------------------
+// Chats, saved on this device per account so a refresh keeps them. Each chat
+// has its own messages; the sidebar lists them newest first.
+// ---------------------------------------------------------------------------
+const MAX_CHATS = 60;
+const MAX_MESSAGES = 200;
+let store = { chats: [], currentId: null };
+let storeKey = null;
 
-function saveConversation() {
-  if (!conversationKey) return;
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+function saveChats() {
+  if (!storeKey) return;
   try {
-    localStorage.setItem(conversationKey, JSON.stringify(conversation.slice(-MAX_SAVED)));
+    localStorage.setItem(storeKey, JSON.stringify(store));
   } catch {} // storage full or blocked: the chat still works, it just won't survive a refresh
 }
 
-function record(item) {
-  conversation.push(item);
-  if (conversation.length > MAX_SAVED) conversation.splice(0, conversation.length - MAX_SAVED);
-  saveConversation();
+function currentChat() {
+  return store.chats.find((c) => c.id === store.currentId) || null;
+}
+
+function titleFrom(text) {
+  const t = text.replace(/\s+/g, " ").trim();
+  return t.length > 48 ? `${t.slice(0, 48)}…` : t || "New chat";
+}
+
+function loadChats(uid) {
+  storeKey = `mkai-chats-${uid}`;
+  try {
+    store = JSON.parse(localStorage.getItem(storeKey)) || { chats: [], currentId: null };
+  } catch {
+    store = { chats: [], currentId: null };
+  }
+  // Bring over the single conversation saved by the previous version.
+  try {
+    const oldKey = `mkai-chat-${uid}`;
+    const old = JSON.parse(localStorage.getItem(oldKey));
+    if (Array.isArray(old) && old.length) {
+      const first = old.find((m) => m.role === "user");
+      store.chats.unshift({ id: newId(), title: titleFrom(first ? first.text : "Earlier chat"), updatedAt: Date.now(), messages: old });
+      store.currentId = store.chats[0].id;
+    }
+    localStorage.removeItem(oldKey);
+  } catch {}
+  if (!currentChat()) store.currentId = store.chats[0]?.id || null;
+  saveChats();
+  renderThread();
+  renderChatList();
+}
+
+// Adds a message to a chat (creating the chat on its first message).
+function record(chatId, item) {
+  let chat = store.chats.find((c) => c.id === chatId);
+  if (!chat) {
+    chat = { id: chatId, title: "New chat", updatedAt: Date.now(), messages: [] };
+    store.chats.unshift(chat);
+  }
+  chat.messages.push(item);
+  if (chat.messages.length > MAX_MESSAGES) chat.messages.splice(0, chat.messages.length - MAX_MESSAGES);
+  if (item.role === "user" && chat.title === "New chat") chat.title = titleFrom(item.text);
+  chat.updatedAt = Date.now();
+  store.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+  store.chats.length = Math.min(store.chats.length, MAX_CHATS);
+  saveChats();
+  renderChatList();
   return item;
 }
 
@@ -286,16 +337,14 @@ function clearThread() {
   history.length = 0;
 }
 
-function restoreConversation(uid) {
-  conversationKey = `mkai-chat-${uid}`;
-  try {
-    conversation = JSON.parse(localStorage.getItem(conversationKey)) || [];
-  } catch {
-    conversation = [];
-  }
+function renderThread() {
   clearThread();
+  const chat = currentChat();
+  $("chatTitle").textContent = chat ? chat.title : "New chat";
+  if (!chat || !chat.messages.length) return;
+  emptyState.classList.add("hidden");
   let lastQuestion = null;
-  for (const item of conversation) {
+  for (const item of chat.messages) {
     if (item.role === "user") {
       addUserMessage(item.text);
       lastQuestion = item.text;
@@ -308,15 +357,134 @@ function restoreConversation(uid) {
       lastQuestion = null;
     }
   }
-  if (conversation.length) emptyState.classList.add("hidden");
   scrollToBottom();
 }
 
-$("newChatBtn").addEventListener("click", () => {
-  conversation = [];
-  saveConversation();
-  clearThread();
+function dayGroup(ts) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  if (ts >= start.getTime()) return "Today";
+  if (ts >= start.getTime() - 86400000) return "Yesterday";
+  if (ts >= start.getTime() - 7 * 86400000) return "Previous 7 days";
+  return "Older";
+}
+
+function renderChatList() {
+  const list = $("chatList");
+  const filter = $("chatSearch").value.trim().toLowerCase();
+  list.innerHTML = "";
+  const chats = store.chats.filter(
+    (c) =>
+      !filter ||
+      c.title.toLowerCase().includes(filter) ||
+      c.messages.some((m) => (m.text || "").toLowerCase().includes(filter))
+  );
+  if (!chats.length) {
+    const empty = document.createElement("p");
+    empty.className = "chat-empty";
+    empty.textContent = filter ? "No chats match." : "Your chats will appear here.";
+    list.appendChild(empty);
+    return;
+  }
+  let group = null;
+  for (const chat of chats) {
+    const g = dayGroup(chat.updatedAt);
+    if (g !== group) {
+      group = g;
+      const label = document.createElement("div");
+      label.className = "chat-group";
+      label.textContent = g;
+      list.appendChild(label);
+    }
+    const item = document.createElement("div");
+    item.className = "chat-item" + (chat.id === store.currentId ? " active" : "");
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "chat-open";
+    open.textContent = chat.title;
+    open.title = chat.title;
+    open.addEventListener("click", () => openChat(chat.id));
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "chat-delete";
+    del.textContent = "×";
+    del.title = "Delete chat";
+    del.setAttribute("aria-label", `Delete chat: ${chat.title}`);
+    del.addEventListener("click", () => deleteChat(chat.id));
+    item.append(open, del);
+    list.appendChild(item);
+  }
+}
+
+function openChat(id) {
+  store.currentId = id;
+  saveChats();
+  renderThread();
+  renderChatList();
+  closeSidebarOnPhone();
+}
+
+function newChat() {
+  store.currentId = null;
+  saveChats();
+  renderThread();
+  renderChatList();
+  closeSidebarOnPhone();
   questionInput.focus();
+}
+
+function deleteChat(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat || !confirm(`Delete "${chat.title}"?`)) return;
+  store.chats = store.chats.filter((c) => c.id !== id);
+  if (store.currentId === id) store.currentId = null;
+  saveChats();
+  renderThread();
+  renderChatList();
+}
+
+$("newChatBtn").addEventListener("click", newChat);
+$("newChatTop").addEventListener("click", newChat);
+$("chatSearch").addEventListener("input", renderChatList);
+
+// --- Sidebar: beside the chat on laptops (remembered open/closed), sliding
+// over the chat on phones (closed until opened).
+const layout = $("chatScreen");
+const isPhone = () => window.matchMedia("(max-width: 899px)").matches;
+function setSidebar(open) {
+  layout.classList.toggle("sidebar-open", open);
+  if (!isPhone()) {
+    try {
+      localStorage.setItem("mkai-sidebar", open ? "open" : "closed");
+    } catch {}
+  }
+}
+function closeSidebarOnPhone() {
+  if (isPhone()) setSidebar(false);
+}
+let savedSidebar = null;
+try {
+  savedSidebar = localStorage.getItem("mkai-sidebar");
+} catch {}
+layout.classList.toggle("sidebar-open", !isPhone() && savedSidebar !== "closed");
+$("sidebarOpen").addEventListener("click", () => setSidebar(!layout.classList.contains("sidebar-open")));
+$("sidebarClose").addEventListener("click", () => setSidebar(false));
+$("sidebarBackdrop").addEventListener("click", () => setSidebar(false));
+window.matchMedia("(max-width: 899px)").addEventListener("change", (e) => {
+  layout.classList.toggle("sidebar-open", !e.matches && savedSidebar !== "closed");
+});
+
+// --- The typing box grows with the text; Enter sends, Shift+Enter adds a line.
+function fitQuestion() {
+  questionInput.style.height = "auto";
+  questionInput.style.height = `${Math.min(questionInput.scrollHeight, 200)}px`;
+}
+questionInput.addEventListener("input", fitQuestion);
+questionInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    composer.requestSubmit();
+  }
 });
 
 function addUserMessage(text) {
@@ -532,17 +700,26 @@ composer.addEventListener("submit", async (e) => {
     return;
   }
 
+  // The answer belongs to this chat even if the person switches chats meanwhile.
+  if (!store.currentId) store.currentId = newId();
+  const chatId = store.currentId;
+  const stillHere = () => store.currentId === chatId;
+
   emptyState.classList.add("hidden");
   addUserMessage(question);
-  record({ role: "user", text: question });
+  record(chatId, { role: "user", text: question });
+  $("chatTitle").textContent = currentChat()?.title || "New chat";
   questionInput.value = "";
+  fitQuestion();
   sendBtn.disabled = true;
   scrollToBottom();
 
   const loading = startLoading();
   scrollToBottom();
   let bubble = null;
+  const offscreen = { setText() {}, finish() {}, setCredit() {}, enableTeaching() {}, enableVotes() {} };
   const showBubble = () => {
+    if (!stillHere()) return offscreen;
     if (!bubble) {
       loading.remove();
       bubble = createAiMessage();
@@ -559,18 +736,18 @@ composer.addEventListener("submit", async (e) => {
     msg.finish(result.answer, result.searchSuggestions);
     if (result.credit) msg.setCredit(result.credit);
     if (result.teachable) msg.enableTeaching(question);
-    else remember(question, result.answer);
-    const saved = record({ role: "bot", text: result.answer, credit: result.credit || null, teachable: !!result.teachable });
+    else if (stillHere()) remember(question, result.answer);
+    const saved = record(chatId, { role: "bot", text: result.answer, credit: result.credit || null, teachable: !!result.teachable });
     result.saved.then((entryId) => {
       if (!entryId) return;
       msg.enableVotes(entryId);
       saved.entryId = entryId;
-      saveConversation();
+      saveChats();
     });
   } catch (err) {
     console.error(err);
     loading.remove();
-    addErrorMessage(aiErrorMessage(err));
+    if (stillHere()) addErrorMessage(aiErrorMessage(err));
   } finally {
     sendBtn.disabled = !hasAccess();
     questionInput.focus();
