@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multiplication Tables</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #eef2ff; font-family: system-ui, sans-serif; text-align: center; padding: 20px 12px; }
+  input { font-size: 22px; width: 90px; padding: 8px; text-align: center; border-radius: 10px; border: 2px solid #c7d2fe; }
+  table { margin: 20px auto; border-collapse: collapse; font-size: 22px; background: #fff; border-radius: 12px; overflow: hidden; }
+  td { padding: 8px 18px; border-bottom: 1px solid #e0e7ff; }
+  tr:nth-child(even) { background: #f5f7ff; }
+  .quiz { margin-top: 10px; font-size: 20px; }
+  button { padding: 10px 18px; font-size: 16px; border: 0; border-radius: 10px; background: #4f46e5; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>✖️ Times Tables</h1>
+Table of <input id="n" type="number" value="7"> up to <input id="upto" type="number" value="10">
+<table id="table"></table>
+<div class="quiz"><button id="quiz">Quiz me!</button> <span id="q"></span> <input id="ans" type="number" style="width:80px" hidden> <span id="res"></span></div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  function draw() {
+    const n = Number($("n").value), upto = Math.min(Number($("upto").value) || 10, 100);
+    $("table").innerHTML = "";
+    for (let i = 1; i <= upto; i++) {
+      const row = $("table").insertRow();
+      row.insertCell().textContent = `${n} × ${i}`;
+      row.insertCell().textContent = `= ${n * i}`;
+    }
+  }
+  let answer;
+  $("quiz").onclick = () => {
+    const a = Math.ceil(Math.random() * 12), b = Math.ceil(Math.random() * 12);
+    answer = a * b;
+    $("q").textContent = `${a} × ${b} = `;
+    $("ans").hidden = false; $("ans").value = ""; $("ans").focus(); $("res").textContent = "";
+  };
+  $("ans").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") $("res").textContent = Number($("ans").value) === answer ? "✅ Correct!" : `❌ It's ${answer}`;
+  });
+  $("n").oninput = draw; $("upto").oninput = draw;
+  draw();
+</script>
+</body>
+</html>

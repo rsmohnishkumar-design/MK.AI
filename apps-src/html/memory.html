@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory Card Game</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #312e81; color: #fff; font-family: system-ui, sans-serif; }
+  .board { display: grid; grid-template-columns: repeat(4, min(20vw, 80px)); gap: 10px; }
+  .card { height: min(20vw, 80px); font-size: min(10vw, 40px); border: 0; border-radius: 12px; background: #6366f1; color: transparent; cursor: pointer; transition: transform 0.2s; }
+  .card.open, .card.matched { background: #fff; color: #000; transform: rotateY(180deg); }
+  .card.matched { background: #bbf7d0; }
+  #info { margin: 14px; font-size: 20px; }
+  button#restart { padding: 10px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #f59e0b; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>🧠 Memory Game</h1>
+<div class="board" id="board"></div>
+<div id="info"></div>
+<button id="restart">Restart</button>
+<script>
+  const ICONS = ["🍎", "🍌", "🍇", "🍉", "🍒", "🥝", "🍍", "🥭"];
+  let open = [], moves = 0, matched = 0;
+
+  function shuffle(list) {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  }
+
+  function start() {
+    const board = document.getElementById("board");
+    board.innerHTML = "";
+    open = []; moves = 0; matched = 0;
+    shuffle([...ICONS, ...ICONS]).forEach((icon) => {
+      const card = document.createElement("button");
+      card.className = "card";
+      card.textContent = icon;
+      card.onclick = () => flip(card);
+      board.append(card);
+    });
+    update();
+  }
+
+  function flip(card) {
+    if (open.length === 2 || card.classList.contains("open") || card.classList.contains("matched")) return;
+    card.classList.add("open");
+    open.push(card);
+    if (open.length === 2) {
+      moves++;
+      const [a, b] = open;
+      if (a.textContent === b.textContent) {
+        a.classList.add("matched"); b.classList.add("matched");
+        matched++;
+        open = [];
+      } else {
+        setTimeout(() => { a.classList.remove("open"); b.classList.remove("open"); open = []; }, 800);
+      }
+      update();
+    }
+  }
+
+  function update() {
+    document.getElementById("info").textContent = matched === ICONS.length ? `🎉 You won in ${moves} moves!` : `Moves: ${moves}`;
+  }
+
+  document.getElementById("restart").onclick = start;
+  start();
+</script>
+</body>
+</html>

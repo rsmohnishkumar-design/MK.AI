@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Typing Speed Test</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #1c1917; color: #e7e5e4; font-family: system-ui, sans-serif; padding: 12px; box-sizing: border-box; }
+  .box { width: min(640px, 100%); }
+  #text { font-size: 22px; line-height: 1.6; background: #292524; padding: 16px; border-radius: 12px; }
+  #text .ok { color: #86efac; } #text .bad { color: #fca5a5; background: #7f1d1d; } #text .cur { border-bottom: 2px solid #fbbf24; }
+  textarea { width: 100%; box-sizing: border-box; margin-top: 12px; font-size: 18px; padding: 12px; border-radius: 12px; min-height: 90px; }
+  #stats { font-size: 20px; margin-top: 12px; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #f59e0b; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>⌨️ Typing Speed Test</h1>
+  <div id="text"></div>
+  <textarea id="input" placeholder="Start typing the text above…"></textarea>
+  <div id="stats">WPM: 0 · Accuracy: 100%</div>
+  <button id="again">New text</button>
+</div>
+<script>
+  const TEXTS = [
+    "Practice makes progress. Every expert was once a beginner who kept going.",
+    "The quick brown fox jumps over the lazy dog while the sun sets slowly.",
+    "Coding is like writing a recipe for a computer, one clear step at a time.",
+  ];
+  let target, started;
+  const input = document.getElementById("input");
+
+  function load() {
+    target = TEXTS[Math.floor(Math.random() * TEXTS.length)];
+    input.value = "";
+    started = null;
+    input.disabled = false;
+    render();
+  }
+
+  function render() {
+    const typed = input.value;
+    const box = document.getElementById("text");
+    box.innerHTML = "";
+    [...target].forEach((ch, i) => {
+      const span = document.createElement("span");
+      span.textContent = ch;
+      if (i < typed.length) span.className = typed[i] === ch ? "ok" : "bad";
+      else if (i === typed.length) span.className = "cur";
+      box.append(span);
+    });
+    const minutes = started ? (Date.now() - started) / 60000 : 0;
+    const correct = [...typed].filter((c, i) => c === target[i]).length;
+    const wpm = minutes > 0 ? Math.round(correct / 5 / minutes) : 0;
+    const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+    document.getElementById("stats").textContent = `WPM: ${wpm} · Accuracy: ${acc}%` + (typed.length >= target.length ? " · Done! 🎉" : "");
+    if (typed.length >= target.length) input.disabled = true;
+  }
+
+  input.addEventListener("input", () => { started ||= Date.now(); render(); });
+  document.getElementById("again").onclick = load;
+  load();
+</script>
+</body>
+</html>

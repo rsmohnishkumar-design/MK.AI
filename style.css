@@ -1065,7 +1065,33 @@ body.chat-page { overflow: hidden; }
   color: #e6e1d6;
   tab-size: 4;
 }
-.code-block pre::-webkit-scrollbar { height: 8px; }
+.code-block pre { max-height: 420px; overflow-y: auto; }
+.code-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.code-run { color: var(--brass); border-color: var(--brass-dim); }
+/* A built app running in a sealed-off frame, over the whole screen */
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: #0b0e11;
+}
+.preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--ink-soft);
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.preview-bar span { flex: 1; }
+.preview-frame { flex: 1; width: 100%; border: 0; background: #fff; }
+.code-block pre::-webkit-scrollbar { height: 8px; width: 8px; }
 .code-block pre::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
 .inline-code {
   font-family: var(--font-mono);

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landing Page</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; color: #0f172a; }
+  .hero { min-height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; background: radial-gradient(circle at top, #22d3ee, #0f172a 70%); color: #fff; }
+  .hero h1 { font-size: clamp(36px, 8vw, 72px); margin: 0 0 10px; }
+  .hero p { font-size: clamp(16px, 3vw, 22px); max-width: 600px; opacity: 0.9; }
+  .cta { margin-top: 24px; padding: 14px 32px; font-size: 18px; border: 0; border-radius: 999px; background: #facc15; color: #0f172a; font-weight: 700; cursor: pointer; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+  .feature { text-align: center; padding: 20px; border-radius: 16px; background: #f1f5f9; }
+  .feature div { font-size: 40px; }
+  .signup { background: #0f172a; color: #fff; text-align: center; padding: 50px 20px; }
+  .signup form { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .signup input { padding: 12px; font-size: 16px; border-radius: 10px; border: 0; width: min(300px, 90vw); }
+  .signup button { padding: 12px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #22d3ee; cursor: pointer; }
+  #thanks { color: #86efac; margin-top: 10px; }
+  footer { text-align: center; padding: 20px; color: #64748b; }
+</style>
+</head>
+<body>
+<section class="hero">
+  <h1>Your Product 🚀</h1>
+  <p>One line that says what it does and why people will love it.</p>
+  <button class="cta" onclick="document.getElementById('join').scrollIntoView({ behavior: 'smooth' })">Get started — it's free</button>
+</section>
+<section class="features">
+  <div class="feature"><div>⚡</div><h3>Fast</h3><p>Explain the first big benefit.</p></div>
+  <div class="feature"><div>🔒</div><h3>Safe</h3><p>Explain the second benefit.</p></div>
+  <div class="feature"><div>💚</div><h3>Free</h3><p>Explain the third benefit.</p></div>
+</section>
+<section class="signup" id="join">
+  <h2>Join the waiting list</h2>
+  <form id="form"><input type="email" placeholder="Your email" required><button>Notify me</button></form>
+  <div id="thanks"></div>
+</section>
+<footer>© Your Product</footer>
+<script>
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    // Connect this to a real service (like a Google Form or Firebase) to collect emails.
+    document.getElementById("thanks").textContent = "Thanks! We'll let you know. 🎉";
+    e.target.reset();
+  });
+</script>
+</body>
+</html>

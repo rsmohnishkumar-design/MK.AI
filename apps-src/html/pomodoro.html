@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pomodoro Study Timer</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #fff; transition: background 0.5s; }
+  body.focus { background: #b91c1c; } body.break { background: #047857; }
+  .box { text-align: center; }
+  #mode { font-size: 24px; }
+  #time { font-size: clamp(64px, 20vw, 130px); font-variant-numeric: tabular-nums; }
+  button { padding: 12px 24px; font-size: 18px; margin: 4px; border: 0; border-radius: 999px; background: #fff; color: #111; cursor: pointer; }
+  #done { margin-top: 12px; }
+</style>
+</head>
+<body class="focus">
+<div class="box">
+  <div id="mode">Focus 📚</div>
+  <div id="time">25:00</div>
+  <button id="start">Start</button><button id="reset">Reset</button>
+  <div id="done">Sessions done: 0</div>
+</div>
+<script>
+  // 25 minutes of focus, then a 5-minute break (every 4th break is 15 minutes)
+  const FOCUS = 25 * 60, SHORT = 5 * 60, LONG = 15 * 60;
+  let left = FOCUS, onBreak = false, sessions = 0, timer = null;
+  const $ = (id) => document.getElementById(id);
+  const show = () => ($("time").textContent = `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`);
+
+  function switchMode() {
+    if (!onBreak) sessions++;
+    onBreak = !onBreak;
+    left = onBreak ? (sessions % 4 === 0 ? LONG : SHORT) : FOCUS;
+    document.body.className = onBreak ? "break" : "focus";
+    $("mode").textContent = onBreak ? "Break ☕" : "Focus 📚";
+    $("done").textContent = `Sessions done: ${sessions}`;
+    try { new AudioContext().resume(); } catch {}
+  }
+
+  $("start").onclick = () => {
+    if (timer) { clearInterval(timer); timer = null; $("start").textContent = "Start"; return; }
+    $("start").textContent = "Pause";
+    timer = setInterval(() => {
+      left--;
+      if (left < 0) switchMode();
+      show();
+    }, 1000);
+  };
+  $("reset").onclick = () => {
+    clearInterval(timer); timer = null;
+    onBreak = false; left = FOCUS;
+    document.body.className = "focus";
+    $("mode").textContent = "Focus 📚"; $("start").textContent = "Start";
+    show();
+  };
+  show();
+</script>
+</body>
+</html>

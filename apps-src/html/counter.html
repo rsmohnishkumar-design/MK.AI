@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counter App</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #ecfeff; font-family: system-ui, sans-serif; text-align: center; }
+  #count { font-size: 96px; font-weight: 700; margin: 10px; }
+  button { font-size: 28px; width: 70px; height: 70px; margin: 6px; border: 0; border-radius: 50%; color: #fff; cursor: pointer; }
+  .minus { background: #ef4444; } .plus { background: #22c55e; } .reset { background: #64748b; font-size: 16px; }
+</style>
+</head>
+<body>
+<div>
+  <h1>Counter</h1>
+  <div id="count">0</div>
+  <button class="minus" id="minus">−</button>
+  <button class="reset" id="reset">Reset</button>
+  <button class="plus" id="plus">+</button>
+</div>
+<script>
+  let count = 0;
+  const show = () => {
+    const el = document.getElementById("count");
+    el.textContent = count;
+    el.style.color = count > 0 ? "#16a34a" : count < 0 ? "#dc2626" : "#0f172a";
+  };
+  document.getElementById("plus").onclick = () => { count++; show(); };
+  document.getElementById("minus").onclick = () => { count--; show(); };
+  document.getElementById("reset").onclick = () => { count = 0; show(); };
+</script>
+</body>
+</html>

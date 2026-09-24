@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piano</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #18181b; color: #fff; font-family: system-ui, sans-serif; }
+  .piano { display: flex; position: relative; }
+  .white { width: min(11vw, 60px); height: min(50vw, 220px); background: #fff; border: 1px solid #333; border-radius: 0 0 8px 8px; display: flex; align-items: flex-end; justify-content: center; color: #555; padding-bottom: 8px; box-sizing: border-box; cursor: pointer; user-select: none; }
+  .black { position: absolute; width: min(7vw, 36px); height: min(30vw, 130px); background: #111; border-radius: 0 0 6px 6px; z-index: 1; cursor: pointer; }
+  .active { background: #fbbf24 !important; }
+  p { color: #a1a1aa; padding: 0 12px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>🎹 Piano</h1>
+<div class="piano" id="piano"></div>
+<p>Tap the keys, or use your keyboard: A S D F G H J K (W E T Y U for black keys)</p>
+<script>
+  // Notes from C4 to C5, made with the Web Audio API (no sound files)
+  const WHITE = [["C", 261.63, "a"], ["D", 293.66, "s"], ["E", 329.63, "d"], ["F", 349.23, "f"], ["G", 392.0, "g"], ["A", 440.0, "h"], ["B", 493.88, "j"], ["C", 523.25, "k"]];
+  const BLACK = [[0, 277.18, "w"], [1, 311.13, "e"], [3, 369.99, "t"], [4, 415.3, "y"], [5, 466.16, "u"]];
+  let audio;
+  const keys = {};
+
+  function play(freq, el) {
+    audio ||= new AudioContext();
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.4, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 1.2);
+    osc.connect(gain).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 1.2);
+    el.classList.add("active");
+    setTimeout(() => el.classList.remove("active"), 200);
+  }
+
+  const piano = document.getElementById("piano");
+  WHITE.forEach(([name, f, key]) => {
+    const el = document.createElement("div");
+    el.className = "white";
+    el.textContent = name;
+    el.onpointerdown = () => play(f, el);
+    piano.append(el);
+    keys[key] = [f, el];
+  });
+  BLACK.forEach(([after, f, key]) => {
+    const el = document.createElement("div");
+    el.className = "black";
+    const w = piano.children[0].offsetWidth;
+    el.style.left = `${(after + 1) * w - el.offsetWidth / 2 - w * 0.3}px`;
+    el.onpointerdown = () => play(f, el);
+    piano.append(el);
+    keys[key] = [f, el];
+  });
+  document.addEventListener("keydown", (e) => { if (keys[e.key] && !e.repeat) play(...keys[e.key]); });
+</script>
+</body>
+</html>

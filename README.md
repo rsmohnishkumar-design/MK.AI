@@ -42,15 +42,22 @@ answers in this order, stopping at the first that works:
    waves, lenses, pendulums, heat) and chemistry (molar mass, moles,
    molecules, percentage composition, balancing equations),
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
-3. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
+   The knowledge base adds coding how-tos with working code in Python,
+   JavaScript, HTML/CSS, Java, C, C++ and SQL, plus data structures,
+   algorithms and common error messages.
+3. **Its app builder**: ask "make a calculator app", "create a snake game"
+   or "rock paper scissors in python" and it writes a complete, tested
+   program. Web apps get a **▶ run** button (they run in a sealed-off frame
+   that can't touch MK.ai's data) and **⬇ download** saves any code as a file.
+4. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
    with the app, then **memory**: everything it has learned or been taught
    before, matched by meaning.
-4. **Your documents**: it reads the documents taught in the Training room and
+5. **Your documents**: it reads the documents taught in the Training room and
    picks out the sentences that answer the question.
-5. **Wikipedia**: "what is / who is" questions get the article's opening;
+6. **Wikipedia**: "what is / who is" questions get the article's opening;
    other factual questions ("how tall is Mount Everest?") are answered by
    reading the best article and picking out the answering sentences.
-6. Otherwise it says it doesn't know yet, puts the question on its
+7. Otherwise it says it doesn't know yet, puts the question on its
    **learning list** (Training room → Learn from users), and shows a
    **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
 
@@ -276,6 +283,7 @@ vault shows them.
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
+| `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
 | `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My First Web Page</title>
+<style>
+  * { box-sizing: border-box; }
+  body { max-width: 760px; margin: 0 auto; padding: 20px; font-family: Georgia, serif; line-height: 1.7; color: #222; }
+  header { border-bottom: 3px solid #0ea5e9; margin-bottom: 20px; }
+  h1 { color: #0369a1; }
+  img { max-width: 100%; border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background: #e0f2fe; }
+  button { padding: 10px 18px; font-size: 16px; border: 0; border-radius: 8px; background: #0ea5e9; color: #fff; cursor: pointer; }
+  footer { margin-top: 40px; color: #777; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Welcome to my page</h1>
+  <p>This is a simple web page made with HTML, CSS and a little JavaScript.</p>
+</header>
+
+<h2>A list</h2>
+<ul>
+  <li>HTML builds the structure</li>
+  <li>CSS makes it look good</li>
+  <li>JavaScript makes it do things</li>
+</ul>
+
+<h2>A table</h2>
+<table>
+  <tr><th>Language</th><th>Used for</th></tr>
+  <tr><td>HTML</td><td>Structure</td></tr>
+  <tr><td>CSS</td><td>Style</td></tr>
+  <tr><td>JavaScript</td><td>Behaviour</td></tr>
+</table>
+
+<h2>A link and a button</h2>
+<p><a href="https://developer.mozilla.org" target="_blank">Learn web development on MDN</a></p>
+<button id="hello">Click me</button>
+<p id="out"></p>
+
+<footer>Made by me ✨</footer>
+
+<script>
+  let clicks = 0;
+  document.getElementById("hello").addEventListener("click", () => {
+    clicks++;
+    document.getElementById("out").textContent = `Hello! You clicked ${clicks} time${clicks === 1 ? "" : "s"}. 👋`;
+  });
+</script>
+</body>
+</html>

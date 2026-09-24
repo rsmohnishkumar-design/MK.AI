@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>To-Do List</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #667eea, #764ba2); font-family: system-ui, sans-serif; display: flex; justify-content: center; padding: 40px 12px; box-sizing: border-box; }
+  .app { width: min(420px, 100%); background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px #0003; height: fit-content; }
+  h1 { margin: 0 0 14px; font-size: 24px; }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 10px; }
+  button { padding: 12px 16px; font-size: 16px; border: 0; border-radius: 10px; background: #667eea; color: #fff; cursor: pointer; }
+  ul { list-style: none; padding: 0; margin: 16px 0 0; }
+  li { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; }
+  li span { flex: 1; cursor: pointer; }
+  li.done span { text-decoration: line-through; color: #999; }
+  .del { background: #e57373; padding: 6px 10px; }
+  .info { color: #777; font-size: 14px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📝 My To-Do List</h1>
+  <form id="form">
+    <input id="task" placeholder="What do you need to do?" autocomplete="off">
+    <button>Add</button>
+  </form>
+  <ul id="list"></ul>
+  <div class="info" id="info"></div>
+</div>
+<script>
+  const list = document.getElementById("list");
+  const info = document.getElementById("info");
+  // Tasks are saved in the browser, so they're still there next time.
+  let tasks = [];
+  try { tasks = JSON.parse(localStorage.getItem("tasks")) || []; } catch {}
+
+  function save() {
+    try { localStorage.setItem("tasks", JSON.stringify(tasks)); } catch {}
+  }
+
+  function render() {
+    list.innerHTML = "";
+    tasks.forEach((task, i) => {
+      const li = document.createElement("li");
+      if (task.done) li.className = "done";
+      const text = document.createElement("span");
+      text.textContent = task.text;
+      text.onclick = () => { task.done = !task.done; save(); render(); };
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "✕";
+      del.onclick = () => { tasks.splice(i, 1); save(); render(); };
+      li.append(text, del);
+      list.append(li);
+    });
+    const left = tasks.filter((t) => !t.done).length;
+    info.textContent = tasks.length ? `${left} task${left === 1 ? "" : "s"} left · tap a task to tick it off` : "Nothing to do yet 🎉";
+  }
+
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("task");
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.push({ text, done: false });
+    input.value = "";
+    save();
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

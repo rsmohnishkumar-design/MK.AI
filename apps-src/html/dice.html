@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dice Roller</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #7f1d1d; color: #fff; font-family: system-ui, sans-serif; text-align: center; }
+  #dice { font-size: min(28vw, 140px); letter-spacing: 10px; }
+  .roll { animation: shake 0.5s; }
+  @keyframes shake { 25% { transform: rotate(15deg); } 50% { transform: rotate(-15deg); } 75% { transform: rotate(10deg); } }
+  button { padding: 14px 30px; font-size: 20px; border: 0; border-radius: 999px; background: #fbbf24; cursor: pointer; }
+  select { font-size: 18px; padding: 6px; border-radius: 8px; }
+  #total { font-size: 24px; margin: 10px; }
+</style>
+</head>
+<body>
+<div>
+  <h1>🎲 Dice Roller</h1>
+  <label>Dice: <select id="count"><option>1</option><option selected>2</option><option>3</option></select></label>
+  <div id="dice">⚀ ⚀</div>
+  <div id="total"></div>
+  <button id="roll">Roll!</button>
+</div>
+<script>
+  const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+  document.getElementById("roll").onclick = () => {
+    const n = Number(document.getElementById("count").value);
+    const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * 6) + 1);
+    const dice = document.getElementById("dice");
+    dice.textContent = rolls.map((r) => FACES[r - 1]).join(" ");
+    dice.classList.remove("roll");
+    void dice.offsetWidth;   // restart the animation
+    dice.classList.add("roll");
+    document.getElementById("total").textContent = `Total: ${rolls.reduce((a, b) => a + b, 0)}`;
+  };
+</script>
+</body>
+</html>

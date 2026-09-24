@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather App</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: linear-gradient(160deg, #38bdf8, #1e3a8a); font-family: system-ui, sans-serif; color: #fff; }
+  .card { width: min(400px, 92vw); background: #ffffff22; backdrop-filter: blur(8px); border-radius: 20px; padding: 24px; text-align: center; }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; font-size: 16px; border: 0; border-radius: 10px; }
+  button { padding: 12px 16px; font-size: 16px; border: 0; border-radius: 10px; background: #facc15; cursor: pointer; }
+  #icon { font-size: 72px; }
+  #temp { font-size: 56px; font-weight: 700; }
+  .row { display: flex; justify-content: space-around; margin-top: 12px; }
+  #msg { margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <form id="form"><input id="city" placeholder="City name" value="Chennai"><button>Search</button></form>
+  <div id="msg"></div>
+  <div id="out" hidden>
+    <h2 id="place"></h2>
+    <div id="icon"></div>
+    <div id="temp"></div>
+    <div id="desc"></div>
+    <div class="row"><div>💧 <span id="hum"></span>%</div><div>💨 <span id="wind"></span> km/h</div></div>
+  </div>
+</div>
+<script>
+  // Uses the free Open-Meteo service (no key needed): https://open-meteo.com
+  const CODES = { 0: ["☀️", "Clear sky"], 1: ["🌤️", "Mostly clear"], 2: ["⛅", "Partly cloudy"], 3: ["☁️", "Cloudy"], 45: ["🌫️", "Fog"], 48: ["🌫️", "Fog"], 51: ["🌦️", "Light drizzle"], 53: ["🌦️", "Drizzle"], 55: ["🌧️", "Heavy drizzle"], 61: ["🌧️", "Light rain"], 63: ["🌧️", "Rain"], 65: ["🌧️", "Heavy rain"], 71: ["🌨️", "Light snow"], 73: ["🌨️", "Snow"], 75: ["❄️", "Heavy snow"], 80: ["🌦️", "Rain showers"], 81: ["🌧️", "Rain showers"], 82: ["⛈️", "Violent showers"], 95: ["⛈️", "Thunderstorm"], 96: ["⛈️", "Thunderstorm with hail"], 99: ["⛈️", "Thunderstorm with hail"] };
+  const $ = (id) => document.getElementById(id);
+
+  async function show(city) {
+    $("msg").textContent = "Loading…";
+    $("out").hidden = true;
+    try {
+      const geo = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`)).json();
+      if (!geo.results?.length) { $("msg").textContent = "City not found 🤔"; return; }
+      const { latitude, longitude, name, country } = geo.results[0];
+      const data = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`)).json();
+      const now = data.current;
+      const [icon, text] = CODES[now.weather_code] || ["🌡️", "Weather"];
+      $("place").textContent = `${name}, ${country}`;
+      $("icon").textContent = icon;
+      $("temp").textContent = `${Math.round(now.temperature_2m)}°C`;
+      $("desc").textContent = text;
+      $("hum").textContent = now.relative_humidity_2m;
+      $("wind").textContent = Math.round(now.wind_speed_10m);
+      $("msg").textContent = "";
+      $("out").hidden = false;
+    } catch {
+      $("msg").textContent = "Couldn't reach the weather service. Check your internet.";
+    }
+  }
+  $("form").addEventListener("submit", (e) => { e.preventDefault(); show($("city").value); });
+  show($("city").value);
+</script>
+</body>
+</html>

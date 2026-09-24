@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Age Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #fdf4ff; font-family: system-ui, sans-serif; }
+  .card { width: min(380px, 92vw); background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #0002; text-align: center; }
+  input { font-size: 18px; padding: 10px; border-radius: 10px; border: 2px solid #f5d0fe; }
+  button { margin-top: 12px; padding: 12px 20px; font-size: 16px; border: 0; border-radius: 10px; background: #c026d3; color: #fff; cursor: pointer; }
+  #out { margin-top: 16px; font-size: 20px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🎂 Age Calculator</h1>
+  <input type="date" id="dob">
+  <br><button id="calc">Calculate</button>
+  <div id="out"></div>
+</div>
+<script>
+  document.getElementById("calc").onclick = () => {
+    const value = document.getElementById("dob").value;
+    const out = document.getElementById("out");
+    if (!value) { out.textContent = "Pick your date of birth."; return; }
+    const birth = new Date(value), today = new Date();
+    if (birth > today) { out.textContent = "That date is in the future!"; return; }
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    let days = today.getDate() - birth.getDate();
+    if (days < 0) { months--; days += new Date(today.getFullYear(), today.getMonth(), 0).getDate(); }
+    if (months < 0) { years--; months += 12; }
+    const totalDays = Math.floor((today - birth) / 86400000);
+    let next = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+    if (next < today) next.setFullYear(today.getFullYear() + 1);
+    const untilBirthday = Math.ceil((next - today) / 86400000);
+    out.innerHTML = `You are <b>${years}</b> years, <b>${months}</b> months and <b>${days}</b> days old.<br>That's ${totalDays.toLocaleString()} days!<br>🎉 Next birthday in ${untilBirthday} days.`;
+  };
+</script>
+</body>
+</html>

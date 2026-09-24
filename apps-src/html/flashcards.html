@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flashcards</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0fdf4; font-family: system-ui, sans-serif; padding: 12px; }
+  .card { width: min(420px, 92vw); height: 240px; perspective: 1000px; cursor: pointer; }
+  .inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; }
+  .card.flip .inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; display: grid; place-items: center; padding: 20px; border-radius: 16px; font-size: 24px; text-align: center; box-shadow: 0 8px 20px #0002; }
+  .front { background: #fff; } .back { background: #16a34a; color: #fff; transform: rotateY(180deg); }
+  .nav { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
+  .nav button { padding: 10px 18px; font-size: 16px; border: 0; border-radius: 10px; background: #16a34a; color: #fff; cursor: pointer; }
+  form { margin-top: 20px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  form input { padding: 8px; font-size: 15px; border-radius: 8px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+<h1>📚 Flashcards</h1>
+<div class="card" id="card"><div class="inner"><div class="face front" id="front"></div><div class="face back" id="back"></div></div></div>
+<div class="nav"><button id="prev">←</button><span id="pos"></span><button id="next">→</button></div>
+<form id="add"><input id="q" placeholder="Question" required><input id="a" placeholder="Answer" required><button>Add card</button></form>
+<script>
+  let cards = [
+    { q: "What is H₂O?", a: "Water" },
+    { q: "Capital of Japan?", a: "Tokyo" },
+    { q: "7 × 8 = ?", a: "56" },
+  ];
+  try { cards = JSON.parse(localStorage.getItem("cards")) || cards; } catch {}
+  let i = 0;
+  const card = document.getElementById("card");
+
+  function show() {
+    card.classList.remove("flip");
+    document.getElementById("front").textContent = cards[i].q;
+    document.getElementById("back").textContent = cards[i].a;
+    document.getElementById("pos").textContent = `${i + 1} / ${cards.length}`;
+  }
+  card.onclick = () => card.classList.toggle("flip");   // tap to see the answer
+  document.getElementById("next").onclick = () => { i = (i + 1) % cards.length; show(); };
+  document.getElementById("prev").onclick = () => { i = (i - 1 + cards.length) % cards.length; show(); };
+  document.getElementById("add").addEventListener("submit", (e) => {
+    e.preventDefault();
+    cards.push({ q: document.getElementById("q").value, a: document.getElementById("a").value });
+    try { localStorage.setItem("cards", JSON.stringify(cards)); } catch {}
+    e.target.reset();
+    i = cards.length - 1;
+    show();
+  });
+  show();
+</script>
+</body>
+</html>

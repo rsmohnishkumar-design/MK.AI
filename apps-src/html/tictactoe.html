@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic Tac Toe</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #1e293b; color: #f1f5f9; font-family: system-ui, sans-serif; }
+  .game { text-align: center; }
+  #status { font-size: 22px; margin-bottom: 14px; min-height: 30px; }
+  .board { display: grid; grid-template-columns: repeat(3, min(26vw, 100px)); gap: 8px; margin: 0 auto; }
+  .cell { height: min(26vw, 100px); font-size: min(14vw, 56px); font-weight: bold; border: 0; border-radius: 12px; background: #334155; color: #f1f5f9; cursor: pointer; }
+  .cell.x { color: #38bdf8; } .cell.o { color: #f472b6; }
+  .cell.win { background: #22c55e55; }
+  .controls { margin-top: 16px; }
+  .controls button, .controls label { font-size: 16px; margin: 4px; }
+  .controls button { padding: 10px 18px; border: 0; border-radius: 10px; background: #6366f1; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="game">
+  <div id="status"></div>
+  <div class="board" id="board"></div>
+  <div class="controls">
+    <label><input type="checkbox" id="vsComputer" checked> Play against computer</label><br>
+    <button id="restart">Restart</button>
+  </div>
+</div>
+<script>
+  const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const boardEl = document.getElementById("board");
+  const status = document.getElementById("status");
+  let cells, turn, over;
+
+  function winner(b) {
+    for (const line of LINES) {
+      const [a, c, d] = line;
+      if (b[a] && b[a] === b[c] && b[a] === b[d]) return { player: b[a], line };
+    }
+    return b.every(Boolean) ? { player: null } : null;
+  }
+
+  // The computer: win if it can, block if it must, else take the centre, a corner, anything.
+  function computerMove() {
+    const empty = cells.map((v, i) => (v ? null : i)).filter((i) => i !== null);
+    for (const who of ["O", "X"]) {
+      for (const i of empty) {
+        const test = cells.slice();
+        test[i] = who;
+        if (winner(test)?.player === who) return i;
+      }
+    }
+    if (!cells[4]) return 4;
+    const corners = [0, 2, 6, 8].filter((i) => !cells[i]);
+    if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
+    return empty[0];
+  }
+
+  function play(i) {
+    if (over || cells[i]) return;
+    cells[i] = turn;
+    turn = turn === "X" ? "O" : "X";
+    draw();
+    if (!over && turn === "O" && document.getElementById("vsComputer").checked) setTimeout(() => play(computerMove()), 400);
+  }
+
+  function draw() {
+    boardEl.innerHTML = "";
+    const result = winner(cells);
+    cells.forEach((v, i) => {
+      const b = document.createElement("button");
+      b.className = "cell" + (v ? " " + v.toLowerCase() : "") + (result?.line?.includes(i) ? " win" : "");
+      b.textContent = v || "";
+      b.onclick = () => {
+        if (turn === "O" && document.getElementById("vsComputer").checked) return;
+        play(i);
+      };
+      boardEl.append(b);
+    });
+    over = Boolean(result);
+    status.textContent = result ? (result.player ? `${result.player} wins! 🎉` : "It's a draw 🤝") : `${turn}'s turn`;
+  }
+
+  function restart() {
+    cells = Array(9).fill(null);
+    turn = "X";
+    over = false;
+    draw();
+  }
+  document.getElementById("restart").onclick = restart;
+  restart();
+</script>
+</body>
+</html>
