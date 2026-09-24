@@ -1,7 +1,7 @@
 // MK.ai's own reading: finds the sentences in a text that answer a question,
 // and summarises a text by picking its most central sentences. No outside AI.
 
-import { keywords } from "./brain.js";
+import { keywords } from "./words.js";
 
 export function sentencesOf(text) {
   return (

@@ -17,11 +17,16 @@ answers in this order, stopping at the first that works:
 2. **Its own brain**, instantly and on the device: greetings (including
    vanakkam and namaste), small talk, who it is, jokes, the time and date,
    maths ("12 x 7", "15% of 200", "squre root of 81") with typos allowed,
-   algebra solved step by step ("the difference of two numbers is 5 and
-   their product is -2", "solve x^2 - 5x + 6 = 0"),
+   and a full maths solver that works problems out step by step: equations
+   (one or two unknowns, quadratics), fractions, HCF/LCM, primes, factors,
+   percentages, simple and compound interest, profit/loss/discount, averages
+   and statistics, ratios, speed/distance/time, work, consecutive numbers,
+   sequences (AP/GP), combinations, logarithms, trigonometry, number systems,
+   Roman numerals, Pythagoras, areas and volumes, clock angles,
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
-3. **Memory**: everything it has learned or been taught before, matched by
-   meaning.
+3. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
+   with the app, then **memory**: everything it has learned or been taught
+   before, matched by meaning.
 4. **Your documents**: it reads the documents taught in the Training room and
    picks out the sentences that answer the question.
 5. **Wikipedia**: "what is / who is" questions get the article's opening;
@@ -252,6 +257,8 @@ vault shows them.
 | `js/brain.js` | Memory: matching questions, learning, votes |
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
+| `js/mathsolve.js`, `js/mathword.js` | The maths solver: equations, numbers, and word problems, step by step |
+| `js/kb.js`, `data/kb/` | The built-in knowledge base |
 | `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
 | `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |

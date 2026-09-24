@@ -2,7 +2,7 @@
 // give it: the questions they ask, bulk question/answer lists, and documents.
 // Pure helpers here are shared with the chat (documents are used to answer).
 
-import { keywords } from "./brain.js";
+import { keywords } from "./words.js";
 
 // --- Bulk answers -------------------------------------------------------------
 
@@ -86,7 +86,7 @@ export function passageScore(question, passageKeywords) {
 
 // --- Learning from users ----------------------------------------------------------
 
-const SKIP_MODES = new Set(["local", "creator", "file", "taught"]);
+const SKIP_MODES = new Set(["local", "creator", "file", "taught", "knowledge"]);
 
 // Groups the activity log into distinct questions and finds what MK.ai should
 // learn: questions it couldn't answer, and questions people ask again and again.
