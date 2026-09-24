@@ -27,6 +27,8 @@ import { localAnswer } from "./local.js";
 import { wikiAnswer, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer } from "./format.js";
+import { onBrainChange, enableBrain, removeBrain, startBrain, checkSupport, wanted as brainWanted } from "./ownbrain.js";
+import { startMeaning } from "./meaning.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -240,6 +242,9 @@ function showChat(user, notice) {
   renderTier();
   if (notice) addErrorMessage(notice);
   questionInput.focus();
+  startBrain();
+  // Neural memory loads quietly once the page is idle.
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 2000)))(() => startMeaning());
 }
 
 function showAuth() {
@@ -751,9 +756,13 @@ async function answer(question, onText) {
     const isLearned = memory.collection === "learned";
     if (isLearned) markUsed(memory.id).catch(() => {});
     logActivity(question, isLearned ? "memory" : "vault");
+    const credits = [
+      memory.source === "wikipedia" ? "from Wikipedia" : "",
+      memory.similarTo ? `from memory of a similar question: “${memory.similarTo.slice(0, 120)}”` : "",
+    ].filter(Boolean);
     return {
       answer: memory.answer,
-      credit: memory.source === "wikipedia" ? "from Wikipedia" : null,
+      credit: credits.join(" · ") || null,
       saved: Promise.resolve(isLearned ? memory.id : null),
     };
   };
@@ -786,7 +795,7 @@ async function answer(question, onText) {
     logActivity(question, "ai");
     // Answers that depend on the conversation or go stale ("today", prices…) aren't saved.
     const saved =
-      contextual || isTimeSensitive(question) || result.partial
+      contextual || isTimeSensitive(question) || result.partial || result.own
         ? nothingSaved
         : learn(question, result.answer).catch((err) => {
             console.warn("Couldn't save to memory:", err);
@@ -795,6 +804,14 @@ async function answer(question, onText) {
     return { ...result, saved };
   } catch (err) {
     console.warn("No AI service could answer:", aiErrorMessage(err));
+    if (!navigator.onLine) {
+      return {
+        answer: brainWanted()
+          ? "You're offline and my own brain couldn't answer that right now. Please try again in a moment."
+          : "You're offline. 📴 Download MK.ai's own brain from the sidebar and I can chat with you even without internet.",
+        saved: nothingSaved,
+      };
+    }
     logActivity(question, "unknown");
     return {
       answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
@@ -928,6 +945,53 @@ secretMark.addEventListener("click", () => {
     clickCount = 0;
     window.location.href = "vault.html";
   }
+});
+
+// --- MK.ai's own brain: the download card in the sidebar ---
+const brainBtn = $("brainBtn");
+const brainRemove = $("brainRemove");
+let removeArmed = null;
+function renderBrain(s) {
+  const badge = $("brainBadge");
+  const text = $("brainText");
+  const busy = s.status === "downloading" || s.status === "loading";
+  const views = {
+    off: ["not downloaded", "", "A real AI model that runs on this device. It answers when the online AI is busy, and works offline."],
+    downloading: [`downloading ${s.progress}%`, "busy", "Keep MK.ai open while it downloads. Wi-Fi recommended."],
+    loading: [`waking up ${s.progress}%`, "busy", "Loading from this device…"],
+    ready: ["ready", "ready", "Answers when the online AI is busy, and when you're offline."],
+    unsupported: ["not supported", "bad", s.text],
+    error: ["failed", "bad", s.text],
+  };
+  const [label, tone, copy] = views[s.status] || views.off;
+  badge.textContent = label;
+  badge.className = `brain-badge ${tone}`;
+  text.textContent = copy;
+  $("brainBar").classList.toggle("hidden", !busy);
+  $("brainBarFill").style.width = `${s.progress || 0}%`;
+  brainBtn.classList.toggle("hidden", !["off", "error"].includes(s.status));
+  brainBtn.textContent = s.status === "error" ? "try again" : "download (about 0.9 GB)";
+  brainRemove.classList.toggle("hidden", s.status !== "ready");
+}
+onBrainChange(renderBrain);
+checkSupport().then((support) => {
+  if (!support.ok && !brainWanted()) renderBrain({ status: "unsupported", text: support.reason });
+});
+brainBtn.addEventListener("click", () => enableBrain().catch(() => {}));
+brainRemove.addEventListener("click", () => {
+  // Two taps, so the download isn't deleted by accident.
+  if (!removeArmed) {
+    brainRemove.textContent = "tap again to delete it";
+    removeArmed = setTimeout(() => {
+      removeArmed = null;
+      brainRemove.textContent = "remove";
+    }, 3000);
+    return;
+  }
+  clearTimeout(removeArmed);
+  removeArmed = null;
+  brainRemove.textContent = "remove";
+  removeBrain();
 });
 
 // --- Installable app (PWA) ---

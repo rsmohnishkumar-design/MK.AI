@@ -1082,3 +1082,35 @@ body.chat-page { overflow: hidden; }
   text-underline-offset: 3px;
 }
 .answer-link:hover { color: var(--paper); }
+
+/* MK.ai's own brain (on-device AI model) */
+.brain-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.brain-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.brain-title { font-size: 13px; font-weight: 600; color: var(--paper); }
+.brain-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(169, 176, 186, 0.14);
+  color: var(--paper-dim);
+  white-space: nowrap;
+}
+.brain-badge.ready { background: rgba(143, 169, 152, 0.2); color: var(--sage); }
+.brain-badge.busy { background: rgba(201, 162, 39, 0.18); color: var(--brass); }
+.brain-badge.bad { background: rgba(201, 106, 74, 0.18); color: var(--error); }
+.brain-text { margin: 0; font-size: 12px; line-height: 1.45; color: var(--paper-dim); }
+.brain-bar { height: 5px; border-radius: 3px; background: var(--panel); overflow: hidden; }
+.brain-bar i { display: block; height: 100%; width: 0; background: var(--brass); transition: width 0.3s; }
+.brain-actions { display: flex; align-items: center; gap: 10px; }
+.brain-actions .link-btn { margin: 0; font-size: 12px; }
