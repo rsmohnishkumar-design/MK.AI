@@ -79,8 +79,9 @@ service cloud.firestore {
       allow create: if signedIn() && hasAccess()
         && incoming().keys().hasOnly([
           'question', 'answer', 'keywords', 'timeSensitive', 'uses', 'voters',
-          'createdBy', 'createdAt', 'lastUsedAt'
+          'createdBy', 'createdAt', 'lastUsedAt', 'source'
         ])
+        && (!('source' in incoming()) || incoming().source in ['ai', 'wikipedia', 'taught'])
         && incoming().createdBy == request.auth.uid
         && incoming().question is string && incoming().question.size() <= 1000
         && incoming().answer is string && incoming().answer.size() <= 20000
@@ -117,7 +118,7 @@ service cloud.firestore {
         && incoming().uid == request.auth.uid
         && incoming().email == request.auth.token.email
         && incoming().question is string && incoming().question.size() <= 1000
-        && incoming().mode in ['ai', 'memory', 'vault']
+        && incoming().mode is string && incoming().mode.size() <= 20
         && incoming().createdAt == request.time;
       allow read, delete: if isAdmin();
     }

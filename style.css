@@ -561,3 +561,42 @@ body {
   margin-top: 6px;
 }
 .link-btn:hover { color: var(--brass); }
+
+.answer-credit {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--paper-dim);
+}
+
+.teach-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.teach-form textarea {
+  background: var(--ink-soft);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--paper);
+  font: inherit;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+}
+.teach-form textarea:focus { border-color: var(--brass); }
+
+.teach-form button {
+  align-self: flex-start;
+  background: var(--brass);
+  color: var(--ink);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.teach-form button:disabled { opacity: 0.6; }

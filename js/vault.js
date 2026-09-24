@@ -164,7 +164,9 @@ function renderList(container, entries, kind) {
       const stats = document.createElement("span");
       stats.className = "entry-stats";
       stats.textContent =
-        `used ${entry.uses || 1}× · 👍 ${up} · 👎 ${down}` + (entry.timeSensitive ? " · time-sensitive" : "");
+        `${entry.source === "taught" ? "taught by a person · " : entry.source === "wikipedia" ? "from Wikipedia · " : ""}` +
+        `used ${entry.uses || 1}× · 👍 ${up} · 👎 ${down}` +
+        (entry.timeSensitive ? " · time-sensitive" : "");
       actions.appendChild(stats);
       button("promote to vault", () => promoteLearned(entry));
       button("delete", () => deleteEntry("learned", entry.id, "Delete this memory?"), true);
@@ -251,6 +253,10 @@ function badgeFor(mode) {
   if (mode === "vault") return '<span class="badge badge-vault">vault</span>';
   if (mode === "memory") return '<span class="badge badge-learned">memory</span>';
   if (mode === "ai") return '<span class="badge badge-google">ai answer</span>';
+  if (mode === "local") return '<span class="badge badge-vault">own brain</span>';
+  if (mode === "wiki") return '<span class="badge badge-google">wikipedia</span>';
+  if (mode === "taught") return '<span class="badge badge-learned">taught</span>';
+  if (mode === "unknown") return '<span class="badge badge-error">didn\'t know</span>';
   return `<span class="badge badge-error">${escapeHtml(mode || "?")}</span>`;
 }
 

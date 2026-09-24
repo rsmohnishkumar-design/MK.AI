@@ -118,10 +118,13 @@ export function isTimeSensitive(question) {
 }
 
 // Follow-ups like "what about its population?" depend on the conversation.
-const FOLLOW_UP = /\b(it|its|he|she|him|her|his|they|them|their|this|that|these|those|there|then|same|more|else)\b/i;
+const FOLLOW_UP = /\b(it|its|he|she|him|her|his|they|them|their|this|that|these|those|there|same|more|else)\b/i;
+const FOLLOW_UP_START = /^(and|so|but|also|then|what about|how about|why|how come|really|tell me more|continue|go on)\b/i;
 export function dependsOnContext(question, history) {
   if (!history.length) return false;
-  return FOLLOW_UP.test(question) || question.trim().split(/\s+/).length <= 3;
+  const q = question.trim();
+  // A lone word like "why?" or "more" only makes sense with the conversation.
+  return FOLLOW_UP.test(q) || FOLLOW_UP_START.test(q) || q.split(/\s+/).length === 1;
 }
 
 async function candidates(collectionName, question) {
@@ -164,8 +167,10 @@ export async function lookup(question) {
   return { memory, knowledge: { good, bad } };
 }
 
-export async function learn(question, answer) {
+// source: "ai", "wikipedia" or "taught" (a person typed the answer).
+export async function learn(question, answer, source = "ai") {
   const ref = await addDoc(collection(db, "learned"), {
+    source,
     question: question.slice(0, 1000),
     answer: answer.slice(0, 20000),
     keywords: keywords(question).slice(0, 50),
