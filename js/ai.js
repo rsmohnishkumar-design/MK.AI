@@ -4,6 +4,7 @@ import { ai, db } from "./firebase.js";
 import { GEMINI_MODELS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, streamChat } from "./providers.js";
 import { wanted as ownBrainWanted, ownAnswer } from "./ownbrain.js";
+import { needsVision, withFileText } from "./attach.js";
 
 // Answers come from the free AI services whose keys the admin saved in the
 // vault (Groq, Cerebras, OpenRouter, GitHub Models), then from Gemini through
@@ -225,6 +226,17 @@ const ownBrain = {
   },
 };
 
+// Photos and PDFs: only Gemini can see them.
+function visionPlan() {
+  if (!navigator.onLine) return [];
+  return available(
+    GEMINI_MODELS.map((model) => ({
+      key: `gemini:${model}`,
+      run: (ctx, onText) => geminiAnswer(model, false, ctx.contents, onText),
+    }))
+  );
+}
+
 // The ordered list of things to try for this question.
 async function plan(question) {
   const own = ownBrainWanted() ? [ownBrain] : [];
@@ -283,13 +295,17 @@ const CREATOR_NOTE =
 
 // history: [{ role: "user" | "assistant", content }], oldest first, ending on "assistant".
 // onText(textSoFar) is called as the answer streams in.
-export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false } = {}) {
+// attachment: a photo or PDF (sent to Gemini, which can see them) or a text
+// file (added to the question, so any service can answer).
+export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false, attachment = null } = {}) {
+  const asked = attachment?.kind === "text" ? withFileText(attachment, question) : question;
   const note = [creator ? CREATOR_NOTE : "", knowledgeNote(knowledge)].filter(Boolean).join("\n\n");
-  const userText = note ? `${note}\n\nQuestion: ${question}` : question;
+  const userText = note ? `${note}\n\nQuestion: ${asked}` : asked;
+  const media = needsVision(attachment) ? [{ inlineData: { mimeType: attachment.mimeType, data: attachment.data } }] : [];
   const ctx = {
     contents: [
       ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
-      { role: "user", parts: [{ text: userText }] },
+      { role: "user", parts: [{ text: userText }, ...media] },
     ],
     messages: (search) => [
       { role: "system", content: search ? SEARCH_PROMPT : NO_SEARCH_PROMPT },
@@ -299,7 +315,9 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   };
 
   let lastError = httpError(503, "all AI services are resting (used up or unavailable) — try again later");
-  for (const attempt of await plan(question)) {
+  const attempts = media.length ? visionPlan() : await plan(question);
+  if (media.length && !navigator.onLine) lastError = httpError(503, "reading photos and files needs the internet");
+  for (const attempt of attempts) {
     let text = "";
     try {
       const result = await attempt.run(ctx, (t) => {

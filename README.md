@@ -176,6 +176,17 @@ conversation is in Tamil. Code is described ("the code is shown on screen")
 rather than read out. The mic only shows in browsers that support voice
 typing (Chrome, Edge, Safari).
 
+## Photos and files
+
+Tap the **paperclip** (or paste a picture, or drag a file onto the chat on
+a laptop) to ask about a **photo** (homework, a diagram, a screenshot), a
+**PDF**, or a **text or code file** (up to 8 MB). Photos are shrunk on the
+device before sending. Photos and PDFs are read by Gemini, which can see
+them; text files are added to the question so every AI service can answer.
+Follow-ups like "what about question 2?" keep using the chat's last file.
+Answers about files aren't saved to the shared memory, and the file itself
+isn't stored in the chat history (only its name).
+
 ## Code School
 
 `learn.html` (the **Learn to code** button in the sidebar) teaches coding
@@ -219,6 +230,7 @@ vault shows them.
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
 | `js/ownbrain.js`, `js/meaning.js` | MK.ai's own on-device model, and neural (meaning) memory |
 | `js/voice.js` | Voice typing and reading answers aloud |
+| `js/attach.js` | Photos, PDFs and text files sent with a question |
 | `js/creator.js` | Creator mode: the secret-code check and the details report |
 | `js/ai.js` | Asking outside AI services (saved keys first, then Gemini) |
 | `js/providers.js` | The free AI services and their models |
