@@ -87,3 +87,31 @@ export async function knowledgeAnswer(question) {
   }
   return bestEntry(question);
 }
+
+// Other entries about the same thing, for Deep think's "Related" list.
+// Rare words count most, so "capital of France" finds France's currency and
+// language rather than other countries' capitals.
+export function relatedEntries(question, exclude = null, n = 2) {
+  const words = keywords(prep(question));
+  if (!words.length) return [];
+  const idf = (w) => Math.log((entries.length + 1) / ((byWord.get(w)?.size || 0) + 1));
+  const total = words.reduce((s, w) => s + idf(w), 0);
+  // Related entries must share the question's rarest word ("france", "gandhi").
+  const rarest = words.reduce((best, w) => (idf(w) > idf(best) ? w : best), words[0]);
+  if ((byWord.get(rarest)?.size || 0) > 25) return [];
+  const rare = [rarest];
+  const scored = new Map();
+  for (const w of rare) {
+    for (const i of byWord.get(w) || []) {
+      const e = entries[i];
+      if (e.q === exclude || scored.has(i)) continue;
+      const own = new Set(e.phrasings.flatMap((p) => p.words));
+      const s = words.filter((x) => own.has(x)).reduce((sum, x) => sum + idf(x), 0) / total;
+      if (s >= 0.4) scored.set(i, s);
+    }
+  }
+  return [...scored]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([i]) => ({ question: entries[i].q, answer: entries[i].a }));
+}

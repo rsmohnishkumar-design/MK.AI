@@ -967,8 +967,48 @@ body.chat-page { overflow: hidden; }
   flex-shrink: 0;
 }
 
+/* Normal / Deep think switch under the message box */
+.desk-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.mode-switch {
+  display: inline-flex;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 2px;
+  background: var(--ink-soft);
+}
+.mode-btn {
+  border: 0;
+  background: transparent;
+  color: var(--paper-dim);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mode-btn.active { background: var(--brass); color: #14181c; font-weight: 600; }
+.mode-btn:not(.active):hover { color: var(--paper); }
+/* "Thought for 1.2 s": the steps Deep think took, folded away */
+.thoughts {
+  margin: 4px 0 10px;
+  border-left: 2px solid var(--brass-dim);
+  padding: 2px 0 2px 10px;
+  font-size: 13px;
+  color: var(--paper-dim);
+}
+.thoughts summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; color: var(--brass); }
+.thoughts ol { margin: 6px 0 2px; padding-left: 20px; line-height: 1.55; }
+.thoughts li { white-space: pre-wrap; }
+.msg-loading .pulling .step { font-size: 12px; opacity: 0.85; }
 .desk-hint {
-  margin: 6px 0 0;
+  margin: 0;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 10.5px;

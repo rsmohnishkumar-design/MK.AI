@@ -23,7 +23,8 @@ import {
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
 import { bestSentences, summarise, wantsSummary } from "./reader.js";
-import { knowledgeAnswer, loadKnowledge } from "./kb.js";
+import { knowledgeAnswer, loadKnowledge, relatedEntries } from "./kb.js";
+import * as deep from "./deepthink.js";
 import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
@@ -293,7 +294,7 @@ function showChat(user, notice) {
   loadChats(user.uid);
   questionInput.disabled = false;
   sendBtn.disabled = false;
-  questionInput.placeholder = "Ask me anything…";
+  setMode(answerMode);
   renderTier();
   if (notice) addErrorMessage(notice);
   questionInput.focus();
@@ -419,6 +420,7 @@ function cloudCopy(chat) {
       ...(m.credit ? { credit: m.credit } : {}),
       ...(m.entryId ? { entryId: m.entryId } : {}),
       ...(m.teachable ? { teachable: true } : {}),
+      ...(m.thoughts ? { thoughts: m.thoughts.slice(0, 30).map((t) => String(t).slice(0, 300)), thoughtMs: Math.round(m.thoughtMs || 0) } : {}),
     })),
   };
 }
@@ -531,6 +533,7 @@ function renderThread() {
     } else if (item.role === "bot") {
       const msg = createAiMessage();
       msg.finish(item.text, null);
+      if (item.thoughts) msg.setThoughts(item.thoughts, item.thoughtMs);
       if (item.credit) msg.setCredit(item.credit);
       if (item.entryId) msg.enableVotes(item.entryId);
       if (lastQuestion && !item.teachable) remember(lastQuestion, item.text);
@@ -730,6 +733,13 @@ function createAiMessage() {
       const speakBtn = actions.querySelector(".speak-btn");
       if (voice.canSpeak) toggleSpeaking(speakBtn, answer);
     },
+    setThoughts(steps, ms) {
+      const box = el.querySelector(".thoughts");
+      box.querySelector("summary").textContent = `🧠 Thought for ${howLong(ms || 0)} · ${steps.length} steps`;
+      const list = box.querySelector("ol");
+      list.replaceChildren(...steps.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
+      box.classList.remove("hidden");
+    },
     setCredit(text) {
       const credit = el.querySelector(".answer-credit");
       credit.textContent = text;
@@ -817,7 +827,8 @@ const DONT_KNOW = [
 // 5. Wikipedia, for simple "what is / who is" questions
 // 6. "I don't know yet": the question goes on its learning list for the Training room
 // Outside AI is never used here; it only helps the admin in the Training room.
-async function answer(question, onText, attachment = null) {
+// think(step) notes what MK.ai is doing, for Deep think's "Thought for …" list.
+async function answer(question, onText, attachment = null, think = () => {}) {
   const nothingSaved = Promise.resolve(null);
   // The question asked before this one in the chat (answered or not).
   const asked = (currentChat()?.messages || []).filter((m) => m.role === "user").map((m) => m.text);
@@ -826,6 +837,7 @@ async function answer(question, onText, attachment = null) {
 
   // A text file sent with the question: MK.ai reads it itself.
   if (attachment) {
+    think(`Reading the file ${attachment.name}`);
     logActivity(question, "file");
     const found = wantsSummary(question) ? summarise(attachment.text) : bestSentences(question, attachment.text);
     return {
@@ -834,6 +846,7 @@ async function answer(question, onText, attachment = null) {
         : `I couldn't find that in ${attachment.name}. Try asking with words that appear in the file, or say "summarise this file".`,
       credit: `read by MK.ai from ${attachment.name}`,
       saved: nothingSaved,
+      source: "file",
     };
   }
 
@@ -851,6 +864,7 @@ async function answer(question, onText, attachment = null) {
     return { answer: report, saved: nothingSaved };
   }
 
+  think("Checking my own brain (maths, science, coding, conversations)");
   const own = localAnswer(question, { creator: isCreator() });
 
   // A follow-up ("what about its population?") is looked up together with
@@ -878,32 +892,39 @@ async function answer(question, onText, attachment = null) {
       memory.source === "wikipedia" ? "from Wikipedia" : "",
       memory.similarTo ? `from memory of a similar question: “${memory.similarTo.slice(0, 120)}”` : "",
     ].filter(Boolean);
+    think(isLearned ? "Found it in my memory of earlier answers" : "Found a curated answer in the vault");
     return {
       answer: memory.answer,
       credit: credits.join(" · ") || null,
       saved: Promise.resolve(isLearned ? memory.id : null),
+      source: isLearned ? "memory" : "vault",
     };
   };
 
   if (memory && memory.collection === "vault") return fromMemory();
 
   if (own) {
+    think("My own brain worked it out");
     logActivity(question, "local");
-    return { answer: own, saved: nothingSaved };
+    return { answer: own, saved: nothingSaved, source: "local" };
   }
 
   // Apps and programs MK.ai builds from its tested templates (data/apps.json).
+  think("Checking whether it's something I can build");
   const built = await appAnswer(question);
   if (built) {
+    think("Picked a tested app template");
     logActivity(question, "app");
-    return { answer: built, saved: nothingSaved };
+    return { answer: built, saved: nothingSaved, source: "app" };
   }
 
   // The built-in knowledge base (checked answers that ship with MK.ai).
+  think("Searching my built-in knowledge base");
   const known = await knowledgeAnswer(searchFor);
   if (known) {
+    think(`Matched “${known.question}” (${Math.round(known.score * 100)}% sure)`);
     logActivity(question, "knowledge");
-    return { answer: known.answer, saved: nothingSaved };
+    return { answer: known.answer, saved: nothingSaved, source: "knowledge", matched: known.question };
   }
 
   if (memory) return fromMemory();
@@ -912,12 +933,14 @@ async function answer(question, onText, attachment = null) {
   for (const passage of knowledge.docs || []) {
     const found = passage.score >= 0.6 && bestSentences(searchFor, passage.text);
     if (found) {
+      think(`Found it in the document “${passage.title}”`);
       logActivity(question, "document");
-      return { answer: found, credit: `from "${passage.title}"`, saved: nothingSaved };
+      return { answer: found, credit: `from "${passage.title}"`, saved: nothingSaved, source: "document" };
     }
   }
 
   if (!isTimeSensitive(question)) {
+    think("Looking it up on Wikipedia");
     const asked = contextual ? searchFor : question;
     const wiki =
       (looksLikeKnowledgeQuestion(asked) && (await wikiAnswer(asked).catch(() => null))) ||
@@ -928,19 +951,100 @@ async function answer(question, onText, attachment = null) {
         answer: wiki.answer,
         credit: "from Wikipedia",
         saved: contextual ? nothingSaved : learn(question, wiki.answer, "wikipedia").catch(() => null),
+        source: "wiki",
       };
     }
   }
 
   if (!navigator.onLine) {
-    return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved };
+    return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved, source: "offline" };
   }
   logActivity(question, "unknown");
   return {
     answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
     saved: nothingSaved,
     teachable: !contextual,
+    source: "unknown",
   };
+}
+
+const howLong = (ms) => (ms < 1000 ? `${Math.max(1, Math.round(ms))} ms` : `${(ms / 1000).toFixed(1)} s`);
+
+// --- Deep think ---
+// Slower and more careful: splits questions with several parts, double-checks
+// maths, adds related facts, and tries harder before giving up. Every step is
+// kept so the person can see how the answer was reached.
+async function deepAnswer(question, onText, attachment, onStep) {
+  const started = performance.now();
+  const steps = [];
+  const think = (text) => {
+    steps.push(text);
+    onStep(text);
+  };
+  const done = (result, extra = "") => {
+    const answerText = extra ? `${result.answer}\n\n${extra}` : result.answer;
+    think(`Done in ${howLong(performance.now() - started)}`);
+    return { ...result, answer: answerText, thoughts: steps.slice(0, 30), thoughtMs: performance.now() - started };
+  };
+
+  think(`Understanding the question: it looks like ${deep.describe(question)}`);
+  const words = keywords(question);
+  if (words.length) think(`Key words: ${words.slice(0, 8).join(", ")}`);
+
+  // Several questions in one message: answer each part.
+  const parts = attachment ? [question] : deep.splitParts(question);
+  if (parts.length > 1) {
+    think(`It has ${parts.length} parts, so I'll answer them one by one`);
+    const answers = [];
+    for (const [i, part] of parts.entries()) {
+      think(`Part ${i + 1}: “${part}”`);
+      const r = await answer(part, () => {}, null, (t) => think(`  ${t}`));
+      const check = r.source === "local" ? deep.verifyMaths(part, r.answer) : null;
+      if (check) think(`  ${check}`);
+      answers.push(`**${i + 1}. ${part.charAt(0).toUpperCase() + part.slice(1)}?**\n${r.answer}${check ? `\n${check}` : ""}`);
+    }
+    return done({ answer: answers.join("\n\n"), saved: Promise.resolve(null), source: "parts" });
+  }
+
+  let result = await answer(question, onText, attachment, think);
+
+  // Maths from its own brain: work it out a second way.
+  if (result.source === "local") {
+    const check = deep.verifyMaths(question, result.answer);
+    if (check) {
+      think(check.startsWith("✓") ? "Double-checked the answer a second way: it holds" : "The double-check didn't agree");
+      return done(result, check);
+    }
+    return done(result);
+  }
+
+  // Couldn't find it: try again with just the core words.
+  if (result.source === "unknown" || result.source === "offline") {
+    const core = deep.coreQuery(question);
+    if (core && core !== question.toLowerCase()) {
+      think(`Trying harder: searching again for just “${core}”`);
+      const known = await knowledgeAnswer(core);
+      const again = known ? { answer: known.answer, matched: known.question, source: "knowledge" } : navigator.onLine ? await wikiFind(core).then((w) => w && { answer: w.answer, source: "wiki" }).catch(() => null) : null;
+      if (again) {
+        think(`Found something close${again.matched ? `: “${again.matched}”` : " on Wikipedia"}`);
+        result = { ...result, answer: `I'm not completely sure this is what you meant, but here's the closest I found:\n\n${again.answer}`, credit: again.source === "wiki" ? "from Wikipedia" : null, source: again.source, matched: again.matched };
+      } else think("Still nothing, so I'll ask you to teach me");
+    }
+    return done(result);
+  }
+
+  // Facts: add related things it knows.
+  if (["knowledge", "memory", "vault", "wiki"].includes(result.source)) {
+    think("Looking for related facts I know");
+    await loadKnowledge().catch(() => {});
+    const related = relatedEntries(question, result.matched || null, 2).filter((r) => !result.answer.includes(deep.firstSentence(r.answer)));
+    if (related.length) {
+      think(`Adding ${related.length} related fact${related.length > 1 ? "s" : ""}`);
+      return done(result, `**Related:**\n${related.map((r) => `- ${r.question} ${deep.firstSentence(r.answer)}`).join("\n")}`);
+    }
+    think("Nothing related worth adding");
+  }
+  return done(result);
 }
 
 // After "I created you", the next short message is the secret code. It is
@@ -975,8 +1079,34 @@ function startLoading() {
       steps.forEach(clearTimeout);
       el.remove();
     },
+    // Deep think shows what it's doing right now.
+    step(text) {
+      steps.forEach(clearTimeout);
+      if (label) label.lastChild.textContent = ` ${text.trim()}…`;
+      label?.classList.add("step");
+    },
   };
 }
+
+// --- Normal / Deep think ---
+const MODE_KEY = "mkai-mode";
+let answerMode = "normal";
+try {
+  answerMode = localStorage.getItem(MODE_KEY) === "deep" ? "deep" : "normal";
+} catch {}
+function setMode(mode) {
+  answerMode = mode;
+  try {
+    localStorage.setItem(MODE_KEY, mode);
+  } catch {}
+  document.querySelectorAll(".mode-btn").forEach((b) => {
+    const on = b.dataset.mode === mode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-checked", String(on));
+  });
+  questionInput.placeholder = mode === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
+}
+document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
 composer.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -1025,7 +1155,7 @@ composer.addEventListener("submit", async (e) => {
   const loading = startLoading();
   scrollToBottom();
   let bubble = null;
-  const offscreen = { setText() {}, finish() {}, setCredit() {}, enableTeaching() {}, enableVotes() {} };
+  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {} };
   const showBubble = () => {
     if (!stillHere()) return offscreen;
     if (!bubble) {
@@ -1040,21 +1170,30 @@ composer.addEventListener("submit", async (e) => {
       ? await checkCreatorCode(question)
       : cancelled
         ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
-        : await answer(
-            question,
-            (text) => {
-              showBubble().setText(text);
-              scrollToBottom();
-            },
-            fileForAnswer
-          );
+        : answerMode === "deep"
+          ? await deepAnswer(question, () => {}, fileForAnswer, (step) => loading.step(step))
+          : await answer(
+              question,
+              (text) => {
+                showBubble().setText(text);
+                scrollToBottom();
+              },
+              fileForAnswer
+            );
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
+    if (result.thoughts) msg.setThoughts(result.thoughts, result.thoughtMs);
     if (spoken && stillHere()) msg.speakNow(result.answer);
     if (result.credit) msg.setCredit(result.credit);
     if (result.teachable) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
-    const saved = record(chatId, { role: "bot", text: result.answer, credit: result.credit || null, teachable: !!result.teachable });
+    const saved = record(chatId, {
+      role: "bot",
+      text: result.answer,
+      credit: result.credit || null,
+      teachable: !!result.teachable,
+      ...(result.thoughts ? { thoughts: result.thoughts, thoughtMs: result.thoughtMs } : {}),
+    });
     result.saved.then((entryId) => {
       if (!entryId) return;
       msg.enableVotes(entryId);
