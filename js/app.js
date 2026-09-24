@@ -934,7 +934,9 @@ composer.addEventListener("submit", async (e) => {
 
   // A follow-up ("what about question 2?") keeps using the chat's last file.
   if (attachment) lastAttachment.set(chatId, attachment);
-  const fileForAnswer = attachment || (dependsOnContext(question, history) ? lastAttachment.get(chatId) : null);
+  // Its own brain (maths, algebra…) comes first, even in a chat with a file.
+  const fileForAnswer =
+    attachment || (dependsOnContext(question, history) && !localAnswer(question) ? lastAttachment.get(chatId) : null);
   clearAttachment();
 
   emptyState.classList.add("hidden");
