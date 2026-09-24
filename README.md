@@ -125,7 +125,8 @@ using the admin email from step 3. That's it.
   browser menu → **Add to Home screen**). On iPhone, Share → **Add to
   Home Screen**.
 - **Open the admin vault:** tap the **MK** logo at the top left 7 times
-  quickly, and log in with the admin account.
+  quickly, and log in with the admin account. The account verified as the
+  creator (see "Creator mode") is an admin too.
 
 ## Accounts and access
 

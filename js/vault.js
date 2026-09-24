@@ -122,7 +122,9 @@ if (configured) {
     }
     // The security rules decide who the admin is (by email).
     if (!(await isAdmin())) {
-      loginError.textContent = "This account isn't the admin. The admin email is set in firestore.rules.";
+      loginError.textContent =
+        `You were signed in as ${user.email}, which isn't an admin. Log in below with the admin email, ` +
+        `or open the chat with your own account, say "I created you" and enter the creator code: the creator is an admin too.`;
       await signOut(auth);
       return;
     }

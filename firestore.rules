@@ -23,8 +23,14 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
 
+    // The admin: the email above, or the account verified as MK.ai's creator
+    // (with the creator code) in the chat.
     function isAdmin() {
-      return signedIn() && request.auth.token.email in adminEmails();
+      return signedIn() && (request.auth.token.email in adminEmails() || isCreator());
+    }
+    function isCreator() {
+      let profile = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(profile) && get(profile).data.get('creator', false) == true;
     }
 
     function incoming() { return request.resource.data; }
