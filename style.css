@@ -1114,3 +1114,40 @@ body.chat-page { overflow: hidden; }
 .brain-bar i { display: block; height: 100%; width: 0; background: var(--brass); transition: width 0.3s; }
 .brain-actions { display: flex; align-items: center; gap: 10px; }
 .brain-actions .link-btn { margin: 0; font-size: 12px; }
+
+/* Voice: mic in the composer, "listen" on answers */
+.mic-btn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--paper-dim);
+  cursor: pointer;
+}
+.mic-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mic-btn:hover { color: var(--brass); border-color: var(--brass); }
+.mic-btn.listening {
+  color: #fff;
+  background: var(--error);
+  border-color: var(--error);
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 106, 74, 0.5); }
+  50% { box-shadow: 0 0 0 7px rgba(201, 106, 74, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .mic-btn.listening { animation: none; } }
+.answer-actions .speak-btn.speaking { opacity: 1; border-color: var(--brass); color: var(--brass); }
