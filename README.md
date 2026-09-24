@@ -36,7 +36,11 @@ answers in this order, stopping at the first that works:
    systems of 3+ equations, vectors, matrix products/transpose/rank/
    eigenvalues, factorising, binomial expansions, infinite series,
    Fibonacci, arrangements, and equations with logs, powers, trig and
-   absolute values,
+   absolute values, science numericals worked with units (force, motion
+   and free fall, energy, work, power, pressure, density, springs,
+   circular motion, electricity and bills, resistors in series/parallel,
+   waves, lenses, pendulums, heat) and chemistry (molar mass, moles,
+   molecules, percentage composition, balancing equations),
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
 3. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
    with the app, then **memory**: everything it has learned or been taught
@@ -272,6 +276,7 @@ vault shows them.
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
+| `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |
 | `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
