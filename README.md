@@ -61,6 +61,16 @@ answers in this order, stopping at the first that works:
    **learning list** (Training room → Learn from users), and shows a
    **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
 
+**Normal and Deep think.** A switch under the message box picks how MK.ai
+answers. **⚡ Normal** gives the first good answer instantly. **🧠 Deep think**
+takes more care: it works out what kind of question it is, answers each
+part of a multi-part question separately, double-checks maths a second way
+(putting solutions back into the equation, comparing a derivative with the
+measured slope, re-working sums), adds related facts it knows, and searches
+again with just the core words before giving up. Its steps are shown in a
+folded "🧠 Thought for …" list on the answer. The choice is remembered on
+the device. (`js/deepthink.js`)
+
 Follow-up questions ("what about its population?") are looked up together
 with the topic of the previous question. Text and code files sent with the
 paperclip are read by MK.ai itself (it finds the answering sentences, or
@@ -284,6 +294,7 @@ vault shows them.
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
 | `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
+| `js/deepthink.js` | Deep think: question type, splitting multi-part questions, double-checking maths |
 | `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |
