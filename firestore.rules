@@ -64,6 +64,16 @@ service cloud.firestore {
       );
 
       allow delete: if isAdmin();
+
+      // Each person's saved chats: only they can read or change them.
+      match /chats/{chatId} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && incoming().keys().hasOnly(['title', 'updatedAt', 'messages'])
+          && incoming().title is string && incoming().title.size() <= 200
+          && incoming().updatedAt is int
+          && incoming().messages is list && incoming().messages.size() <= 100;
+      }
     }
 
     // --- Curated answers: everyone can read, only the admin can change ---
