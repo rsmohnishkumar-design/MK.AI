@@ -163,14 +163,32 @@ if (configured) {
     if (!user) {
       profile = null;
       awaitingCode = false;
+      forgetSession();
       stopSync();
       showAuth();
+      return;
+    }
+    // Returning on this device: open the chat straight away with the saved
+    // profile, and refresh it from the database in the background.
+    const saved = savedSession(user.uid);
+    if (saved && !pendingAccessCode) {
+      profile = saved;
+      showChat(user);
+      loadProfile(user, "")
+        .then((result) => {
+          if (auth.currentUser?.uid !== user.uid) return;
+          profile = result.profile;
+          saveSession(user.uid, profile);
+          renderTier();
+        })
+        .catch((err) => console.warn("Couldn't refresh the profile:", err));
       return;
     }
     try {
       const result = await loadProfile(user, pendingAccessCode);
       pendingAccessCode = "";
       profile = result.profile;
+      saveSession(user.uid, profile);
       showChat(user, result.notice);
     } catch (err) {
       authError.textContent = friendlyError(err);
@@ -179,6 +197,40 @@ if (configured) {
       authSubmit.disabled = false;
     }
   });
+}
+
+// --- Remembered session ---
+// The profile is kept on this device so a reload opens the chat at once
+// (index.html also hides the login screen early when this is present).
+const SESSION_KEY = "mkai-session";
+const toSaved = (v) => (v && typeof v.toMillis === "function" ? { __ms: v.toMillis() } : v);
+const fromSaved = (v) => (v && typeof v === "object" && "__ms" in v ? Timestamp.fromMillis(v.__ms) : v);
+
+function saveSession(uid, data) {
+  try {
+    // Never keep the codes on the device
+    const plain = Object.fromEntries(
+      Object.entries(data || {})
+        .filter(([k]) => k !== "accessCode" && k !== "creatorCode")
+        .map(([k, v]) => [k, toSaved(v)])
+    );
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ uid, profile: plain }));
+  } catch {}
+}
+function savedSession(uid) {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (!s || s.uid !== uid || !s.profile) return null;
+    return Object.fromEntries(Object.entries(s.profile).map(([k, v]) => [k, fromSaved(v)]));
+  } catch {
+    return null;
+  }
+}
+function forgetSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {}
+  document.documentElement.classList.remove("has-session");
 }
 
 let trialTimer = null;
@@ -255,6 +307,7 @@ function showChat(user, notice) {
 
 function showAuth() {
   clearInterval(trialTimer);
+  document.documentElement.classList.remove("has-session");
   chatScreen.classList.add("hidden");
   authScreen.classList.remove("hidden");
   const error = authError.textContent; // keep any sign-in error visible
@@ -898,6 +951,7 @@ async function checkCreatorCode(code) {
   const outcome = await creator.verifyCode(auth.currentUser.uid, code);
   if (outcome === "ok") {
     profile = { ...profile, creator: true };
+    saveSession(auth.currentUser.uid, profile);
     renderTier();
   }
   const text = outcome === "ok" ? creator.replies.welcome() : outcome === "wrong" ? creator.replies.wrong() : creator.replies.error();
