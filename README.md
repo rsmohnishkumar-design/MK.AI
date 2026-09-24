@@ -29,7 +29,14 @@ answers in this order, stopping at the first that works:
    between dates, leap years), decimals/fractions/percentages, rounding,
    surds and roots, coordinate geometry, time/data/area/volume units, and
    exam classics (unitary method, successive discounts, trains, boats,
-   ages, average speed),
+   ages, average speed), and advanced maths: derivatives and integrals of
+   any functions (trig, exponential, log; product, quotient and chain rules,
+   substitution, by parts, partial fractions), limits (L'Hôpital), tangents,
+   maxima and minima, simple differential equations, complex numbers,
+   systems of 3+ equations, vectors, matrix products/transpose/rank/
+   eigenvalues, factorising, binomial expansions, infinite series,
+   Fibonacci, arrangements, and equations with logs, powers, trig and
+   absolute values,
    unit conversions ("10 km to miles") and coding basics ("what is a loop?").
 3. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
    with the app, then **memory**: everything it has learned or been taught
@@ -265,6 +272,7 @@ vault shows them.
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
+| `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |
 | `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
 | `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |
