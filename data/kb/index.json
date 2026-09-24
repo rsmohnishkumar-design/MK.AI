@@ -3,6 +3,10 @@
   "countries.json",
   "maths.json",
   "elements.json",
-  "science.json"
+  "science.json",
+  "india.json",
+  "world.json",
+  "english.json",
+  "computers.json"
  ]
 }
