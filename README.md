@@ -169,21 +169,9 @@ Everything prepared waits in **Ready for you to approve**: edit, untick
 what's wrong, and save. Saved answers go into the vault and are used
 straight away.
 
-## MK.ai's own brain (on-device AI)
+## Neural memory
 
-A real open neural language model (**Llama 3.2 1B**, via
-[WebLLM](https://github.com/mlc-ai/web-llm)) can run entirely on a person's
-device. Nothing downloads until they tap **download** on the "MK.ai's own
-brain" card in the sidebar (about 0.9 GB, kept by the browser; **remove**
-deletes it). It needs WebGPU (recent Chrome or Edge, many newer Android
-devices); other devices see "not supported".
-
-Once downloaded it answers whenever the online AI services are resting, and
-when the device is **offline**. Its answers are credited "answered by MK.ai's
-own brain" and aren't saved to the shared memory, since a small model can be
-wrong.
-
-**Neural memory.** A small sentence-embedding model (all-MiniLM-L6-v2,
+A small sentence-embedding model (all-MiniLM-L6-v2,
 about 23 MB, via Transformers.js) loads quietly in the background, so memory
 matches questions by meaning: "how tall is Everest" finds the saved answer
 to "height of Mount Everest", credited "from memory of a similar question".
@@ -252,7 +240,7 @@ vault shows them.
 | `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Simple knowledge questions from Wikipedia |
 | `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
-| `js/ownbrain.js`, `js/meaning.js` | MK.ai's own on-device model, and neural (meaning) memory |
+| `js/meaning.js` | Neural (meaning) memory |
 | `js/voice.js` | Voice typing and reading answers aloud |
 | `js/attach.js` | Photos, PDFs and text files sent with a question |
 | `js/training.js` | The Training room: analysing questions, bulk answers, documents |

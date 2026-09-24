@@ -1,11 +1,11 @@
 // MK.ai service worker: makes the app installable and lets it open offline.
 // Bump CACHE when shipping changes that must reach installed apps right away.
 // Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
-const CACHE = "mkai-v28";
+const CACHE = "mkai-v29";
 const SHELL = [
   "./",
-  "style.css?v=28",
-  "js/app.js?v=28",
+  "style.css?v=29",
+  "js/app.js?v=29",
   "js/ai.js",
   "js/brain.js",
   "js/firebase.js",
@@ -15,7 +15,6 @@ const SHELL = [
   "js/creator.js",
   "js/format.js",
   "js/knowledge.js",
-  "js/ownbrain.js",
   "js/meaning.js",
   "js/voice.js",
   "js/attach.js",
@@ -48,21 +47,17 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Only our own files and the libraries themselves; database, login and AI
+  // Only our own files and the Firebase library itself; database, login and AI
   // requests (and the admin vault) always go straight to the network.
   const firebaseLibrary = url.origin === "https://www.gstatic.com" && url.pathname.startsWith("/firebasejs/");
-  // The on-device brain's library, so it can start offline (its model files
-  // are stored by the library itself).
-  const aiLibrary = url.origin === "https://cdn.jsdelivr.net" && url.pathname.startsWith("/npm/@mlc-ai/web-llm@");
-  const library = firebaseLibrary || aiLibrary;
-  if (request.method !== "GET" || (url.origin !== self.location.origin && !library)) return;
+  if (request.method !== "GET" || (url.origin !== self.location.origin && !firebaseLibrary)) return;
   if (url.pathname.includes("vault")) return;
 
   // Network first so updates (including firebase-config.js) show up right away;
   // the cached copy is only used when offline. Our own files are revalidated
   // with the server every time, so a stale browser copy is never mixed in.
   event.respondWith(
-    fetch(library ? request : new Request(request.url, { cache: "no-cache" }))
+    fetch(firebaseLibrary ? request : new Request(request.url, { cache: "no-cache" }))
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();
