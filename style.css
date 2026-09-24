@@ -995,3 +995,15 @@ body.chat-page { overflow: hidden; }
 
 /* Older rule stacked the chat screen vertically; the new layout is a row. */
 #chatScreen.chat-layout { flex-direction: row; }
+
+/* MK logo image (replaces the old text mark). */
+.logo {
+  display: block;
+  border-radius: 22%;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.logo-auth { width: 64px; height: 64px; margin: 0 auto 10px; }
+.logo-brand { width: 36px; height: 36px; cursor: default; }
+.logo-empty { width: 72px; height: 72px; margin: 0 auto 14px; }

@@ -871,7 +871,7 @@ composer.addEventListener("submit", async (e) => {
   }
 });
 
-// --- Hidden vault entrance: click the § mark 7 times within 3 seconds ---
+// --- Hidden vault entrance: click the MK logo 7 times within 3 seconds ---
 let clickCount = 0;
 let clickTimer = null;
 secretMark.addEventListener("click", () => {
