@@ -35,6 +35,7 @@
 <link rel="modulepreload" href="js/apps.js" />
 <link rel="modulepreload" href="js/deepthink.js" />
 <link rel="modulepreload" href="js/thirukkural.js" />
+<link rel="modulepreload" href="js/vision.js" />
 <link rel="modulepreload" href="js/format.js" />
 <link rel="modulepreload" href="js/creator.js" />
 <link rel="modulepreload" href="js/providers.js" />
@@ -52,7 +53,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=47" />
+<link rel="stylesheet" href="style.css?v=48" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -171,6 +172,10 @@
             </button>
           </div>
           <div class="desk-foot">
+            <select id="modelSelect" class="model-select" aria-label="Model">
+              <option value="alpaca">🦙 Alpaca</option>
+              <option value="vision">🎨 Alpaca Vision</option>
+            </select>
             <div class="mode-switch" role="radiogroup" aria-label="How MK.ai answers">
               <button type="button" class="mode-btn active" data-mode="normal" role="radio" aria-checked="true" title="Fast answers">⚡ Normal</button>
               <button type="button" class="mode-btn" data-mode="deep" role="radio" aria-checked="false" title="Slower, more careful: checks its work, adds related facts and shows its steps">🧠 Deep think</button>
@@ -241,6 +246,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=47"></script>
+  <script type="module" src="js/app.js?v=48"></script>
 </body>
 </html>

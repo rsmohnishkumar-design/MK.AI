@@ -29,13 +29,15 @@ import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
-import { renderAnswer } from "./format.js";
+import { renderAnswer, registerBlock } from "./format.js";
+import { isVisionRequest, visionAnswer, mountVision } from "./vision.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
+registerBlock("alpaca-vision", mountVision);
 
 // --- Auth screens/elements ---
 const authScreen = $("authScreen");
@@ -864,6 +866,16 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     return { answer: report, saved: nothingSaved };
   }
 
+  // Pictures and videos: Alpaca Vision (chosen in the model menu, or "draw …")
+  if (activeModel === "vision" || isVisionRequest(question)) {
+    think("Handing this to Alpaca Vision, my picture and video model");
+    logActivity(question, "vision");
+    if (activeModel === "vision" && /^(hi|hello|hey|help|what can you (draw|make|do)|how does this work)\b/i.test(question.trim()))
+      return { answer: VISION_HELP, saved: nothingSaved, source: "vision" };
+    think("Planned the picture from the description and painted it");
+    return { answer: visionAnswer(question), saved: nothingSaved, source: "vision" };
+  }
+
   think("Checking my own brain (maths, science, coding, conversations)");
   const own = localAnswer(question, { creator: isCreator() });
 
@@ -1091,6 +1103,42 @@ function startLoading() {
   };
 }
 
+// --- Models: Alpaca (answers) and Alpaca Vision (pictures and videos) ---
+const MODEL_KEY = "mkai-model";
+let activeModel = "alpaca";
+try {
+  activeModel = localStorage.getItem(MODEL_KEY) === "vision" ? "vision" : "alpaca";
+} catch {}
+const VISION_HELP = [
+  "🎨 **Alpaca Vision** draws pictures and makes short videos from your words — all by itself, no outside AI.",
+  "",
+  "Try:",
+  "- a sunset over the sea with palm trees and a boat",
+  "- night sky with stars over mountains, **video**",
+  "- a temple in a village at sunrise",
+  "- rain in a forest at night, 10 second video",
+  "- a cat and a dog in a garden, pixel art",
+  "- diwali greeting card for Asha from Ravi",
+  "- birthday card for Priya, video",
+  "- logo for MK Tech, blue",
+  "- a kolam pattern, or a mandala video",
+  "- bar chart of apples 10, mangoes 25, bananas 15",
+  "- outer space with planets and a rocket",
+  "",
+  "Styles: neon, pixel art, black and white, vintage, watercolour. Sizes: portrait, square.",
+].join("\n");
+function setModel(model) {
+  activeModel = model;
+  try {
+    localStorage.setItem(MODEL_KEY, model);
+  } catch {}
+  const select = $("modelSelect");
+  if (select) select.value = model;
+  document.querySelector(".mode-switch")?.classList.toggle("hidden", model === "vision");
+  questionInput.placeholder = model === "vision" ? "Describe a picture…" : answerMode === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
+}
+$("modelSelect")?.addEventListener("change", (e) => setModel(e.target.value));
+
 // --- Normal / Deep think ---
 const MODE_KEY = "mkai-mode";
 let answerMode = "normal";
@@ -1107,7 +1155,7 @@ function setMode(mode) {
     b.classList.toggle("active", on);
     b.setAttribute("aria-checked", String(on));
   });
-  questionInput.placeholder = mode === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
+  setModel(activeModel);
 }
 document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 

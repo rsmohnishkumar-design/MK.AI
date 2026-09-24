@@ -292,9 +292,9 @@ const RULES = [
   {
     test: /^(what|which) (ai )?(model|version|brain|llm|engine) (are you|is this|do you (use|run( on)?)|powers you|are you (using|running|built on))|^(what is|tell me about|who is) (the )?alpaca( model)?\b|^(your|mk ?ai'?s?) (model|version)\b/,
     creator: () =>
-      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 It's all my own: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and memory that grows as people teach me. No outside AI in chat.`,
+      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 It's all my own: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and memory that grows as people teach me. My picture and video model is Alpaca Vision 🎨. No outside AI in chat.`,
     reply: () =>
-      `I run on ${MODEL_NAME} 🦙, MK.ai's own model: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and a memory that learns from people. No outside AI is used in chat.`,
+      `I run on ${MODEL_NAME} 🦙, MK.ai's own model: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and a memory that learns from people. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …"). No outside AI is used in chat.`,
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
