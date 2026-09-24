@@ -63,6 +63,22 @@ answers in this order, stopping at the first that works:
    **learning list** (Training room → Learn from users), and shows a
    **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
 
+**Alpaca Vision (pictures and videos).** A model menu under the message
+box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**, MK.ai's
+own picture and video model; saying "draw …" or "make a video of …" also
+goes to it. It reads the description and paints it on a canvas — sky and
+time of day, sun, moon, stars, clouds, rainbows, auroras, mountains, hills,
+sea and beaches, lakes, deserts, forests, cities, villages, temples,
+lighthouses, windmills, boats, balloons, kites, fireworks, weather (rain,
+snow, storms, fog), animals and objects, text, and styles (neon, pixel art,
+black and white, vintage, watercolour). It also makes festival greeting
+cards (birthday, Diwali, Pongal, Christmas, Eid …), logos, kolam, mandala and
+geometric patterns, bar/line/pie charts, space and underwater scenes.
+"Video" brings the scene to life (waves, rain, birds, rising sun,
+fireworks) and records it as a WebM file in the browser. Only a small plan
+of the picture is saved with the chat, and it's redrawn when shown. No
+outside AI is used. (`js/vision.js`)
+
 **Normal and Deep think.** A switch under the message box picks how MK.ai
 answers. **⚡ Normal** gives the first good answer instantly. **🧠 Deep think**
 takes more care: it works out what kind of question it is, answers each
@@ -298,6 +314,7 @@ vault shows them.
 | `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
 | `js/thirukkural.js` | Famous kurals in Tamil with meanings: "give me a thirukkural", "kural on friendship", "kural 391" |
 | `kb-src/` | The scripts that write the knowledge packs in `data/kb/` (one per topic): edit one and run `python3 kb-src/<topic>.py` |
+| `js/vision.js` | Alpaca Vision: pictures, cards, logos, patterns, charts and videos drawn from a description |
 | `js/deepthink.js` | Deep think: question type, splitting multi-part questions, double-checking maths |
 | `js/science.js` | Physics numericals with units, and chemistry: molar mass, moles, % composition, balancing equations |
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |

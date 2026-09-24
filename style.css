@@ -971,8 +971,8 @@ body.chat-page { overflow: hidden; }
 .desk-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 8px;
   margin-top: 6px;
   flex-wrap: wrap;
 }
@@ -995,6 +995,39 @@ body.chat-page { overflow: hidden; }
 }
 .mode-btn.active { background: var(--brass); color: #14181c; font-weight: 600; }
 .mode-btn:not(.active):hover { color: var(--paper); }
+.model-select {
+  background: var(--ink-soft);
+  color: var(--paper);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.desk-foot .desk-hint { margin-left: auto; }
+/* Alpaca Vision pictures and videos in answers */
+.vision-box {
+  margin: 10px 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f1317;
+  max-width: 640px;
+}
+.vision-canvas { display: block; width: 100%; height: auto; }
+.vision-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--paper-dim);
+  background: var(--ink-soft);
+}
 /* "Thought for 1.2 s": the steps Deep think took, folded away */
 .thoughts {
   margin: 4px 0 10px;

@@ -58,6 +58,7 @@ export function listenErrorMessage(code) {
 // What's worth reading aloud: code and links are described, not spelled out.
 export function speakable(text) {
   return readableMath(text)
+    .replace(/```alpaca-vision[\s\S]*?(```|$)/g, " (the picture is shown on screen) ")
     .replace(/```[\s\S]*?(```|$)/g, " (the code is shown on screen) ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/[`*_#>]/g, "")

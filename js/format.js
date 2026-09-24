@@ -161,13 +161,21 @@ export function readableMath(text) {
     .replace(/\$([^$\n]+?)\$/g, (whole, m) => (/\\[a-zA-Z]|[\^_=]|^[a-z]$/.test(m) ? mathToText(m) : whole));
 }
 
+// Special blocks drawn by other parts of MK.ai (e.g. "alpaca-vision" pictures).
+const BLOCKS = new Map();
+export function registerBlock(lang, render) {
+  BLOCKS.set(lang, render);
+}
+
 export function renderAnswer(container, text) {
   container.replaceChildren();
   let last = 0;
   for (const m of text.matchAll(FENCE)) {
     // The box has its own spacing, so blank lines around it are dropped.
     if (m.index > last) inline(container, readableMath(text.slice(last, m.index)).replace(/\s+$/, ""));
-    container.append(codeBlock(m[1].toLowerCase(), m[2].replace(/\n$/, "")));
+    const lang = m[1].toLowerCase();
+    if (BLOCKS.has(lang)) BLOCKS.get(lang)(container, m[2].replace(/\n$/, ""));
+    else container.append(codeBlock(lang, m[2].replace(/\n$/, "")));
     last = m.index + m[0].length;
     while (text[last] === "\n") last++;
   }

@@ -268,6 +268,7 @@ function badgeFor(mode) {
   if (mode === "document") return '<span class="badge badge-learned">your documents</span>';
   if (mode === "knowledge") return '<span class="badge badge-vault">knowledge base</span>';
   if (mode === "app") return '<span class="badge badge-vault">app builder</span>';
+  if (mode === "vision") return '<span class="badge badge-vault">Alpaca Vision</span>';
   if (mode === "file") return '<span class="badge badge-google">photo / file</span>';
   if (mode === "creator") return '<span class="badge badge-vault">creator</span>';
   return `<span class="badge badge-error">${escapeHtml(mode || "?")}</span>`;
@@ -580,7 +581,7 @@ async function loadTraining() {
       vaultSnap.docs.map((d) => d.data().question || "")
     );
     const m = analysis.modes;
-    const selfAnswered = ["local", "memory", "vault", "document", "creator", "knowledge", "app", "wiki", "file"].reduce((n, k) => n + (m[k] || 0), 0);
+    const selfAnswered = ["local", "memory", "vault", "document", "creator", "knowledge", "app", "vision", "wiki", "file"].reduce((n, k) => n + (m[k] || 0), 0);
     const stat = (value, label) => `<div class="train-stat"><b>${value}</b><span>${label}</span></div>`;
     $("trainStats").innerHTML =
       stat(analysis.total, "questions analysed") +
