@@ -1151,3 +1151,36 @@ body.chat-page { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .mic-btn.listening { animation: none; } }
 .answer-actions .speak-btn.speaking { opacity: 1; border-color: var(--brass); color: var(--brass); }
+
+/* Attachments: a photo or file waiting to be sent */
+.attach-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  width: fit-content;
+  margin: 0 0 8px;
+  padding: 6px 8px 6px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--ink-soft);
+  font-size: 13px;
+  color: var(--paper);
+}
+.attach-chip img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
+.attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+#attachRemove {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--paper-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+#attachRemove:hover { color: var(--brass); border-color: var(--brass); }
+.desk.dragging .desk-box { border-color: var(--brass); border-style: dashed; }
+.msg-attach { display: block; max-width: min(260px, 100%); max-height: 260px; border-radius: 10px; margin: 0 0 6px auto; object-fit: contain; }

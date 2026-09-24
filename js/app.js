@@ -30,6 +30,7 @@ import { renderAnswer } from "./format.js";
 import { onBrainChange, enableBrain, removeBrain, startBrain, checkSupport, wanted as brainWanted } from "./ownbrain.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
+import * as attach from "./attach.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -613,9 +614,13 @@ questionInput.addEventListener("keydown", (e) => {
   }
 });
 
-function addUserMessage(text) {
+function addUserMessage(text, attachment = null) {
   const node = tUser.content.cloneNode(true);
   node.querySelector(".msg-body").textContent = text;
+  if (attachment?.previewUrl) {
+    const img = Object.assign(document.createElement("img"), { className: "msg-attach", src: attachment.previewUrl, alt: attachment.name });
+    node.querySelector(".msg-body").before(img);
+  }
   thread.appendChild(node);
 }
 
@@ -754,9 +759,29 @@ const DONT_KNOW = [
 // 4. Wikipedia, for simple "what is / who is" questions
 // 5. Outside AI services, when available
 // 6. "I don't know yet — teach me"
-async function answer(question, onText) {
+async function answer(question, onText, attachment = null) {
   const nothingSaved = Promise.resolve(null);
   const contextual = dependsOnContext(question, history);
+
+  // Questions about a photo or file go straight to the AI and aren't saved:
+  // the answer depends on the file.
+  if (attachment) {
+    try {
+      const result = await askGemini(question, history, { good: [], bad: [] }, onText, { creator: isCreator(), attachment });
+      if (!result.answer) throw new Error("empty answer");
+      logActivity(question, "file");
+      return { ...result, saved: nothingSaved };
+    } catch (err) {
+      console.warn("Couldn't answer about the attachment:", aiErrorMessage(err));
+      const what = attachment.kind === "image" ? "photo" : "file";
+      return {
+        answer: !navigator.onLine
+          ? `Reading a ${what} needs the internet. Please connect and try again.`
+          : `I couldn't read that ${what} right now: the AI that reads ${what}s is busy or used up for today. Please try again in a few minutes.`,
+        saved: nothingSaved,
+      };
+    }
+  }
 
   if (creator.claimsCreator(question)) {
     logActivity(question, "creator");
@@ -891,8 +916,10 @@ function startLoading() {
 
 composer.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const question = questionInput.value.trim().slice(0, 4000);
-  if (!question) return;
+  const attachment = pendingAttachment;
+  let question = questionInput.value.trim().slice(0, 4000);
+  if (!question && !attachment) return;
+  if (!question) question = attach.defaultQuestion(attachment);
   if (!hasAccess()) {
     renderTier();
     return;
@@ -912,10 +939,15 @@ composer.addEventListener("submit", async (e) => {
   awaitingCode = false;
   const cancelled = waitingForCode && creator.isCancel(question);
   const isCode = waitingForCode && !cancelled && creator.looksLikeCode(question);
-  const shown = isCode ? "•".repeat(Math.min(question.length, 12)) : question;
+  const shown = isCode ? "•".repeat(Math.min(question.length, 12)) : attachment ? `${attach.label(attachment)}\n${question}` : question;
+
+  // A follow-up ("what about question 2?") keeps using the chat's last file.
+  if (attachment) lastAttachment.set(chatId, attachment);
+  const fileForAnswer = attachment || (dependsOnContext(question, history) ? lastAttachment.get(chatId) : null);
+  clearAttachment();
 
   emptyState.classList.add("hidden");
-  addUserMessage(shown);
+  addUserMessage(shown, attachment);
   record(chatId, { role: "user", text: shown });
   $("chatTitle").textContent = currentChat()?.title || "New chat";
   questionInput.value = "";
@@ -942,10 +974,14 @@ composer.addEventListener("submit", async (e) => {
       ? await checkCreatorCode(question)
       : cancelled
         ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
-        : await answer(question, (text) => {
-            showBubble().setText(text);
-            scrollToBottom();
-          });
+        : await answer(
+            question,
+            (text) => {
+              showBubble().setText(text);
+              scrollToBottom();
+            },
+            fileForAnswer
+          );
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
     if (spoken && stillHere()) msg.speakNow(result.answer);
@@ -984,6 +1020,57 @@ secretMark.addEventListener("click", () => {
     clickCount = 0;
     window.location.href = "vault.html";
   }
+});
+
+// --- Attachments: photos, PDFs and text files ---
+const attachInput = $("attachInput");
+const attachChip = $("attachChip");
+let pendingAttachment = null;
+const lastAttachment = new Map(); // chat id → its most recent file, for follow-ups
+attachInput.accept = attach.ACCEPT;
+
+function clearAttachment() {
+  pendingAttachment = null;
+  attachChip.classList.add("hidden");
+  attachInput.value = "";
+}
+async function useFile(file) {
+  if (!file) return;
+  $("attachName").textContent = `Reading ${file.name || "image"}…`;
+  $("attachThumb").classList.add("hidden");
+  attachChip.classList.remove("hidden");
+  try {
+    pendingAttachment = await attach.readAttachment(file);
+    $("attachName").textContent = pendingAttachment.name;
+    if (pendingAttachment.previewUrl) {
+      $("attachThumb").src = pendingAttachment.previewUrl;
+      $("attachThumb").classList.remove("hidden");
+    }
+    questionInput.focus();
+  } catch (err) {
+    clearAttachment();
+    addErrorMessage(err.friendly ? err.message : "That file couldn't be read.");
+  }
+}
+$("attachBtn").addEventListener("click", () => attachInput.click());
+attachInput.addEventListener("change", () => useFile(attachInput.files[0]));
+$("attachRemove").addEventListener("click", clearAttachment);
+questionInput.addEventListener("paste", (e) => {
+  const file = [...(e.clipboardData?.files || [])][0];
+  if (file) {
+    e.preventDefault();
+    useFile(file);
+  }
+});
+composer.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  composer.classList.add("dragging");
+});
+composer.addEventListener("dragleave", () => composer.classList.remove("dragging"));
+composer.addEventListener("drop", (e) => {
+  e.preventDefault();
+  composer.classList.remove("dragging");
+  useFile(e.dataTransfer?.files?.[0]);
 });
 
 // --- Voice typing: tap the mic, speak, and the question is sent ---
