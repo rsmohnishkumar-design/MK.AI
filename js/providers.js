@@ -98,9 +98,16 @@ export function chooseModels(provider, available) {
 }
 
 // Streams one chat answer. onText(rawTextSoFar) is called as it arrives.
+// Resolves { text, complete }: complete is false when the answer stopped early.
+// timeoutMs limits the wait for the answer to start, and any pause after that,
+// so long answers (like code) can take as long as they need.
 export async function streamChat(provider, key, model, messages, onText, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timer = setTimeout(() => controller.abort(), timeoutMs);
+  const stillAlive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(), timeoutMs);
+  };
   try {
     const res = await fetch(provider.chatUrl, {
       method: "POST",
@@ -115,7 +122,7 @@ export async function streamChat(provider, key, model, messages, onText, timeout
         messages,
         stream: true,
         temperature: 0.6,
-        max_tokens: 2048,
+        max_tokens: 4096,
         ...(provider.extraBody ? provider.extraBody(model) : {}),
       }),
     });
@@ -126,9 +133,11 @@ export async function streamChat(provider, key, model, messages, onText, timeout
     const decoder = new TextDecoder();
     let buffer = "";
     let text = "";
+    let finish = null;
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
+      stillAlive();
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop();
@@ -143,6 +152,7 @@ export async function streamChat(provider, key, model, messages, onText, timeout
           continue;
         }
         if (event.error) throw httpError(500, `${provider.name} ${model}: ${event.error.message || "stream error"}`);
+        finish = event.choices?.[0]?.finish_reason || finish;
         const piece = event.choices?.[0]?.delta?.content || "";
         if (piece) {
           text += piece;
@@ -150,10 +160,10 @@ export async function streamChat(provider, key, model, messages, onText, timeout
         }
       }
     }
-    return text;
+    return { text, complete: finish === "stop" || finish === null };
   } catch (err) {
     if (err.name === "AbortError") {
-      throw httpError(504, `${provider.name} ${model}: timeout — no answer in ${timeoutMs / 1000}s`);
+      throw httpError(504, `${provider.name} ${model}: timeout — no reply for ${timeoutMs / 1000}s`);
     }
     throw err;
   } finally {

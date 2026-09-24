@@ -1,11 +1,11 @@
 // MK.ai service worker: makes the app installable and lets it open offline.
 // Bump CACHE when shipping changes that must reach installed apps right away.
 // Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
-const CACHE = "mkai-v21";
+const CACHE = "mkai-v22";
 const SHELL = [
   "./",
-  "style.css?v=21",
-  "js/app.js?v=21",
+  "style.css?v=22",
+  "js/app.js?v=22",
   "js/ai.js",
   "js/brain.js",
   "js/firebase.js",
@@ -13,6 +13,7 @@ const SHELL = [
   "js/local.js",
   "js/wiki.js",
   "js/creator.js",
+  "js/format.js",
   "firebase-config.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
