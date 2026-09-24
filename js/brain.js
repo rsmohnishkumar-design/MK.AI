@@ -20,11 +20,12 @@ import { embed, closeness } from "./meaning.js";
 // much of their meaning-carrying words overlap, forgiving small typos.
 // ---------------------------------------------------------------------------
 const STOPWORDS = new Set(
-  "a an the is are was were be been am do does did of to in on at for by with from and or but " +
+  (
+    "a an the is are was were be been am do does did of to in on at for by with from and or but " +
     "what whats who whom which when where why how can could would should will shall may might " +
     "i me my you your it its this that these those tell please about there their they them " +
     "give explain know want need some any much many"
-      .split(" ")
+  ).split(" ")
 );
 
 function normalize(str) {
@@ -170,8 +171,36 @@ async function candidates(collectionName, question) {
 }
 
 // Looks up the vault and learned memory together (one read each).
+// Passages from documents the admin taught in the Training room, best first:
+// those containing most of the question's key words.
+async function documentPassages(question) {
+  const words = keywords(question).slice(0, 30);
+  if (!words.length) return [];
+  try {
+    const snap = await getDocs(
+      query(collection(db, "knowledge"), where("keywords", "array-contains-any", words), limit(20))
+    );
+    return snap.docs
+      .map((d) => {
+        const passage = d.data();
+        const have = new Set(passage.keywords || []);
+        return { title: passage.title, text: passage.text, score: words.filter((w) => have.has(w)).length / words.length };
+      })
+      .filter((p) => p.score >= 0.5)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  } catch (err) {
+    console.warn("Couldn't read the taught documents:", err);
+    return [];
+  }
+}
+
 export async function lookup(question) {
-  const [vault, learned] = await Promise.all([candidates("vault", question), candidates("learned", question)]);
+  const [vault, learned, docs] = await Promise.all([
+    candidates("vault", question),
+    candidates("learned", question),
+    documentPassages(question),
+  ]);
   await addMeaning(question, [...vault, ...learned]);
 
   let memory = null;
@@ -212,7 +241,7 @@ export async function lookup(question) {
     }
   }
 
-  return { memory, knowledge: { good, bad } };
+  return { memory, knowledge: { good, bad, docs } };
 }
 
 // source: "ai", "wikipedia" or "taught" (a person typed the answer).

@@ -193,8 +193,14 @@ async function geminiAnswer(model, search, contents, onText) {
 // ---------------------------------------------------------------------------
 
 // Turns what MK.ai already knows into context for the new answer.
-function knowledgeNote({ good = [], bad = [] }) {
+function knowledgeNote({ good = [], bad = [], docs = [] }) {
   const parts = [];
+  if (docs.length) {
+    parts.push(
+      "Passages from documents the admin gave you. When they answer the question, base your answer on them:\n" +
+        docs.map((d) => `[${d.title}]\n${d.text.slice(0, 2000)}`).join("\n\n")
+    );
+  }
   if (good.length) {
     parts.push(
       "Things you have learned before that may help (curated ones are verified by the admin — follow them):\n" +
