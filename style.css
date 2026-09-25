@@ -1333,3 +1333,8 @@ a.side-btn { text-align: center; text-decoration: none; }
   .msg-bot .answer-actions,
   .msg-bot .pulling { margin-left: 0; }
 }
+
+/* Suggestion buttons on the empty chat */
+.suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px auto 0; max-width: 560px; }
+.suggest button { background: var(--panel); border: 1px solid var(--panel-border); color: var(--paper); border-radius: 18px; padding: 8px 14px; font: 14px var(--font-body); cursor: pointer; text-align: left; }
+.suggest button:hover, .suggest button:focus-visible { border-color: var(--brass); color: var(--brass); }

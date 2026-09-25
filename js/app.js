@@ -283,6 +283,28 @@ function renderGreeting() {
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
   $("emptyTitle").textContent = pick(hellos);
   $("emptySub").textContent = pick(subs);
+  // Four things to try, a different mix each time
+  const ideas = [
+    "Solve 2x + 5 = 13", "Differentiate x^3 sin x", "What is 15% of 240?", "Balance H2 + O2 = H2O",
+    "Molar mass of H2SO4", "Essay on pollution", "Leave letter to the principal", "Full form of ISRO",
+    "When is Engineers' Day?", "Thirukkural on friendship", "Make a calculator app", "What is recursion?",
+    "Who invented the telephone?", "Meaning of practice makes perfect", "What is photosynthesis?", "How to become an IAS officer?",
+  ];
+  if (isUnlimited()) ideas.push("Draw a sunset over the sea", "Make a birthday card for Priya");
+  const shuffled = ideas.sort(() => Math.random() - 0.5).slice(0, 4);
+  const box = $("emptySuggest");
+  box.replaceChildren(
+    ...shuffled.map((idea) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = idea;
+      b.addEventListener("click", () => {
+        questionInput.value = idea;
+        composer.requestSubmit();
+      });
+      return b;
+    })
+  );
 }
 
 function renderTier() {
