@@ -64,20 +64,28 @@ answers in this order, stopping at the first that works:
    **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
 
 **Alpaca Vision (pictures and videos).** A model menu under the message
-box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**, MK.ai's
-own picture and video model; saying "draw …" or "make a video of …" also
-goes to it. It reads the description and paints it on a canvas — sky and
-time of day, sun, moon, stars, clouds, rainbows, auroras, mountains, hills,
-sea and beaches, lakes, deserts, forests, cities, villages, temples,
-lighthouses, windmills, boats, balloons, kites, fireworks, weather (rain,
-snow, storms, fog), animals and objects, text, and styles (neon, pixel art,
-black and white, vintage, watercolour). It also makes festival greeting
-cards (birthday, Diwali, Pongal, Christmas, Eid …), logos, kolam, mandala and
-geometric patterns, bar/line/pie charts, space and underwater scenes.
-"Video" brings the scene to life (waves, rain, birds, rising sun,
-fireworks) and records it as a WebM file in the browser. Only a small plan
-of the picture is saved with the chat, and it's redrawn when shown. No
-outside AI is used. (`js/vision.js`)
+box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**;
+saying "draw …", "photo of …", "make a video of …", "birthday card for …"
+or "logo for …" also goes to it.
+
+- **Real photos:** Alpaca turns the description into a detailed photography
+  prompt (lighting, lens, detail, style words like cinematic, anime or oil
+  painting) and gets a real AI photo from the free
+  [Pollinations](https://pollinations.ai) image service (no key, no account;
+  only the description is sent). Adult or violent requests are refused
+  before anything is sent.
+- **Photo videos:** 4–5 AI photos of the scene (wide, medium, close-up,
+  other angles) are joined into a short film with slow zooms and pans,
+  crossfades, a vignette, fades, live rain or snow, and the title. It plays
+  in the chat and "⬇ video" records it as a WebM file in the browser.
+- **Greeting cards** get a real festive photo background with Alpaca's own
+  exact text on top (AI photos can't spell).
+- **Alpaca's own drawing engine** makes logos, kolam/mandala/geometric
+  patterns and charts, draws scenes when asked for "offline", and takes over
+  automatically if the photo service can't be reached.
+
+Only a small plan of the picture is saved with the chat, and it's recreated
+when shown. (`js/vision.js`)
 
 **Normal and Deep think.** A switch under the message box picks how MK.ai
 answers. **⚡ Normal** gives the first good answer instantly. **🧠 Deep think**

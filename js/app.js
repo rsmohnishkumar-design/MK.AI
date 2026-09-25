@@ -1110,10 +1110,14 @@ try {
   activeModel = localStorage.getItem(MODEL_KEY) === "vision" ? "vision" : "alpaca";
 } catch {}
 const VISION_HELP = [
-  "🎨 **Alpaca Vision** draws pictures and makes short videos from your words — all by itself, no outside AI.",
+  "🎨 **Alpaca Vision** turns your words into real photos and short photo-videos, plus greeting cards, logos, patterns and charts.",
+  "(For photos, your description is sent to the free Pollinations image service; logos, charts and patterns are drawn by Alpaca itself. Say \"offline\" to have Alpaca draw a scene itself.)",
   "",
   "Try:",
+  "- a photo of a boy playing in the garden",
   "- a sunset over the sea with palm trees and a boat",
+  "- a street in Chennai at night in the rain, cinematic",
+  "- an elephant in a forest, 10 second video",
   "- night sky with stars over mountains, **video**",
   "- a temple in a village at sunrise",
   "- rain in a forest at night, 10 second video",
@@ -1125,7 +1129,7 @@ const VISION_HELP = [
   "- bar chart of apples 10, mangoes 25, bananas 15",
   "- outer space with planets and a rocket",
   "",
-  "Styles: neon, pixel art, black and white, vintage, watercolour. Sizes: portrait, square.",
+  "Styles: cinematic, black and white, vintage, neon, anime, oil painting, watercolour, pixel art. Sizes: portrait, square.",
 ].join("\n");
 function setModel(model) {
   activeModel = model;
