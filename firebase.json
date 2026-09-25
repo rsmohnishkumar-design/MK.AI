@@ -3,6 +3,9 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "**/__pycache__/**",
+      ".firebase/**",
+      ".git/**",
       "**/.*",
       "**/node_modules/**",
       "kb-src/**",
@@ -13,7 +16,12 @@
     "headers": [
       {
         "source": "/sw.js",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
       }
     ]
   }
