@@ -31,7 +31,7 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
-import { noteUnknown, startAutoLearner, researchMore } from "./learning.js";
+import { noteUnknown, startAutoLearner, researchMore, worthLearning } from "./learning.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -892,6 +892,7 @@ function scrollToBottom() {
   thread.scrollTop = thread.scrollHeight;
 }
 
+const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 const DONT_KNOW = [
   "I don't know that one yet 🤔 I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
   "Hmm, that's new to me! 🧠 It's on my learning list now. If you know the answer, teach me below.",
@@ -1070,6 +1071,14 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     }
   }
   logActivity(question, "unknown");
+  // Gibberish isn't worth learning: say so honestly instead of promising to learn it
+  if (!worthLearning(question)) {
+    return {
+      answer: pickOne(["I didn't quite catch that 🤔 Could you ask it another way?", "Hmm, I'm not sure what you mean 🤔 Try asking a full question, like \"what is photosynthesis?\""]),
+      saved: nothingSaved,
+      source: "unknown",
+    };
+  }
   if (!contextual) noteUnknown(question);
   return {
     answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],

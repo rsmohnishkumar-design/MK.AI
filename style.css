@@ -1011,6 +1011,10 @@ body.chat-page { overflow: hidden; }
   cursor: pointer;
 }
 .desk-foot .desk-hint { margin-left: auto; }
+.disclaimer { margin: 6px 0 0; text-align: center; font-size: 11px; color: var(--paper-dim); opacity: 0.8; }
+.disclaimer a { color: inherit; }
+.disclaimer a:hover { color: var(--brass); }
+a.side-btn { text-align: center; text-decoration: none; }
 /* Alpaca Vision pictures and videos in answers */
 .vision-box {
   margin: 10px 0;

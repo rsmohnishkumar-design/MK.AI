@@ -304,7 +304,23 @@ const RULES = [
   {
     test: /^(what can you do|help|what do you do|how can you help|how do you work|what are your features)\b/,
     reply: () =>
-      "Here's what I can do:\n- Chat with you 😊\n- Answer simple questions (\"what is photosynthesis?\", \"who is APJ Abdul Kalam?\")\n- Maths: \"12 x 7\", \"15% of 200\", \"square root of 81\"\n- Conversions: \"10 km to miles\", \"37 c to f\"\n- Tell the time and date\n- Tell jokes\n- Learn anything you teach me",
+      [
+        `Here's what I can do (${MODEL_NAME} model):`,
+        "- **Maths with steps:** \"15% of 200\", \"solve 2x + 5 = 13\", \"differentiate x^3 sin x\", \"integrate 1/(x^2+1)\"",
+        "- **Science:** \"a car goes from 0 to 20 m/s in 5 s, find the acceleration\", \"molar mass of H2SO4\", \"balance Fe + O2 = Fe2O3\"",
+        "- **Coding:** \"make a calculator app\", \"bubble sort in python\", \"what is recursion\"",
+        "- **Knowledge:** science, countries, India and Tamil Nadu, history, people, festivals, careers, full forms, important days, proverbs and the Thirukkural",
+        "- **Conversions, time and date:** \"10 km to miles\", \"37 c to f\"",
+        "- **🧠 Deep think:** switch it on under the message box for careful, step-by-step answers",
+        "- **Learning:** if I don't know something, I research it, and you can teach me too",
+        "",
+        "Unlimited members also get 🎨 **Alpaca Vision** (pictures and videos) and the **Code School**. More on the [About page](about.html).",
+      ].join("\n"),
+  },
+  {
+    test: /\b(privacy|privacy policy|terms of (use|service)|is my (data|chat|information) (safe|private|secure)|do you (store|save|keep|sell) my (data|chats?|messages|information)|who can (see|read) my (chats?|messages))\b/,
+    reply: () =>
+      "🔒 **Your privacy:** your chats are saved to your account and only you can read them. The questions people ask are logged so MK.ai can learn what to improve, and answers it learns are shared with everyone, so please don't teach it private information. MK.ai never sells data, shows ads or sends your chats to outside AI companies.\n\nRead the full [privacy policy](about.html#privacy) and [terms of use](about.html#terms).",
   },
   {
     test: /^(are you (a )?(robot|bot|human|ai|real)|are you alive)\b/,

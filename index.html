@@ -4,7 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MK.ai</title>
-<meta name="description" content="Ask anything — an AI assistant that learns from every conversation." />
+<meta name="description" content="MK.ai: a free AI assistant for maths, science, coding and general knowledge, powered by its own model, Alpaca." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MK.ai" />
+<meta property="og:title" content="MK.ai: free AI assistant" />
+<meta property="og:description" content="Maths with steps, science, coding, general knowledge and Tamil culture, from MK.ai's own model, Alpaca. Free, with no ads." />
+<meta property="og:url" content="https://mkai-c042b.web.app/" />
+<meta property="og:image" content="https://mkai-c042b.web.app/icons/icon-512.png" />
+<meta name="twitter:card" content="summary" />
 <meta name="theme-color" content="#14181c" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
@@ -53,7 +60,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=57" />
+<link rel="stylesheet" href="style.css?v=58" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -123,6 +130,7 @@
           </div>
           <div class="account-actions">
             <button type="button" id="installBtn" class="side-btn hidden" title="Install MK.ai as an app">install app</button>
+            <a href="about.html" class="side-btn about-link" title="About MK.ai, privacy and terms">about</a>
             <button type="button" id="signOutBtn" class="side-btn" title="Sign out">sign out</button>
           </div>
         </div>
@@ -185,6 +193,7 @@
             </div>
             <p class="desk-hint">Enter to send · Shift + Enter for a new line</p>
           </div>
+          <p class="disclaimer">MK.ai can make mistakes. Check important information. · <a href="about.html#privacy">Privacy</a> · <a href="about.html#terms">Terms</a></p>
         </form>
       </div>
     </div>
@@ -249,6 +258,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=57"></script>
+  <script type="module" src="js/app.js?v=58"></script>
 </body>
 </html>

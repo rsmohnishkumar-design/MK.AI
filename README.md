@@ -214,6 +214,10 @@ using the admin email from step 3. That's it.
 - In the vault you can grant unlimited access, start a new trial, or
   block an account.
 
+## About, privacy and terms
+
+`about.html` describes MK.ai and its models (Alpaca, Alpaca Vision) and holds the privacy policy and terms of use. The chat links to it from the sidebar (**about**) and the note under the message box; asking MK.ai "is my data safe" also points there.
+
 ## Access levels
 
 - **Trial accounts** (3 hours) chat with Alpaca. **Alpaca Vision** and the

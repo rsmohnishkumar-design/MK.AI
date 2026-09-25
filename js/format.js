@@ -5,7 +5,7 @@
 const FENCE = /```([\w+#.-]*)[^\n]*\n?([\s\S]*?)(?:```|$)/g;
 
 // Only links to MK.ai's own lessons or to https sites become clickable.
-const SAFE_LINK = /^(learn\.html(#[\w-]+)?|https:\/\/[^\s]+)$/;
+const SAFE_LINK = /^((learn|about)\.html(#[\w-]+)?|https:\/\/[^\s]+)$/;
 
 function inline(parent, text) {
   // `code`, **bold** and [text](url); anything else stays plain text.

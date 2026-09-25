@@ -34,7 +34,8 @@ export function worthLearning(question) {
   const q = question.trim().toLowerCase();
   if (q.length < 4 || q.length > 300) return false;
   if (/(.)\1{3,}/.test(q)) return false; // "faaaaah"
-  if (!/[a-z஀-௿]{3,}/.test(q)) return false; // "270814"
+  if (/[\u0B80-\u0BFF]{2,}/.test(q)) return true; // Tamil
+  if (!/[a-z]{3,}/.test(q)) return false; // "270814"
   const words = q.match(/[a-z]+/g) || [];
   return words.some((w) => w.length >= 3 && /[aeiouy]/.test(w));
 }

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>About MK.ai</title>
+<meta name="description" content="About MK.ai and its models Alpaca and Alpaca Vision, with the privacy policy and terms of use." />
+<meta name="theme-color" content="#14181c" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14181c; --panel: #202730; --panel-border: #323d49;
+    --paper: #ede9e0; --paper-dim: #a9b0ba; --sage: #8fa998; --brass: #c9a227;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--ink); color: var(--paper); font: 16px/1.65 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--brass); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 32px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 600; color: var(--paper); text-decoration: none; }
+  .brand svg { flex: none; }
+  .back { font: 500 13px "IBM Plex Mono", monospace; color: var(--paper-dim); text-decoration: none; border: 1px solid var(--panel-border); border-radius: 8px; padding: 7px 12px; }
+  .back:hover { color: var(--brass); border-color: var(--brass); }
+  h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: clamp(30px, 7vw, 44px); line-height: 1.15; margin: 0 0 12px; }
+  .lead { color: var(--paper-dim); font-size: 18px; margin: 0 0 28px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
+  nav.toc a { font: 500 13px "IBM Plex Mono", monospace; text-decoration: none; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 6px 12px; }
+  h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 26px; margin: 44px 0 12px; scroll-margin-top: 16px; }
+  h3 { font-size: 17px; margin: 22px 0 6px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+  .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px; }
+  .card b { display: block; font-family: Fraunces, Georgia, serif; font-size: 19px; margin-bottom: 4px; }
+  .card span { color: var(--paper-dim); font-size: 14px; }
+  .tag { display: inline-block; font: 500 11px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .05em; color: var(--sage); margin-bottom: 6px; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; }
+  .note { border-left: 3px solid var(--brass); background: rgba(201,162,39,.08); padding: 12px 14px; border-radius: 0 8px 8px 0; }
+  .muted { color: var(--paper-dim); font-size: 14px; }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--panel-border); color: var(--paper-dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="./"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="4"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="38" fill="#c9a227">MK</text></svg>MK.ai</a>
+    <a class="back" href="./">← back to chat</a>
+  </div>
+
+  <h1>About MK.ai</h1>
+  <p class="lead">MK.ai is a free AI assistant for learning: maths, science, coding, general knowledge and Tamil culture. Its own model answers your questions, and it keeps learning from what people ask.</p>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#models">Models</a><a href="#abilities">What it can do</a><a href="#learning">How it learns</a><a href="#access">Access</a><a href="#privacy">Privacy policy</a><a href="#terms">Terms of use</a>
+  </nav>
+
+  <h2 id="models">Models</h2>
+  <div class="cards">
+    <div class="card"><span class="tag">Answers</span><b>🦙 Alpaca</b><span>MK.ai's own model. Everything runs in your browser: a maths engine (arithmetic to calculus), a science solver, a knowledge base of about 2,600 answers, coding help and an app builder. No outside AI is used for chat answers.</span></div>
+    <div class="card"><span class="tag">Pictures &amp; videos</span><b>🎨 Alpaca Vision</b><span>Makes pictures and short videos from a description: logos, cards, charts and patterns drawn by Alpaca itself, and realistic photos from a free, volunteer-run image service. For unlimited members.</span></div>
+  </div>
+  <p class="muted">Two ways to answer: <b>⚡ Normal</b> for quick answers, and <b>🧠 Deep think</b>, which splits the question into parts, double-checks maths and shows its steps.</p>
+
+  <h2 id="abilities">What it can do</h2>
+  <ul>
+    <li><b>Maths:</b> arithmetic, fractions, percentages, algebra, equations, derivatives, integrals, limits, matrices, vectors, complex numbers and word problems, with step-by-step working.</li>
+    <li><b>Science:</b> physics formulas with units, chemistry (molar mass, balancing equations), biology and space.</li>
+    <li><b>Coding:</b> explanations, examples in many languages, 33 ready-to-run apps and a Code School for beginners.</li>
+    <li><b>Knowledge:</b> countries, India and Tamil Nadu, history, people, inventions, festivals, careers, full forms, important days, proverbs and the Thirukkural.</li>
+    <li><b>Documents and photos:</b> attach a file and ask about it.</li>
+  </ul>
+
+  <h2 id="learning">How it learns</h2>
+  <p>When MK.ai can't answer something, the question goes on a learning list. Open MK.ai pages research it when they are idle, using its knowledge base, Wikipedia, Wiktionary, Tamil Wikipedia and Simple English Wikipedia, and every night it studies the whole list and the day's most-read topics. Anyone can also teach it an answer directly. Answers people vote down are dropped.</p>
+  <p class="note">MK.ai can make mistakes. Check important information, and don't rely on it for medical, legal or financial decisions.</p>
+
+  <h2 id="access">Access</h2>
+  <ul>
+    <li>Every new account gets a free <b>3-hour trial</b> of chat.</li>
+    <li><b>Unlimited members</b> also get Alpaca Vision and the Code School. The admin gives unlimited access to people who help train MK.ai, or with an access code.</li>
+    <li>MK.ai is free: there are no payments, ads or subscriptions.</li>
+  </ul>
+
+  <h2 id="privacy">Privacy policy</h2>
+  <p class="muted">Last updated: 25 September 2026</p>
+  <h3>What we keep</h3>
+  <ul>
+    <li><b>Your account:</b> your email address and access level. Passwords are handled by Google Firebase and are never visible to us.</li>
+    <li><b>Your chats:</b> saved to your account so you can open them on any device. Only you can read them.</li>
+    <li><b>Questions asked:</b> each question is logged (with the account that asked it) so the admin can see what MK.ai should learn. Questions it couldn't answer go on the shared learning list.</li>
+    <li><b>What MK.ai learns:</b> answers it researches or people teach it are shared with everyone, together with votes. Please don't teach it private information.</li>
+  </ul>
+  <h3>What goes to other services</h3>
+  <ul>
+    <li><b>Google Firebase</b> hosts the site and stores the data above.</li>
+    <li><b>Wikipedia and Wiktionary</b> receive the search words of questions MK.ai looks up.</li>
+    <li><b>AI Horde</b> receives the description of a photo you ask Alpaca Vision for, and nothing else.</li>
+  </ul>
+  <h3>What we never do</h3>
+  <ul>
+    <li>We never sell your data or show ads.</li>
+    <li>We never send your chats to outside AI companies.</li>
+  </ul>
+  <h3>Your choices</h3>
+  <p>You can delete any chat from the sidebar. To delete your account and everything linked to it, ask the MK.ai admin.</p>
+
+  <h2 id="terms">Terms of use</h2>
+  <ul>
+    <li>MK.ai is provided free, for learning, as it is, with no guarantee that answers are correct or complete.</li>
+    <li>Use it kindly and lawfully. Don't use it to harass anyone, cheat in exams where it isn't allowed, or make harmful, adult or violent content; Alpaca Vision refuses such requests.</li>
+    <li>Pictures and videos from Alpaca Vision are AI-made. Don't present them as real photos of real events or people.</li>
+    <li>Don't try to break into accounts, the vault or the database. The admin can turn off accounts that misuse MK.ai.</li>
+    <li>These terms may change as MK.ai grows; the date above shows the latest version.</li>
+  </ul>
+
+  <footer>
+    MK.ai · made by Mohnishkumar · models: Alpaca and Alpaca Vision<br />
+    Knowledge from Wikipedia and Wiktionary (CC BY-SA). PDF reading by PDF.js (Apache 2.0).
+  </footer>
+</div>
+</body>
+</html>
