@@ -1111,7 +1111,7 @@ try {
 } catch {}
 const VISION_HELP = [
   "🎨 **Alpaca Vision** turns your words into real photos and short photo-videos, plus greeting cards, logos, patterns and charts.",
-  "(For photos, your description is sent to the free Pollinations image service; logos, charts and patterns are drawn by Alpaca itself. Say \"offline\" to have Alpaca draw a scene itself.)",
+  "(For photos, your description is sent to the free AI Horde image service — it can take a minute or two; logos, charts and patterns are drawn by Alpaca itself. Say \"offline\" to have Alpaca draw a scene itself.)",
   "",
   "Try:",
   "- a photo of a boy playing in the garden",

@@ -180,7 +180,7 @@ export function planPicture(question, variant = 0) {
 
 // --- Real photos ------------------------------------------------------------------------------
 // The words are turned into a detailed photography prompt for the free
-// Pollinations image service (no key, no account). Only the description is sent.
+// AI Horde image service (free, no key, no account). Only the description is sent.
 
 const CLEAN_COMMAND = /^(?:please\s+)?(?:can you\s+)?(?:draw|paint|sketch|create|make|generate|design|give me|show me|render|produce)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:\d+\s*(?:s|sec|second)s?\s+)?(?:(?:realistic|real|hd|high quality|beautiful|nice|good|cinematic|short)\s+)*(?:photo|picture|pic|image|drawing|painting|video|animation|clip|scene|wallpaper|illustration|art|artwork)?\s*(?:of\s+|showing\s+|about\s+|with\s+)?/i;
 export function subjectOfPicture(raw) {
@@ -214,15 +214,38 @@ function finishPhoto(spec, raw) {
   return spec;
 }
 
-// Shots for a photo video: the same scene from different camera views
-const SHOTS = ["wide establishing shot", "medium shot, main subject in focus", "close-up detail shot", "different angle, cinematic lighting", "dramatic wide shot, golden light"];
-export function photoUrls(spec) {
+// Real photos come from AI Horde (aihorde.net): a free, volunteer-run image AI.
+// No account or key: the anonymous key is 0000000000. Only the prompt is sent.
+const HORDE = "https://aihorde.net/api/v2";
+const HORDE_HEADERS = { "Content-Type": "application/json", apikey: "0000000000", "Client-Agent": "MK.ai:1.0:https://mkai-c042b.web.app" };
+const HORDE_MODELS = ["AlbedoBase XL (SDXL)", "Juggernaut XL", "ICBINP - I Can't Believe It's Not Photography", "Realistic Vision", "Deliberate"];
+const NEGATIVE = "text, letters, watermark, signature, blurry, low quality, deformed, extra fingers, bad hands, nsfw, nude";
+// Horde sizes: multiples of 64, longest side 768
+export function hordeSize(spec) {
   const [W, H] = sizeOf(spec);
-  const url = (prompt, seed) =>
-    `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${W}&height=${H}&seed=${seed % 1000000}&nologo=true&model=flux&referrer=mkai`;
-  if (!spec.video || spec.kind === "card") return [url(spec.photoPrompt, spec.seed)];
-  const n = spec.duration >= 10 ? 5 : 4;
-  return SHOTS.slice(0, n).map((shot, i) => url(`${spec.photoPrompt}, ${shot}`, spec.seed + i * 101));
+  const k = 768 / Math.max(W, H);
+  return [Math.round((W * k) / 64) * 64, Math.round((H * k) / 64) * 64];
+}
+export function hordeRequest(spec, withModels = true) {
+  const [width, height] = hordeSize(spec);
+  const n = !spec.video || spec.kind === "card" ? 1 : spec.duration >= 10 ? 5 : 4;
+  const prompt = spec.video && n > 1 ? `${spec.photoPrompt}, cinematic film still` : spec.photoPrompt;
+  const body = {
+    prompt: `${prompt} ### ${NEGATIVE}`,
+    params: { sampler_name: "k_euler_a", cfg_scale: 6, steps: 25, width, height, n, seed: String(spec.seed % 1000000), karras: true },
+    nsfw: false,
+    censor_nsfw: true,
+    r2: false,
+    slow_workers: true,
+  };
+  if (withModels) body.models = HORDE_MODELS;
+  return body;
+}
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+async function hordeJson(path, options = {}) {
+  const r = await fetch(HORDE + path, { ...options, headers: HORDE_HEADERS });
+  if (!r.ok) throw new Error(`AI Horde ${r.status}`);
+  return r.json();
 }
 
 // Things Alpaca Vision won't make
@@ -1386,42 +1409,59 @@ function paintPhotoFrame(canvas, spec, photos, t) {
   ctx.restore();
 }
 
-// Loads one photo; resolves with the image or null.
-function loadPhoto(url, timeoutMs = 90000) {
+// Loads one image; resolves with the image or null.
+function loadImage(src) {
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
-    const timer = setTimeout(() => {
-      img.src = "";
-      resolve(null);
-    }, timeoutMs);
-    img.onload = () => {
-      clearTimeout(timer);
-      resolve(img.naturalWidth ? img : null);
-    };
-    img.onerror = () => {
-      clearTimeout(timer);
-      resolve(null);
-    };
-    img.src = url;
+    if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img.naturalWidth ? img : null);
+    img.onerror = () => resolve(null);
+    img.src = src;
   });
 }
 
-// Loads every shot one after another (the free service handles one at a time).
-async function loadPhotos(spec, onProgress) {
-  const urls = photoUrls(spec);
-  const photos = [];
-  for (const [k, url] of urls.entries()) {
-    onProgress(k, urls.length);
-    let img = await loadPhoto(url);
-    if (!img) img = await loadPhoto(url.replace(/seed=(\d+)/, (m, s) => `seed=${(Number(s) + 13) % 1000000}`));
-    if (!img) {
-      if (!photos.length) return null;
-      break; // use the shots we have
+// Asks AI Horde for the photo (or the video's shots) and waits in its queue.
+// onProgress(text) gets "In the queue…" updates. Resolves with images or null.
+async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
+  const until = Date.now() + timeoutMs;
+  let id = null;
+  try {
+    let job;
+    try {
+      job = await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec)) });
+    } catch {
+      job = await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, false)) });
     }
-    photos.push(img);
+    id = job.id;
+    if (!id) return null;
+    let retried = false;
+    for (;;) {
+      if (Date.now() > until) throw new Error("timed out");
+      await pause(4000);
+      const c = await hordeJson(`/generate/check/${id}`);
+      if (c.faulted) throw new Error("faulted");
+      if (c.done) break;
+      if (c.is_possible === false && !retried) {
+        // no volunteer has those models right now: take any model
+        retried = true;
+        fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+        id = (await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, false)) })).id;
+        continue;
+      }
+      const wait = Math.max(1, Math.round(c.wait_time || 0));
+      onProgress(c.processing ? `Painting… about ${wait} s` : c.queue_position ? `In the queue (#${c.queue_position}), about ${wait} s` : `Starting… about ${wait} s`);
+    }
+    const done = await hordeJson(`/generate/status/${id}`);
+    id = null;
+    const gens = (done.generations || []).filter((g) => g.img && !g.censored);
+    const imgs = await Promise.all(gens.map((g) => loadImage(g.img.startsWith("http") ? g.img : `data:image/webp;base64,${g.img}`)));
+    const photos = imgs.filter(Boolean);
+    return photos.length ? photos : null;
+  } catch (err) {
+    console.warn("Photo service:", err);
+    if (id) fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+    return null;
   }
-  return photos;
 }
 
 // --- In the chat -------------------------------------------------------------------------------
@@ -1555,13 +1595,13 @@ export function mountVision(container, specText) {
     let waitText = spec.video ? "Creating your video" : "Creating your photo";
     const waitTimer = setInterval(() => drawWaiting(canvas, spec, waitText, (waitT += 0.1)), 100);
     label.textContent = "⏳ creating…";
-    const got = await loadPhotos(spec, (k, n) => (waitText = n > 1 ? `Creating shot ${k + 1} of ${n}` : spec.video ? "Creating your video" : "Creating your photo"));
+    const got = await loadPhotos(spec, (text) => (waitText = text));
     clearInterval(waitTimer);
     if (token !== loadToken) return;
     photos = got && got.length ? got : null;
     if (!photos) label.dataset.fallback = "1";
     setLabel();
-    if (!photos) label.textContent += " (photo service unreachable — drawn by Alpaca)";
+    if (!photos) label.textContent += " (photo service busy — drawn by Alpaca)";
     if (spec.video && playing) setPlaying(true);
     else frame(canvas, 0);
   }
@@ -1589,12 +1629,7 @@ export function mountVision(container, specText) {
   }
   actions.append(
     btn("⬇ image", () => {
-      try {
-        canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
-      } catch {
-        // the photo service didn't allow copying: open the photo itself
-        window.open(photoUrls(spec)[0], "_blank", "noopener");
-      }
+      canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
     }),
     btn("🔄 new version", () => {
       spec = { ...spec, seed: (spec.seed + 7919) >>> 0 };

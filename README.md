@@ -70,12 +70,11 @@ or "logo for …" also goes to it.
 
 - **Real photos:** Alpaca turns the description into a detailed photography
   prompt (lighting, lens, detail, style words like cinematic, anime or oil
-  painting) and gets a real AI photo from the free
-  [Pollinations](https://pollinations.ai) image service (no key, no account;
-  only the description is sent). Adult or violent requests are refused
+  painting) and gets a real AI photo from the free, volunteer-run
+  [AI Horde](https://aihorde.net) (no key, no account; only the description
+  is sent; it can take a minute or two while waiting in the queue). Adult or violent requests are refused
   before anything is sent.
-- **Photo videos:** 4–5 AI photos of the scene (wide, medium, close-up,
-  other angles) are joined into a short film with slow zooms and pans,
+- **Photo videos:** 4–5 AI photos of the scene are joined into a short film with slow zooms and pans,
   crossfades, a vignette, fades, live rain or snow, and the title. It plays
   in the chat and "⬇ video" records it as a WebM file in the browser.
 - **Greeting cards** get a real festive photo background with Alpaca's own
