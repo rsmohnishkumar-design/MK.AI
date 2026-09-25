@@ -232,7 +232,7 @@ export function hordeRequest(spec, withModels = true) {
   const prompt = spec.video && n > 1 ? `${spec.photoPrompt}, cinematic film still` : spec.photoPrompt;
   const body = {
     prompt: `${prompt} ### ${NEGATIVE}`,
-    params: { sampler_name: "k_euler_a", cfg_scale: 6, steps: 25, width, height, n, seed: String(spec.seed % 1000000), karras: true },
+    params: { sampler_name: "k_euler_a", cfg_scale: 6, steps: 20, width, height, n, seed: String(spec.seed % 1000000), karras: true },
     nsfw: false,
     censor_nsfw: true,
     r2: false,
@@ -1420,38 +1420,60 @@ function loadImage(src) {
   });
 }
 
+// Jobs waiting at AI Horde, so "stop" can cancel them
+const activeJobs = new Set();
+let cancelGen = 0;
+export function cancelPhotos() {
+  cancelGen++;
+  const n = activeJobs.size;
+  for (const id of activeJobs) fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+  activeJobs.clear();
+  return n;
+}
+
 // Asks AI Horde for the photo (or the video's shots) and waits in its queue.
-// onProgress(text) gets "In the queue…" updates. Resolves with images or null.
+// onProgress(text) gets "In the queue…" updates. Resolves with images, or null
+// (with photos.stopped = true when the person said "stop").
 async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
   const until = Date.now() + timeoutMs;
+  const gen = cancelGen;
   let id = null;
-  try {
-    let job;
-    try {
-      job = await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec)) });
-    } catch {
-      job = await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, false)) });
+  const submit = async (withModels) => {
+    if (id) {
+      activeJobs.delete(id);
+      fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
     }
-    id = job.id;
+    id = (await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, withModels)) })).id;
+    if (id) activeJobs.add(id);
+  };
+  try {
+    let anyModel = false;
+    try {
+      await submit(true);
+    } catch {
+      anyModel = true;
+      await submit(false);
+    }
     if (!id) return null;
-    let retried = false;
     for (;;) {
       if (Date.now() > until) throw new Error("timed out");
       await pause(4000);
+      if (gen !== cancelGen) return { stopped: true };
       const c = await hordeJson(`/generate/check/${id}`);
       if (c.faulted) throw new Error("faulted");
       if (c.done) break;
-      if (c.is_possible === false && !retried) {
-        // no volunteer has those models right now: take any model
-        retried = true;
-        fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
-        id = (await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, false)) })).id;
+      // The photo models have a long queue (or no volunteer has them): take any model
+      if (!anyModel && (c.is_possible === false || (c.wait_time || 0) > 120)) {
+        anyModel = true;
+        await submit(false);
         continue;
       }
       const wait = Math.max(1, Math.round(c.wait_time || 0));
-      onProgress(c.processing ? `Painting… about ${wait} s` : c.queue_position ? `In the queue (#${c.queue_position}), about ${wait} s` : `Starting… about ${wait} s`);
+      const time = wait >= 90 ? `${Math.round(wait / 60)} min` : `${wait} s`;
+      onProgress(c.processing ? `Painting… about ${time}` : c.queue_position ? `In the queue (#${c.queue_position}), about ${time}` : `Starting… about ${time}`);
     }
     const done = await hordeJson(`/generate/status/${id}`);
+    activeJobs.delete(id);
     id = null;
     const gens = (done.generations || []).filter((g) => g.img && !g.censored);
     const imgs = await Promise.all(gens.map((g) => loadImage(g.img.startsWith("http") ? g.img : `data:image/webp;base64,${g.img}`)));
@@ -1459,7 +1481,10 @@ async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
     return photos.length ? photos : null;
   } catch (err) {
     console.warn("Photo service:", err);
-    if (id) fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+    if (id) {
+      activeJobs.delete(id);
+      fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+    }
     return null;
   }
 }
@@ -1515,22 +1540,6 @@ export function recordVideo(spec, onProgress = () => {}, draw = (c, t) => paint(
     };
     requestAnimationFrame(frame);
   });
-}
-
-function drawWaiting(canvas, spec, text, t) {
-  const [W, H] = sizeOf(spec);
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d");
-  const g = ctx.createLinearGradient(0, 0, W, H);
-  const shift = (Math.sin(t * 1.5) + 1) / 2;
-  g.addColorStop(0, "#111827");
-  g.addColorStop(shift * 0.6 + 0.2, "#312e81");
-  g.addColorStop(1, "#0f172a");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-  textBlock(ctx, "🎨", W / 2, H * 0.4, Math.min(W, H) * 0.12, "#fff", { shadow: false });
-  textBlock(ctx, text + ".".repeat(1 + (Math.floor(t * 2) % 3)), W / 2, H * 0.58, Math.min(W, H) * 0.045, "#e0e7ff", { font: "system-ui, sans-serif", weight: "600", shadow: false, maxWidth: W * 0.9 });
 }
 
 // Shows a picture or video (from a saved spec) inside an answer.
@@ -1591,17 +1600,23 @@ export function mountVision(container, specText) {
       frame(canvas, 0);
       return;
     }
-    let waitT = 0;
-    let waitText = spec.video ? "Creating your video" : "Creating your photo";
-    const waitTimer = setInterval(() => drawWaiting(canvas, spec, waitText, (waitT += 0.1)), 100);
-    label.textContent = "⏳ creating…";
-    const got = await loadPhotos(spec, (text) => (waitText = text));
-    clearInterval(waitTimer);
+    // Meanwhile: Alpaca's own drawing, with the real photo's queue status
+    let waitText = "Asking for a real photo…";
+    const showWaiting = () => {
+      paint(canvas, spec, 0);
+      label.textContent = `⏳ real ${spec.video ? "video" : "photo"}: ${waitText} (drawing shown meanwhile)`;
+    };
+    showWaiting();
+    const got = await loadPhotos(spec, (text) => {
+      waitText = text;
+      if (token === loadToken) showWaiting();
+    });
     if (token !== loadToken) return;
-    photos = got && got.length ? got : null;
+    const stopped = got && got.stopped;
+    photos = Array.isArray(got) && got.length ? got : null;
     if (!photos) label.dataset.fallback = "1";
     setLabel();
-    if (!photos) label.textContent += " (photo service busy — drawn by Alpaca)";
+    if (!photos) label.textContent += stopped ? " (real photo stopped — drawn by Alpaca)" : " (photo service busy — drawn by Alpaca)";
     if (spec.video && playing) setPlaying(true);
     else frame(canvas, 0);
   }

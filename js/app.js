@@ -30,7 +30,7 @@ import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
-import { isVisionRequest, visionAnswer, mountVision } from "./vision.js";
+import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -872,6 +872,16 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     logActivity(question, "vision");
     if (activeModel === "vision" && /^(hi|hello|hey|help|what can you (draw|make|do)|how does this work)\b/i.test(question.trim()))
       return { answer: VISION_HELP, saved: nothingSaved, source: "vision" };
+    // "stop", "cancel", "ok thanks"… aren't pictures
+    if (activeModel === "vision" && /^(stop|cancel|abort|wait|no|nope|never ?mind|ok|okay|thanks|thank you|thankyou|bye|done|enough)\b[\s!.]*(it|that|this|please|pls|now|thanks|thank you)?[\s!.]*$/i.test(question.trim())) {
+      const stopped = cancelPhotos();
+      const answer = /^(stop|cancel|abort|wait|no|nope|never ?mind|enough)/i.test(question.trim())
+        ? stopped
+          ? "⏹️ Stopped. I cancelled the real photo, and the drawing stays. Describe another picture whenever you like."
+          : "⏹️ Nothing is being made right now. Describe a picture whenever you like."
+        : "😊 You're welcome! Describe another picture whenever you like.";
+      return { answer, saved: nothingSaved, source: "vision" };
+    }
     think("Planned the picture from the description and painted it");
     return { answer: visionAnswer(question), saved: nothingSaved, source: "vision" };
   }
