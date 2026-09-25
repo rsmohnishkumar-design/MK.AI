@@ -234,6 +234,7 @@ using the admin email from step 3. That's it.
   working through the whole list and keeping the screen on. The vault's
   **🌙 Start learning mode** button runs it any time. MK.ai has no server,
   so a device has to stay open (a tablet on charge works).
+- More open sources: Wiktionary (word meanings), Tamil Wikipedia (questions in Tamil) and Simple English Wikipedia. Learning mode also learns Wikipedia's most-read topics each night; the vault's **📰 Learn today's top topics** does it on demand. YouTube, Instagram and Google search block this kind of reading, so they aren't used.
 - The vault's **Research & learn** button researches the ticked questions
   the same way and saves them straight into the vault.
 

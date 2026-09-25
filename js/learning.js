@@ -23,7 +23,7 @@ import { auth, db } from "./firebase.js";
 import { knowledgeAnswer } from "./kb.js";
 import { wikiAnswer, wikiFind } from "./wiki.js";
 import { coreQuery } from "./deepthink.js";
-import { learn } from "./brain.js";
+import { learn, lookup } from "./brain.js";
 
 const MAX_TRIES = 5; // after this the question waits for a person to teach it
 const IDLE_MS = 90000; // how long a page must be quiet before it researches
@@ -61,7 +61,91 @@ export async function research(question) {
     (await wikiFind(question).catch(() => null)) ||
     (core && core !== question.toLowerCase() ? await wikiFind(core).catch(() => null) : null);
   if (wiki?.answer) return { answer: wiki.answer, source: "Wikipedia" };
+  return researchMore(question);
+}
+
+// --- More free, open sources (no key, and they allow other sites to read them) ---
+
+async function getJson(url, ms = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+const stripHtml = (html) => html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+const firstSentences = (text, max = 480) => {
+  let out = "";
+  for (const s of text.match(/[^.!?]+[.!?]+(\s|$)/g) || [text]) {
+    if ((out + s).length > max && out) break;
+    out += s;
+  }
+  return out.trim();
+};
+
+// A summary from any Wikipedia (Simple English, Tamil…)
+async function wikiSummary(host, topic) {
+  const search = await getJson(`https://${host}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&srlimit=1&format=json&origin=*`);
+  const title = search?.query?.search?.[0]?.title;
+  if (!title) return null;
+  const page = await getJson(`https://${host}/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`);
+  return page?.extract && page.type !== "disambiguation" ? firstSentences(page.extract) : null;
+}
+
+// "meaning of serendipity", "define ubiquitous", "what does quaint mean"
+async function wiktionary(question) {
+  const m = question.toLowerCase().match(/^(?:what is the )?(?:meaning of|define|definition of|what does|what is the meaning of)\s+(?:the word\s+)?["']?([a-z-]{2,30})["']?(?:\s+mean)?\??$/);
+  if (!m) return null;
+  const data = await getJson(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(m[1])}`);
+  const senses = (data?.en || []).slice(0, 3).map((p) => {
+    const d = (p.definitions || []).map((x) => stripHtml(x.definition || "")).find(Boolean);
+    return d ? `- **${p.partOfSpeech}**: ${d}` : null;
+  }).filter(Boolean);
+  return senses.length ? `**${m[1]}**\n${senses.join("\n")}` : null;
+}
+
+// Sources the chat hasn't already tried: Wiktionary, Tamil Wikipedia (for
+// questions in Tamil), and Simple English Wikipedia.
+export async function researchMore(question) {
+  const meaning = await wiktionary(question.trim());
+  if (meaning) return { answer: meaning, source: "Wiktionary" };
+  if (/[\u0B80-\u0BFF]/.test(question)) {
+    const ta = await wikiSummary("ta.wikipedia.org", question.replace(/[?？!]/g, "").trim());
+    if (ta) return { answer: ta, source: "Tamil Wikipedia" };
+  }
+  const core = coreQuery(question);
+  if (core && core.split(" ").length <= 6) {
+    const simple = await wikiSummary("simple.wikipedia.org", core);
+    if (simple) return { answer: simple, source: "Simple English Wikipedia" };
+  }
   return null;
+}
+
+// Today's most-read Wikipedia articles: learns what people are curious about.
+export async function learnTrending(max = 15, onLearned = () => {}) {
+  const d = new Date(Date.now() - 86400000); // yesterday's list is complete
+  const day = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+  const feed = await getJson(`https://en.wikipedia.org/api/rest_v1/feed/featured/${day}`);
+  const articles = [feed?.tfa, ...(feed?.mostread?.articles || [])].filter((a) => a?.extract && a.titles?.normalized);
+  let learned = 0;
+  for (const a of articles) {
+    if (learned >= max) break;
+    const title = a.titles.normalized;
+    if (/^(Main Page|Special:|Deaths in|List of|\d{4} in )/.test(title)) continue;
+    const person = /\b(born|actor|actress|singer|player|cricketer|footballer|politician|president|minister|writer|author|rapper|musician|businessman|director|youtuber|athlete)\b/i.test(a.description || "");
+    const question = `${person ? "who is" : "what is"} ${title}`;
+    const known = await lookup(question).catch(() => null);
+    if (known?.memory) continue;
+    await learn(question, firstSentences(a.extract), "wikipedia");
+    learned++;
+    onLearned(question);
+  }
+  return learned;
 }
 
 export function isNight(date = new Date()) {
@@ -123,7 +207,22 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
     busy = true;
     try {
       onStatus(night ? "🌙 Learning mode: studying…" : "📚 Learning while you're away…");
-      const n = await learnFromList(night ? 5 : 1, (q) => onStatus(`📚 Just learned: ${q.slice(0, 60)}`));
+      const said = (q) => onStatus(`📚 Just learned: ${q.slice(0, 60)}`);
+      let n = await learnFromList(night ? 5 : 1, said);
+      if (!n && night) {
+        const key = "mkai-trending-" + new Date().toDateString();
+        let done = false;
+        try {
+          done = localStorage.getItem(key) === "1";
+        } catch {}
+        if (!done) {
+          onStatus("🌙 Learning mode: reading today's most popular topics…");
+          n = await learnTrending(15, said);
+          try {
+            localStorage.setItem(key, "1");
+          } catch {}
+        }
+      }
       if (!n) onStatus(night ? "🌙 Learning mode: nothing new to learn right now" : "");
     } catch (err) {
       console.warn("Self-learning:", err);

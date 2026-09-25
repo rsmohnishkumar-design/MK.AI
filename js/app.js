@@ -31,7 +31,7 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
-import { noteUnknown, startAutoLearner } from "./learning.js";
+import { noteUnknown, startAutoLearner, researchMore } from "./learning.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -1060,6 +1060,14 @@ async function answer(question, onText, attachment = null, think = () => {}) {
 
   if (!navigator.onLine) {
     return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved, source: "offline" };
+  }
+  // More open sources: Wiktionary, Tamil Wikipedia, Simple English Wikipedia
+  if (!contextual) {
+    const more = await researchMore(question).catch(() => null);
+    if (more) {
+      logActivity(question, "wiki");
+      return { answer: more.answer, credit: `from ${more.source}`, saved: learn(question, more.answer, "wikipedia").catch(() => null), source: "wiki" };
+    }
   }
   logActivity(question, "unknown");
   if (!contextual) noteUnknown(question);

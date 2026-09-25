@@ -27,7 +27,7 @@ import { keywords, votes, lookup } from "./brain.js";
 import { askGemini, aiErrorMessage } from "./ai.js";
 import { readAttachment } from "./attach.js";
 import * as training from "./training.js";
-import { research, worthLearning, startAutoLearner } from "./learning.js";
+import { research, worthLearning, startAutoLearner, learnTrending } from "./learning.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
@@ -648,6 +648,15 @@ $("prepareBtn").addEventListener("click", async () => {
     loadEntries();
     loadTraining();
   }
+});
+
+// Learns Wikipedia's most-read topics right now
+$("trendingBtn")?.addEventListener("click", async () => {
+  $("trendingBtn").disabled = true;
+  setStatus("prepareStatus", "📰 Reading today's most popular topics…");
+  const n = await learnTrending(25, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`)).catch(() => 0);
+  $("trendingBtn").disabled = false;
+  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now.` : "Nothing new: MK.ai already knows today's popular topics.", n ? "good" : "");
 });
 
 // Learning mode: works through the learning list and keeps the screen on.
