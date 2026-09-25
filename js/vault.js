@@ -126,7 +126,9 @@ if (configured) {
       loginError.textContent =
         `You were signed in as ${user.email}, which isn't an admin. Log in below with the admin email, ` +
         `or open the chat with your own account, say "I created you" and enter the creator code: the creator is an admin too.`;
-      await signOut(auth);
+      // Stay signed in to the chat: logging in below switches accounts anyway.
+      vaultScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
       return;
     }
     loginScreen.classList.add("hidden");

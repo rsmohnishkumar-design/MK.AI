@@ -537,3 +537,6 @@
 .review-row.off { opacity: 0.45; }
 .doc-row .need-q b { font-weight: 500; }
 .doc-row button { background: transparent; border: 1px solid var(--panel-border); color: var(--error); font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
+
+/* Way back to the chat from the vault's login page */
+.login-back { position: fixed; top: 16px; left: 16px; z-index: 5; }
