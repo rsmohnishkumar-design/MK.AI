@@ -46,6 +46,12 @@ const authForm = $("authForm");
 const authEmail = $("authEmail");
 const authPassword = $("authPassword");
 const authCode = $("authCode");
+// The access code box stays hidden until someone asks for it
+$("showCodeBtn")?.addEventListener("click", (e) => {
+  authCode.hidden = false;
+  authCode.focus();
+  e.currentTarget.hidden = true;
+});
 const authSubmit = $("authSubmit");
 const authError = $("authError");
 const authCopy = $("authCopy");
@@ -318,6 +324,8 @@ function showAuth() {
   authError.textContent = error;
   authPassword.value = "";
   authCode.value = "";
+  authCode.hidden = true;
+  if ($("showCodeBtn")) $("showCodeBtn").hidden = false;
 }
 
 // --- Chat ---
