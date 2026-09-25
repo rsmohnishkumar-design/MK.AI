@@ -1358,3 +1358,8 @@ a.side-btn { text-align: center; text-decoration: none; }
 .quiz-option.wrong { border-color: var(--error); background: rgba(201, 106, 74, 0.15); opacity: 1; }
 .quiz-result { margin: 4px 0 0; font-size: 14px; color: var(--paper-dim); }
 .quiz-next { justify-self: start; background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer; }
+
+/* "More detail" and "Simpler" under explanations */
+.refine { display: inline-flex; gap: 2px; margin-left: 6px; }
+.refine button { background: transparent; border: 0; color: var(--paper-dim); font: 12px var(--font-mono); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+.refine button:hover, .refine button:focus-visible { color: var(--brass); background: rgba(201, 162, 39, 0.08); }

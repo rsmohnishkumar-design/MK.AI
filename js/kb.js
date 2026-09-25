@@ -115,3 +115,36 @@ export function relatedEntries(question, exclude = null, n = 2) {
     .slice(0, n)
     .map(([i]) => ({ question: entries[i].q, answer: entries[i].a }));
 }
+
+// "Did you mean …?": swaps misspelt words for the closest word MK.ai knows
+// (up to 2 letters different), and returns the corrected question only when
+// the knowledge base then has an answer for it.
+function distance(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+export function spellFix(question) {
+  const words = question.toLowerCase().match(/[a-z]+/g) || [];
+  let changed = false;
+  const fixed = question.toLowerCase().replace(/[a-z]+/g, (w) => {
+    if (w.length < 4 || byWord.has(w)) return w;
+    let best = null;
+    for (const known of byWord.keys()) {
+      if (known[0] !== w[0] || !/^[a-z]+$/.test(known)) continue;
+      const d = distance(w, known);
+      if (d <= (w.length >= 7 ? 2 : 1) && (!best || d < best.d || (d === best.d && byWord.get(known).size > byWord.get(best.w).size))) best = { w: known, d };
+    }
+    if (!best) return w;
+    changed = true;
+    return best.w;
+  });
+  if (!changed || !words.length) return null;
+  const hit = bestEntry(fixed);
+  return hit ? { question: fixed, hit } : null;
+}

@@ -22,8 +22,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
-import { bestSentences, summarise, wantsSummary } from "./reader.js";
-import { knowledgeAnswer, loadKnowledge, relatedEntries } from "./kb.js";
+import { bestSentences, summarise, wantsSummary, sentencesOf } from "./reader.js";
+import { knowledgeAnswer, loadKnowledge, relatedEntries, spellFix } from "./kb.js";
 import * as deep from "./deepthink.js";
 import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
@@ -31,7 +31,7 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
-import { noteUnknown, startAutoLearner, researchMore, worthLearning } from "./learning.js";
+import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { startMeaning } from "./meaning.js";
@@ -816,7 +816,7 @@ function createAiMessage() {
       renderAnswer(body, text);
     },
     finish(answer, searchSuggestions) {
-      renderAnswer(body, answer);
+      typeOut(body, answer);
       if (searchSuggestions) {
         // Shadow DOM keeps Google's own styling from clashing with the page.
         const host = el.querySelector(".search-suggestions");
@@ -837,6 +837,28 @@ function createAiMessage() {
         } catch {}
       });
       actions.classList.remove("hidden");
+    },
+    // "More detail" (Deep think) and "Simpler" for explanations
+    setRefine(question) {
+      const box = document.createElement("div");
+      box.className = "refine";
+      const more = document.createElement("button");
+      more.type = "button";
+      more.textContent = "🧠 more detail";
+      more.addEventListener("click", () => {
+        deepOnce = true;
+        questionInput.value = question;
+        composer.requestSubmit();
+      });
+      const simpler = document.createElement("button");
+      simpler.type = "button";
+      simpler.textContent = "🧒 simpler";
+      simpler.addEventListener("click", () => {
+        questionInput.value = `explain simply: ${question}`;
+        composer.requestSubmit();
+      });
+      box.append(more, simpler);
+      actions.append(box);
     },
     // "You might also ask": related questions MK.ai knows the answers to
     setFollowUps(questions) {
@@ -939,6 +961,22 @@ function addErrorMessage(message) {
   thread.appendChild(node);
 }
 
+// Answers appear as if being typed (about half a second), like other AI
+// assistants. Code, pictures, quizzes and very short answers show at once.
+function typeOut(container, text) {
+  const instant = text.length < 60 || text.includes("```") || matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden;
+  if (instant) return renderAnswer(container, text);
+  const frames = 30;
+  const step = Math.ceil(text.length / frames);
+  let shown = 0;
+  const tick = () => {
+    shown = Math.min(text.length, shown + step);
+    renderAnswer(container, shown < text.length ? text.slice(0, shown) + " ▍" : text);
+    if (shown < text.length) requestAnimationFrame(tick);
+  };
+  tick();
+}
+
 function scrollToBottom() {
   thread.scrollTop = thread.scrollHeight;
 }
@@ -1028,6 +1066,16 @@ async function answer(question, onText, attachment = null, think = () => {}) {
       think("Made a quiz question from my knowledge");
       return { answer: quiz, saved: nothingSaved, source: "local" };
     }
+  }
+  // "Explain simply: X": the same answer in fewer, easier words
+  const simply = !attachment && question.match(/^explain (?:it |this |that )?(?:simply|in simple words|in simple terms|like i'?m (?:5|five|a kid|a child))[:,]?\s+([\s\S]{3,})$/i);
+  if (simply) {
+    const topic = simply[1].trim();
+    think("Looking for an easier explanation");
+    const easy = await researchMore(topic).catch(() => null);
+    const base = easy?.source === "Simple English Wikipedia" ? easy : await answer(topic, () => {}, null, think);
+    const first = sentencesOf(base.answer.replace(/\*\*/g, "")).slice(0, 2).join(" ");
+    return { answer: `🧒 **In simple words:** ${first || base.answer}`, saved: nothingSaved, source: "local", credit: easy?.source === "Simple English Wikipedia" ? "from Simple English Wikipedia" : null };
   }
   // "Summarise: <pasted text>"
   const pasted = !attachment && question.match(/^(?:please\s+)?(?:summari[sz]e|sum up|give (?:me )?(?:a )?summary of|make (?:a )?summary of)(?:\s+(?:this|the following|it))?(?:\s*(?:text|paragraph|passage))?\s*[:\-]?\s+([\s\S]{200,})$/i);
@@ -1128,6 +1176,16 @@ async function answer(question, onText, attachment = null, think = () => {}) {
         saved: contextual ? nothingSaved : learn(question, wiki.answer, "wikipedia").catch(() => null),
         source: "wiki",
       };
+    }
+  }
+
+  // "Did you mean …?": a spelling slip away from something MK.ai knows
+  if (!contextual) {
+    await loadKnowledge().catch(() => {});
+    const fix = spellFix(question);
+    if (fix) {
+      think(`Fixed the spelling: “${fix.hit.question}”`);
+      return { answer: `🔤 Did you mean **“${fix.hit.question}”**?\n\n${fix.hit.answer}`, saved: nothingSaved, source: "knowledge", matched: fix.hit.question };
     }
   }
 
@@ -1350,8 +1408,11 @@ function setMode(mode) {
 }
 document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
+let deepOnce = false; // "more detail" asks one question with Deep think
 composer.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const deepNow = answerMode === "deep" || deepOnce;
+  deepOnce = false;
   const attachment = pendingAttachment;
   let question = questionInput.value.trim().slice(0, 4000);
   if (!question && !attachment) return;
@@ -1397,7 +1458,7 @@ composer.addEventListener("submit", async (e) => {
   const loading = startLoading();
   scrollToBottom();
   let bubble = null;
-  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {} };
+  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {}, setFollowUps() {}, setRefine() {} };
   const showBubble = () => {
     if (!stillHere()) return offscreen;
     if (!bubble) {
@@ -1412,7 +1473,7 @@ composer.addEventListener("submit", async (e) => {
       ? await checkCreatorCode(question)
       : cancelled
         ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
-        : answerMode === "deep"
+        : deepNow
           ? await deepAnswer(question, () => {}, fileForAnswer, (step) => loading.step(step))
           : await answer(
               question,
@@ -1427,13 +1488,14 @@ composer.addEventListener("submit", async (e) => {
     if (result.thoughts) msg.setThoughts(result.thoughts, result.thoughtMs);
     if (spoken && stillHere()) msg.speakNow(result.answer);
     if (result.credit) msg.setCredit(result.credit);
-    if (result.source === "knowledge" && answerMode !== "deep") {
+    if (result.source === "knowledge" && !deepNow) {
       const asked = question.trim().toLowerCase().replace(/[?.!]+$/, "");
       const more = relatedEntries(question, result.matched || null, 3)
         .map((r) => r.question)
         .filter((q) => q.toLowerCase().replace(/[?.!]+$/, "") !== asked);
       if (more.length) msg.setFollowUps(more);
     }
+    if (["knowledge", "wiki"].includes(result.source) && !deepNow && result.answer.length > 120 && !result.answer.includes("```")) msg.setRefine(question);
     if (result.teachable) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
     const saved = record(chatId, {
