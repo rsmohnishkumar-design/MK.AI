@@ -24,10 +24,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { keywords, votes, lookup } from "./brain.js";
-import { askGemini, aiErrorMessage } from "./ai.js";
-import { readAttachment } from "./attach.js";
 import * as training from "./training.js";
 import { research, worthLearning, startAutoLearner, learnTrending } from "./learning.js";
+import { pdfText, makeQA } from "./docreader.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
@@ -704,7 +703,7 @@ $("docFile").addEventListener("change", async (e) => {
   if (!$("docTitle").value.trim()) $("docTitle").value = file.name.replace(/\.[^.]+$/, "");
   try {
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
-      docPdf = await readAttachment(file);
+      docPdf = file;
       $("docText").value = "";
       $("docText").placeholder = `PDF ready: ${file.name}. MK.ai will read it when you tap a button below.`;
       setStatus("docStatus", `PDF ready: ${file.name}`, "good");
@@ -721,14 +720,16 @@ $("docText").addEventListener("input", () => {
   if ($("docText").value.trim()) docPdf = null;
 });
 
-// The document's text: typed/pasted, or read out of the PDF by the AI.
+// The document's text: typed/pasted, or read out of the PDF by MK.ai itself.
 async function documentText() {
   const typed = $("docText").value.trim();
   if (typed) return typed;
   if (!docPdf) return "";
-  setStatus("docStatus", "Reading the PDF…");
-  const result = await askGemini(training.TEXT_FROM_DOCUMENT, [], { good: [], bad: [] }, () => {}, { attachment: docPdf });
-  return result.answer.trim();
+  const text = await pdfText(docPdf, (n, total) => setStatus("docStatus", `Reading the PDF: page ${n} of ${total}…`));
+  if (!text) throw Object.assign(new Error("no text"), { friendly: "This PDF has no text inside (it's pictures of pages, like a scan). Type or paste the text instead." });
+  $("docText").value = text; // shows what was read, and is reused for Q&A
+  docPdf = null;
+  return text;
 }
 
 $("docLearnBtn").addEventListener("click", async () => {
@@ -751,31 +752,29 @@ $("docLearnBtn").addEventListener("click", async () => {
     setStatus("docStatus", `✓ MK.ai learned "${title}" (${chunks.length} passage${chunks.length === 1 ? "" : "s"}). It answers questions about it from now on.`, "good");
     loadDocuments();
   } catch (err) {
-    setStatus("docStatus", /permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : aiErrorMessage(err), "bad");
+    setStatus("docStatus", err.friendly || (/permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : "The document couldn't be read. Try pasting its text instead."), "bad");
   } finally {
     $("docLearnBtn").disabled = false;
   }
 });
 
+// Questions and answers from the document's own definition sentences (no AI)
 $("docQaBtn").addEventListener("click", async () => {
-  const title = $("docTitle").value.trim() || "the document";
   $("docQaBtn").disabled = true;
-  setStatus("docStatus", "MK.ai is reading the document and writing questions and answers…");
   try {
-    const typed = $("docText").value.trim();
-    const attachment = typed ? { kind: "text", name: title, text: typed } : docPdf;
-    if (!attachment) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
-    const result = await askGemini(training.QA_FROM_DOCUMENT(20), [], { good: [], bad: [] }, () => {}, { attachment });
-    const pairs = training.readPairsJson(result.answer);
-    if (!pairs.length) return setStatus("docStatus", "The AI's reply couldn't be read as questions and answers. Try again.", "bad");
-    setStatus("docStatus", `${pairs.length} questions and answers ready below.`, "good");
+    const text = await documentText();
+    if (!text) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
+    const pairs = makeQA(text, 20);
+    if (!pairs.length) return setStatus("docStatus", "I couldn't find definition sentences (like \"X is …\") to turn into questions. Use \"Learn this document\" instead: MK.ai still answers from it.", "bad");
+    setStatus("docStatus", `${pairs.length} questions and answers ready below. Check them, then save.`, "good");
     setReview(pairs);
   } catch (err) {
-    setStatus("docStatus", aiErrorMessage(err), "bad");
+    setStatus("docStatus", err.friendly || "The document couldn't be read. Try pasting its text instead.", "bad");
   } finally {
     $("docQaBtn").disabled = false;
   }
 });
+
 
 async function loadDocuments() {
   try {
