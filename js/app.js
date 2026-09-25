@@ -298,7 +298,7 @@ function renderGreeting() {
     "Solve 2x + 5 = 13", "Differentiate x^3 sin x", "What is 15% of 240?", "Balance H2 + O2 = H2O",
     "Molar mass of H2SO4", "Essay on pollution", "Leave letter to the principal", "Full form of ISRO",
     "When is Engineers' Day?", "Thirukkural on friendship", "Make a calculator app", "What is recursion?",
-    "Who invented the telephone?", "Meaning of practice makes perfect", "What is photosynthesis?", "How to become an IAS officer?",
+    "Who invented the telephone?", "Meaning of practice makes perfect", "Quiz me on capitals", "Quiz me on full forms", "What is photosynthesis?", "How to become an IAS officer?",
   ];
   if (isUnlimited()) ideas.push("Draw a sunset over the sea", "Make a birthday card for Priya");
   const shuffled = ideas.sort(() => Math.random() - 0.5).slice(0, 4);
