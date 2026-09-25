@@ -25,7 +25,7 @@ import {
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { keywords, votes, lookup } from "./brain.js";
 import * as training from "./training.js";
-import { research, worthLearning, startAutoLearner, learnTrending } from "./learning.js";
+import { research, worthLearning, startAutoLearner, learnTrending, learnCurriculum } from "./learning.js";
 import { pdfText, makeQA } from "./docreader.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
@@ -658,6 +658,15 @@ $("trendingBtn")?.addEventListener("click", async () => {
   const n = await learnTrending(25, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`)).catch(() => 0);
   $("trendingBtn").disabled = false;
   setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now.` : "Nothing new: MK.ai already knows today's popular topics.", n ? "good" : "");
+});
+
+// Learns 20 of Wikipedia's most important topics right now
+$("vitalBtn")?.addEventListener("click", async () => {
+  $("vitalBtn").disabled = true;
+  setStatus("prepareStatus", "📚 Studying important topics…");
+  const n = await learnCurriculum(20, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`)).catch(() => 0);
+  $("vitalBtn").disabled = false;
+  setStatus("prepareStatus", n ? `✓ Learned ${n} important topics. Tap again for more.` : "Nothing new this time. Tap again to keep going.", n ? "good" : "");
 });
 
 // Learning mode: works through the learning list and keeps the screen on.

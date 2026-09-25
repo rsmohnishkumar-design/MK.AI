@@ -127,25 +127,87 @@ export async function researchMore(question) {
   return null;
 }
 
-// Today's most-read Wikipedia articles: learns what people are curious about.
-export async function learnTrending(max = 15, onLearned = () => {}) {
-  const d = new Date(Date.now() - 86400000); // yesterday's list is complete
-  const day = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
-  const feed = await getJson(`https://en.wikipedia.org/api/rest_v1/feed/featured/${day}`);
+const PERSON = /\b(born|died|actor|actress|singer|player|cricketer|footballer|politician|president|minister|writer|author|poet|rapper|musician|businessman|businesswoman|director|youtuber|athlete|scientist|physicist|chemist|mathematician|philosopher|emperor|king|queen|leader|activist|inventor|painter|composer)\b/i;
+const SKIP_TITLE = /^(Main Page|Special:|Deaths in|List of|Lists of|\d{4} in |Index of|Outline of)/;
+
+// Learns one Wikipedia article as "what is X" / "who is X", unless MK.ai
+// already knows it. Returns the question when it learned something new.
+async function learnArticle(title, description, extract) {
+  if (!title || !extract || SKIP_TITLE.test(title)) return null;
+  const question = `${PERSON.test(description || "") ? "who is" : "what is"} ${title}`;
+  if (await knowledgeAnswer(question).catch(() => null)) return null;
+  const known = await lookup(question).catch(() => null);
+  if (known?.memory) return null;
+  await learn(question, firstSentences(extract), "wikipedia");
+  return question;
+}
+
+const dayPath = (daysAgo) => {
+  const d = new Date(Date.now() - daysAgo * 86400000);
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// Wikipedia's most-read articles (yesterday, or `daysAgo` days back): what people are curious about.
+export async function learnTrending(max = 15, onLearned = () => {}, daysAgo = 1) {
+  const feed = await getJson(`https://en.wikipedia.org/api/rest_v1/feed/featured/${dayPath(daysAgo)}`);
   const articles = [feed?.tfa, ...(feed?.mostread?.articles || [])].filter((a) => a?.extract && a.titles?.normalized);
   let learned = 0;
   for (const a of articles) {
     if (learned >= max) break;
-    const title = a.titles.normalized;
-    if (/^(Main Page|Special:|Deaths in|List of|\d{4} in )/.test(title)) continue;
-    const person = /\b(born|actor|actress|singer|player|cricketer|footballer|politician|president|minister|writer|author|rapper|musician|businessman|director|youtuber|athlete)\b/i.test(a.description || "");
-    const question = `${person ? "who is" : "what is"} ${title}`;
-    const known = await lookup(question).catch(() => null);
-    if (known?.memory) continue;
-    await learn(question, firstSentences(a.extract), "wikipedia");
-    learned++;
-    onLearned(question);
+    const q = await learnArticle(a.titles.normalized, a.description, a.extract);
+    if (q) {
+      learned++;
+      onLearned(q);
+    }
   }
+  return learned;
+}
+
+// The 1,000 most important topics on Wikipedia ("vital articles"): a
+// curriculum MK.ai works through a few at a time. The list and how far it
+// has got are kept on this device.
+const CURRICULUM_KEY = "mkai-curriculum";
+async function curriculum() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CURRICULUM_KEY) || "null");
+    if (saved?.titles?.length) return saved;
+  } catch {}
+  const titles = [];
+  let cont = "";
+  for (let page = 0; page < 4; page++) {
+    const data = await getJson(
+      `https://en.wikipedia.org/w/api.php?action=query&titles=Wikipedia:Vital_articles/Level/3&prop=links&plnamespace=0&pllimit=max&format=json&origin=*${cont ? `&plcontinue=${encodeURIComponent(cont)}` : ""}`
+    );
+    const links = Object.values(data?.query?.pages || {})[0]?.links || [];
+    titles.push(...links.map((l) => l.title));
+    cont = data?.continue?.plcontinue;
+    if (!cont) break;
+  }
+  const plan = { titles: titles.sort(() => Math.random() - 0.5), next: 0 };
+  try {
+    localStorage.setItem(CURRICULUM_KEY, JSON.stringify(plan));
+  } catch {}
+  return plan;
+}
+
+export async function learnCurriculum(max = 5, onLearned = () => {}) {
+  const plan = await curriculum();
+  let learned = 0;
+  let checked = 0;
+  while (learned < max && checked < max * 4 && plan.next < plan.titles.length) {
+    const title = plan.titles[plan.next++];
+    checked++;
+    const page = await getJson(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`);
+    if (!page?.extract || page.type === "disambiguation") continue;
+    const q = await learnArticle(page.title, page.description, page.extract);
+    if (q) {
+      learned++;
+      onLearned(q);
+    }
+  }
+  try {
+    localStorage.setItem(CURRICULUM_KEY, JSON.stringify(plan));
+  } catch {}
   return learned;
 }
 
@@ -211,20 +273,26 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
       const said = (q) => onStatus(`📚 Just learned: ${q.slice(0, 60)}`);
       let n = await learnFromList(night ? 5 : 1, said);
       if (!n && night) {
+        // The list is done: popular topics from the last week (once each per
+        // night), then the curriculum of important topics.
         const key = "mkai-trending-" + new Date().toDateString();
-        let done = false;
+        let daysDone = 0;
         try {
-          done = localStorage.getItem(key) === "1";
+          daysDone = Number(localStorage.getItem(key)) || 0;
         } catch {}
-        if (!done) {
-          onStatus("🌙 Learning mode: reading today's most popular topics…");
-          n = await learnTrending(15, said);
+        if (daysDone < 7) {
+          onStatus("🌙 Learning mode: reading the week's most popular topics…");
+          n = await learnTrending(10, said, daysDone + 1);
           try {
-            localStorage.setItem(key, "1");
+            localStorage.setItem(key, String(daysDone + 1));
           } catch {}
         }
+        if (!n) {
+          onStatus("🌙 Learning mode: studying important topics…");
+          n = await learnCurriculum(5, said);
+        }
       }
-      if (!n) onStatus(night ? "🌙 Learning mode: nothing new to learn right now" : "");
+      if (!n) onStatus(night ? "🌙 Learning mode: all caught up for now" : "");
     } catch (err) {
       console.warn("Self-learning:", err);
       onStatus("");
