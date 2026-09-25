@@ -256,16 +256,46 @@ function hasAccess() {
 const isCreator = () => profile?.creator === true;
 const isUnlimited = () => profile?.tier === "unlimited";
 const unlimitedOnly = (what) =>
-  `🔒 **${what}** is for unlimited members.\n\n` +
+  `🔒 ${what === "Alpaca Vision" ? "Pictures and videos are" : "This is"} for unlimited members.\n\n` +
   "**Want unlimited access?** Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. " +
   "The admin gives unlimited access to people who help.\n\n" +
   "Already have an access code? Tap **🔑 enter access code** under your email.";
 
+// The empty chat greets the person by name, a little differently each time
+function nameOf(email = "") {
+  if (isCreator()) return creator.firstName();
+  const word = (email.split("@")[0].match(/[a-z]{2,}/i) || [""])[0];
+  return word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : "there";
+}
+function renderGreeting() {
+  const name = nameOf(auth.currentUser?.email);
+  const h = new Date().getHours();
+  const part = h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const hellos = [`${part}, ${name}!`, `Hi ${name}! 👋`, `Hello, ${name}!`, `Vanakkam, ${name}! 🙏`, `Welcome back, ${name}!`, `Nice to see you, ${name}!`];
+  const subs = [
+    "What would you like to know today?",
+    "Ask me anything: maths, science, coding or general knowledge.",
+    "What shall we explore today?",
+    "Got a question? I'm ready.",
+    "Pick a topic, any topic.",
+  ];
+  if (isUnlimited()) subs.push("Want a picture? Switch to 🎨 Alpaca Vision.", "Learning to code? The Code School is open for you.");
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  $("emptyTitle").textContent = pick(hellos);
+  $("emptySub").textContent = pick(subs);
+}
+
 function renderTier() {
   clearInterval(trialTimer);
-  $("codeBtn").hidden = isUnlimited();
-  const visionOption = document.querySelector('#modelSelect option[value="vision"]');
-  if (visionOption) visionOption.textContent = isUnlimited() ? "🎨 Alpaca Vision" : "🎨 Alpaca Vision 🔒";
+  renderGreeting();
+  // Alpaca Vision and the Code School only appear for unlimited members
+  const unlimited = isUnlimited();
+  $("codeBtn").hidden = unlimited;
+  $("upgradeNote").hidden = unlimited;
+  $("modelSelect")?.classList.toggle("hidden", !unlimited);
+  $("learnLink")?.classList.toggle("hidden", !unlimited);
+  $("emptyLearn")?.classList.toggle("hidden", !unlimited);
+  if (!unlimited && activeModel === "vision") setModel("alpaca");
 
   if (profile.tier === "unlimited") {
     tierBadge.textContent = isCreator() ? "👑 creator · unlimited" : "unlimited";
@@ -564,6 +594,7 @@ function clearThread() {
   thread.querySelectorAll(".msg").forEach((n) => n.remove());
   emptyState.classList.remove("hidden");
   history.length = 0;
+  if (profile) renderGreeting();
 }
 
 function renderThread() {

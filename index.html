@@ -53,7 +53,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=53" />
+<link rel="stylesheet" href="style.css?v=54" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -98,7 +98,7 @@
           New chat
         </button>
 
-        <a class="new-chat-btn learn-btn" id="learnLink" href="learn.html">
+        <a class="new-chat-btn learn-btn hidden" id="learnLink" href="learn.html">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="m9 8-2 2 2 2M13 8l2 2-2 2"/></svg>
           Learn to code
         </a>
@@ -117,6 +117,7 @@
               <span class="account-email" id="accountEmail"></span>
               <span id="tierBadge" class="tier-badge"></span>
               <button type="button" id="codeBtn" class="link-btn code-link" hidden>🔑 enter access code</button>
+              <span id="upgradeNote" class="upgrade-note" hidden>✨ Want unlimited access? Chat with MK.ai and help train it. The admin gives unlimited access to people who help.</span>
               <span id="learnStatus" class="learn-status" aria-live="polite"></span>
             </div>
           </div>
@@ -143,8 +144,8 @@
           <div class="empty-state" id="emptyState">
             <svg class="logo logo-empty" width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
             <h2 class="empty-title" id="emptyTitle">How can I help you today?</h2>
-            <p>Say hi, ask a question, try some maths — or teach me something new.</p>
-            <p class="empty-learn">New to coding? <a href="learn.html">Open the Code School →</a></p>
+            <p id="emptySub">Ask me anything.</p>
+            <p class="empty-learn hidden" id="emptyLearn">New to coding? <a href="learn.html">Open the Code School →</a></p>
           </div>
         </main>
 
@@ -174,7 +175,7 @@
             </button>
           </div>
           <div class="desk-foot">
-            <select id="modelSelect" class="model-select" aria-label="Model">
+            <select id="modelSelect" class="model-select hidden" aria-label="Model">
               <option value="alpaca">🦙 Alpaca</option>
               <option value="vision">🎨 Alpaca Vision</option>
             </select>
@@ -248,6 +249,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=53"></script>
+  <script type="module" src="js/app.js?v=54"></script>
 </body>
 </html>
