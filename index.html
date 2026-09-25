@@ -60,7 +60,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=64" />
+<link rel="stylesheet" href="style.css?v=65" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -123,6 +123,7 @@
             <div class="account-text">
               <span class="account-email" id="accountEmail"></span>
               <span id="tierBadge" class="tier-badge"></span>
+              <span class="side-meter" id="sideMeter" hidden><span></span></span>
               <button type="button" id="codeBtn" class="link-btn code-link" hidden>🔑 enter access code</button>
               <span id="upgradeNote" class="upgrade-note" hidden>✨ Want unlimited access? Chat with MK.ai and help train it. The admin gives unlimited access to people who help.</span>
               <span id="learnStatus" class="learn-status" aria-live="polite"></span>
@@ -143,6 +144,20 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
           </button>
           <div class="topbar-title" id="chatTitle">New chat</div>
+          <div class="usage" id="usage" hidden>
+            <button type="button" class="usage-btn" id="usageBtn" aria-expanded="false" aria-controls="usagePanel" title="Free trial usage">
+              <span class="usage-ring" id="usageRing" aria-hidden="true"></span><span id="usageShort">3h 0m</span>
+            </button>
+            <div class="usage-panel" id="usagePanel" role="dialog" aria-label="Free trial usage" hidden>
+              <p class="usage-head">Free trial usage</p>
+              <div class="usage-row"><span>Trial time</span><span id="usageTimeText"></span></div>
+              <div class="usage-bar"><span id="usageTimeBar"></span></div>
+              <div class="usage-row"><span>Questions asked</span><span id="usageCount">0</span></div>
+              <div class="usage-row muted"><span>🎨 Alpaca Vision · 💻 Code School</span><span>🔒 unlimited</span></div>
+              <p class="usage-note">Want unlimited access? Chat with MK.ai and help train it: the admin gives unlimited access to people who help.</p>
+              <button type="button" class="usage-code" id="usageCodeBtn">🔑 Enter access code</button>
+            </div>
+          </div>
           <button type="button" class="icon-btn" id="newChatTop" title="New chat" aria-label="New chat">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           </button>
@@ -259,6 +274,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=64"></script>
+  <script type="module" src="js/app.js?v=65"></script>
 </body>
 </html>

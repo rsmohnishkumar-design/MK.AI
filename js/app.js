@@ -317,8 +317,57 @@ function renderGreeting() {
   );
 }
 
+// --- Usage meter for free (trial) users ---
+const usageKey = () => `mkai-asked-${auth.currentUser?.uid || "guest"}`;
+function countQuestion() {
+  try {
+    const n = (Number(localStorage.getItem(usageKey())) || 0) + 1;
+    localStorage.setItem(usageKey(), String(n));
+    $("usageCount").textContent = String(n);
+  } catch {}
+}
+function renderUsage(msLeft) {
+  const trial = profile?.tier === "trial" && msLeft != null;
+  $("usage").hidden = !trial;
+  $("sideMeter").hidden = !trial;
+  if (!trial) return;
+  const total = TRIAL_HOURS * 3600000;
+  const used = Math.min(100, Math.max(0, Math.round((1 - msLeft / total) * 100)));
+  const h = Math.floor(Math.max(0, msLeft) / 3600000);
+  const m = Math.floor((Math.max(0, msLeft) % 3600000) / 60000);
+  const left = msLeft <= 0 ? "ended" : h ? `${h}h ${m}m` : `${m} min`;
+  $("usageShort").textContent = msLeft <= 0 ? "trial ended" : left;
+  $("usageRing").style.setProperty("--used", used);
+  $("usageTimeText").textContent = msLeft <= 0 ? "Trial ended" : `${used}% used · ${left} left`;
+  $("usageTimeBar").style.width = `${used}%`;
+  $("usageTimeBar").parentElement.classList.toggle("low", used >= 80);
+  $("sideMeter").firstElementChild.style.width = `${used}%`;
+  let asked = 0;
+  try {
+    asked = Number(localStorage.getItem(usageKey())) || 0;
+  } catch {}
+  $("usageCount").textContent = String(asked);
+}
+$("usageBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const open = $("usagePanel").hidden;
+  $("usagePanel").hidden = !open;
+  $("usageBtn").setAttribute("aria-expanded", String(open));
+});
+document.addEventListener("click", (e) => {
+  if (!$("usagePanel").hidden && !e.target.closest("#usage")) {
+    $("usagePanel").hidden = true;
+    $("usageBtn").setAttribute("aria-expanded", "false");
+  }
+});
+$("usageCodeBtn").addEventListener("click", () => {
+  $("usagePanel").hidden = true;
+  $("codeBtn").click();
+});
+
 function renderTier() {
   clearInterval(trialTimer);
+  renderUsage(null);
   renderGreeting();
   // Alpaca Vision and the Code School only appear for unlimited members
   const unlimited = isUnlimited();
@@ -343,6 +392,7 @@ function renderTier() {
 
   const update = () => {
     const msLeft = profile.expiresAt.toMillis() - Date.now();
+    renderUsage(msLeft);
     if (msLeft <= 0) {
       tierBadge.textContent = "trial expired";
       tierBadge.className = "tier-badge expired";
@@ -1074,7 +1124,15 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     think("Looking for an easier explanation");
     const easy = await researchMore(topic).catch(() => null);
     const base = easy?.source === "Simple English Wikipedia" ? easy : await answer(topic, () => {}, null, think);
-    const first = sentencesOf(base.answer.replace(/\*\*/g, "")).slice(0, 2).join(" ");
+    // Lists ("**Weather** - … **Climate** - …"): the first point of each part
+    const parts = base.answer
+      .split(/\n\s*\n/)
+      .map((block) => block.match(/^\*\*(.+?)\*\*\s*\n\s*[-*]\s+(.+)/))
+      .filter(Boolean);
+    const first =
+      parts.length >= 2
+        ? "\n" + parts.map((m) => `- **${m[1]}:** ${m[2]}`).join("\n")
+        : sentencesOf(base.answer.replace(/\*\*/g, "")).slice(0, 2).join(" ");
     return { answer: `🧒 **In simple words:** ${first || base.answer}`, saved: nothingSaved, source: "local", credit: easy?.source === "Simple English Wikipedia" ? "from Simple English Wikipedia" : null };
   }
   // "Summarise: <pasted text>"
@@ -1413,6 +1471,7 @@ composer.addEventListener("submit", async (e) => {
   e.preventDefault();
   const deepNow = answerMode === "deep" || deepOnce;
   deepOnce = false;
+  if (questionInput.value.trim() || pendingAttachment) countQuestion();
   const attachment = pendingAttachment;
   let question = questionInput.value.trim().slice(0, 4000);
   if (!question && !attachment) return;
