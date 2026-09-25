@@ -27,6 +27,7 @@ import { keywords, votes, lookup } from "./brain.js";
 import { askGemini, aiErrorMessage } from "./ai.js";
 import { readAttachment } from "./attach.js";
 import * as training from "./training.js";
+import { research, worthLearning, startAutoLearner } from "./learning.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
 
@@ -591,7 +592,7 @@ async function loadTraining() {
     $("trainTopics").innerHTML = analysis.topics.length
       ? `What people ask about most: ${analysis.topics.map(([w, n]) => `<b>${escapeHtml(w)}</b> (${n})`).join(", ")}`
       : "";
-    needs = analysis.needs.slice(0, 60);
+    needs = analysis.needs.filter((n) => worthLearning(n.question)).slice(0, 60);
     $("needsCount").textContent = `(${needs.length})`;
     const list = $("needsList");
     list.innerHTML = needs.length ? "" : `<p class="empty-col-note">Nothing to learn right now. As people ask questions, MK.ai lists what it should learn here.</p>`;
@@ -613,36 +614,58 @@ async function loadTraining() {
 }
 $("reanalyseBtn").addEventListener("click", loadTraining);
 
+// Researches the ticked questions itself (knowledge base, then Wikipedia) and
+// saves what it finds straight into the vault. No outside AI, no approval step.
 $("prepareBtn").addEventListener("click", async () => {
   const picked = needs.filter((n) => n.picked);
   if (!picked.length) return setStatus("prepareStatus", "Tick at least one question first.", "bad");
   $("prepareBtn").disabled = true;
-  const ready = [];
-  let failed = 0;
+  const learnt = [];
+  const missing = [];
   for (const [i, need] of picked.entries()) {
-    setStatus("prepareStatus", `Writing answer ${i + 1} of ${picked.length}…`);
+    setStatus("prepareStatus", `Researching ${i + 1} of ${picked.length}…`);
+    const found = await research(need.question).catch(() => null);
+    if (!found) {
+      missing.push(need.question);
+      continue;
+    }
     try {
-      // What MK.ai already knows (including taught documents) goes in as background.
-      const { knowledge } = await lookup(need.question).catch(() => ({ knowledge: { good: [], bad: [] } }));
-      const result = await askGemini(need.question, [], knowledge);
-      if (result.answer && !result.partial) ready.push({ question: need.question, answer: result.answer });
-      else failed++;
+      await addDoc(collection(db, "vault"), { ...vaultFields(need.question, found.answer), createdAt: serverTimestamp() });
+      learnt.push(need.question);
     } catch (err) {
-      failed++;
-      console.warn("Couldn't prepare an answer:", aiErrorMessage(err));
-      if (/resting|quota|used up/i.test(aiErrorMessage(err))) break;
+      missing.push(need.question);
+      console.warn("Couldn't save:", err);
     }
   }
   $("prepareBtn").disabled = false;
   setStatus(
     "prepareStatus",
-    ready.length
-      ? `${ready.length} answer${ready.length === 1 ? "" : "s"} ready below.${failed ? ` ${failed} couldn't be written (the AI may be busy) — try those again later.` : ""}`
-      : "The AI couldn't write answers right now (it may be busy or used up for today). Try again later.",
-    ready.length ? "good" : "bad"
+    (learnt.length ? `✓ Learned ${learnt.length}: MK.ai answers ${learnt.length === 1 ? "it" : "them"} now. ` : "") +
+      (missing.length ? `Couldn't find ${missing.length} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}): teach ${missing.length === 1 ? "it" : "those"} yourself under Curated answers.` : ""),
+    learnt.length ? "good" : "bad"
   );
-  setReview(ready);
+  if (learnt.length) {
+    loadEntries();
+    loadTraining();
+  }
 });
+
+// Learning mode: works through the learning list and keeps the screen on.
+// Leave this page open (tablet on charge) and MK.ai studies by itself.
+let stopLearning = null;
+$("learnModeBtn")?.addEventListener("click", async () => {
+  const btn = $("learnModeBtn");
+  if (stopLearning) {
+    stopLearning();
+    stopLearning = null;
+    btn.textContent = "🌙 Start learning mode";
+    return setStatus("prepareStatus", "Learning mode stopped.");
+  }
+  btn.textContent = "⏹ Stop learning mode";
+  setStatus("prepareStatus", "🌙 Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open MK.ai page.");
+  stopLearning = startAutoLearner({ canLearn: () => true, forceNight: () => true, onStatus: (t) => t && setStatus("prepareStatus", t) });
+});
+
 
 // --- Bulk answers ---
 $("bulkFile").addEventListener("change", async (e) => {

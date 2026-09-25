@@ -152,6 +152,23 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // --- Learning list: questions MK.ai couldn't answer yet. Open MK.ai pages
+    // research them in the background and delete each one once it's learned. ---
+    match /unknown/{id} {
+      allow read: if signedIn() && hasAccess();
+      allow create: if signedIn() && hasAccess()
+        && incoming().keys().hasOnly(['question', 'tries', 'createdBy', 'createdAt'])
+        && incoming().question is string && incoming().question.size() <= 500
+        && incoming().tries == 0
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if signedIn() && hasAccess()
+        && changed().hasOnly(['tries', 'lastTriedAt'])
+        && incoming().tries == resource.data.tries + 1
+        && incoming().lastTriedAt == request.time;
+      allow delete: if signedIn() && hasAccess();
+    }
+
     // --- Activity log: people add their own entries, only the admin reads ---
     match /activity/{id} {
       allow create: if signedIn()

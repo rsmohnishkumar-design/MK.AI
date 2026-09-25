@@ -214,6 +214,29 @@ using the admin email from step 3. That's it.
 - In the vault you can grant unlimited access, start a new trial, or
   block an account.
 
+## Access levels
+
+- **Trial accounts** (3 hours) chat with Alpaca. **Alpaca Vision** and the
+  **Code School** are for unlimited members; trial users see a message
+  inviting them to help train MK.ai, since the admin gives unlimited access
+  to people who help.
+- An access code can be entered at login ("Have an access code?") or later
+  in the chat (**🔑 enter access code** under the email).
+
+## Self-learning (no outside AI, no keys)
+
+- A question MK.ai can't answer goes on a shared **learning list**
+  (Firestore `unknown`; keyboard mashing and bare numbers are skipped).
+- Any open MK.ai page that has been quiet for 90 seconds researches one of
+  them (knowledge base, then Wikipedia) and saves the answer to memory,
+  which MK.ai uses straight away. No approval step.
+- **Learning mode** runs from 2:00 to 5:30 at night in any open MK.ai page,
+  working through the whole list and keeping the screen on. The vault's
+  **🌙 Start learning mode** button runs it any time. MK.ai has no server,
+  so a device has to stay open (a tablet on charge works).
+- The vault's **Research & learn** button researches the ticked questions
+  the same way and saves them straight into the vault.
+
 ## The admin vault
 
 - **Curated answers:** add question/answer pairs. MK.ai answers from

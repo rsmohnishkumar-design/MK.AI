@@ -31,6 +31,7 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
+import { noteUnknown, startAutoLearner } from "./learning.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -243,6 +244,7 @@ function forgetSession() {
 }
 
 let trialTimer = null;
+let stopLearner = null; // the background self-learner
 
 function hasAccess() {
   if (!profile) return false;
@@ -252,9 +254,18 @@ function hasAccess() {
 }
 
 const isCreator = () => profile?.creator === true;
+const isUnlimited = () => profile?.tier === "unlimited";
+const unlimitedOnly = (what) =>
+  `🔒 **${what}** is for unlimited members.\n\n` +
+  "**Want unlimited access?** Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. " +
+  "The admin gives unlimited access to people who help.\n\n" +
+  "Already have an access code? Tap **🔑 enter access code** under your email.";
 
 function renderTier() {
   clearInterval(trialTimer);
+  $("codeBtn").hidden = isUnlimited();
+  const visionOption = document.querySelector('#modelSelect option[value="vision"]');
+  if (visionOption) visionOption.textContent = isUnlimited() ? "🎨 Alpaca Vision" : "🎨 Alpaca Vision 🔒";
 
   if (profile.tier === "unlimited") {
     tierBadge.textContent = isCreator() ? "👑 creator · unlimited" : "unlimited";
@@ -274,7 +285,7 @@ function renderTier() {
       tierBadge.textContent = "trial expired";
       tierBadge.className = "tier-badge expired";
       clearInterval(trialTimer);
-      lockChat("Your trial has ended — log in with an access code, or ask the admin for unlimited access.");
+      lockChat("Your trial has ended. Have an access code? Tap 🔑 enter access code, or ask the admin for unlimited access.");
       return;
     }
     const h = Math.floor(msLeft / 3600000);
@@ -286,6 +297,28 @@ function renderTier() {
   update();
   trialTimer = setInterval(update, 30000);
 }
+
+// Entering an access code after signing in
+$("codeBtn").addEventListener("click", async () => {
+  const code = (prompt("Enter your access code:") || "").trim();
+  if (!code || !auth.currentUser) return;
+  const ref = doc(db, "users", auth.currentUser.uid);
+  try {
+    await updateDoc(ref, { tier: "unlimited", expiresAt: null, accessCode: code });
+    profile = (await getDoc(ref)).data();
+    saveSession(auth.currentUser.uid, profile);
+    renderTier();
+    questionInput.disabled = false;
+    sendBtn.disabled = false;
+    setModel(activeModel);
+    const msg = createAiMessage();
+    msg.finish("🎉 **Unlimited access unlocked!** Alpaca Vision and the Code School are open for you now.");
+    scrollToBottom();
+  } catch {
+    addErrorMessage("That access code isn't right. Check it and try again, or ask the admin.");
+    scrollToBottom();
+  }
+});
 
 function lockChat(message) {
   questionInput.disabled = true;
@@ -312,10 +345,14 @@ function showChat(user, notice) {
     startMeaning();
     loadKnowledge().catch(() => {});
   });
+  stopLearner?.();
+  stopLearner = startAutoLearner({ canLearn: hasAccess, onStatus: (t) => ($("learnStatus").textContent = t) });
 }
 
 function showAuth() {
   clearInterval(trialTimer);
+  stopLearner?.();
+  stopLearner = null;
   document.documentElement.classList.remove("has-session");
   chatScreen.classList.add("hidden");
   authScreen.classList.remove("hidden");
@@ -876,6 +913,7 @@ async function answer(question, onText, attachment = null, think = () => {}) {
 
   // Pictures and videos: Alpaca Vision (chosen in the model menu, or "draw …")
   if (activeModel === "vision" || isVisionRequest(question)) {
+    if (!isUnlimited()) return { answer: unlimitedOnly("Alpaca Vision"), saved: nothingSaved, source: "vision" };
     think("Handing this to Alpaca Vision, my picture and video model");
     logActivity(question, "vision");
     if (activeModel === "vision" && /^(hi|hello|hey|help|what can you (draw|make|do)|how does this work)\b/i.test(question.trim()))
@@ -993,6 +1031,7 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved, source: "offline" };
   }
   logActivity(question, "unknown");
+  if (!contextual) noteUnknown(question);
   return {
     answer: DONT_KNOW[Math.floor(Math.random() * DONT_KNOW.length)],
     saved: nothingSaved,
@@ -1160,6 +1199,16 @@ function setModel(model) {
   questionInput.placeholder = model === "vision" ? "Describe a picture…" : answerMode === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
 }
 $("modelSelect")?.addEventListener("change", (e) => setModel(e.target.value));
+
+// The Code School is for unlimited members
+document.addEventListener("click", (e) => {
+  const link = e.target.closest?.('a[href="learn.html"]');
+  if (!link || !profile || isUnlimited()) return;
+  e.preventDefault();
+  const msg = createAiMessage();
+  msg.finish(unlimitedOnly("The Code School"));
+  scrollToBottom();
+});
 
 // --- Normal / Deep think ---
 const MODE_KEY = "mkai-mode";

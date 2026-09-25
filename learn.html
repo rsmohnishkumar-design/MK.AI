@@ -993,12 +993,31 @@ if (hour < 12) {
   let timer = null;
 
   if (auth) {
+    // The Code School is for unlimited members
+    const lock = (text) => {
+      let el = document.getElementById("schoolLock");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "schoolLock";
+        el.style.cssText = "position:fixed;inset:0;z-index:999;display:grid;place-items:center;padding:24px;background:rgba(10,12,16,.96);color:#f1ead8;font:16px/1.6 system-ui,sans-serif;text-align:center";
+        document.body.append(el);
+      }
+      el.innerHTML = `<div style="max-width:460px"><div style="font-size:44px">🔒</div><h2 style="margin:8px 0">The Code School is for unlimited members</h2><p>${text}</p><p><a href="./" style="color:#c9a227">← Back to MK.ai</a></p></div>`;
+    };
     onAuthStateChanged(auth, async (user) => {
       school.onSave = null;
       if (!user) {
-        setStatus('Progress is saved in this browser. <a href="./">Sign in to MK.ai</a> to keep it on every device.');
+        lock("Sign in to MK.ai with an unlimited account to open it.");
         return;
       }
+      try {
+        const me = await getDoc(doc(db, "users", user.uid));
+        if (me.data()?.tier !== "unlimited") {
+          lock("Want unlimited access? Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. The admin gives unlimited access to people who help. Have an access code? Tap 🔑 enter access code in the chat.");
+          return;
+        }
+      } catch {}
+      document.getElementById("schoolLock")?.remove();
       const ref = doc(db, "users", user.uid, "progress", "learn");
       const save = () => setDoc(ref, { done: school.saved.done, ex: school.saved.ex, updatedAt: serverTimestamp() });
       try {
