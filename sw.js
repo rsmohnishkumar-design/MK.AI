@@ -35,6 +35,8 @@ const SHELL = [
   "js/thirukkural.js",
   "js/vision.js",
   "js/learning.js",
+  "js/personal.js",
+  "js/quiz.js",
   "data/kb/index.json",
   "data/apps.json",
   "learn.html",

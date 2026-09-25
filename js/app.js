@@ -32,6 +32,8 @@ import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
 import { noteUnknown, startAutoLearner, researchMore, worthLearning } from "./learning.js";
+import { personalAnswer, aboutMe } from "./personal.js";
+import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -39,6 +41,12 @@ import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
+registerBlock("mkai-quiz", (container, text) =>
+  mountQuiz(container, text, (label) => {
+    questionInput.value = `quiz me on ${label}`;
+    composer.requestSubmit();
+  })
+);
 
 // --- Auth screens/elements ---
 const authScreen = $("authScreen");
@@ -263,6 +271,8 @@ const unlimitedOnly = (what) =>
 
 // The empty chat greets the person by name, a little differently each time
 function nameOf(email = "") {
+  const told = aboutMe(auth.currentUser?.uid).name;
+  if (told) return told.split(" ")[0];
   if (isCreator()) return creator.firstName();
   const word = (email.split("@")[0].match(/[a-z]{2,}/i) || [""])[0];
   return word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : "there";
@@ -828,6 +838,25 @@ function createAiMessage() {
       });
       actions.classList.remove("hidden");
     },
+    // "You might also ask": related questions MK.ai knows the answers to
+    setFollowUps(questions) {
+      const box = document.createElement("div");
+      box.className = "follow-ups";
+      const label = document.createElement("span");
+      label.textContent = "You might also ask:";
+      box.append(label);
+      for (const q of questions) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = q;
+        b.addEventListener("click", () => {
+          questionInput.value = q;
+          composer.requestSubmit();
+        });
+        box.append(b);
+      }
+      actions.before(box);
+    },
     // Reads the answer aloud (after a spoken question).
     speakNow(answer) {
       const speakBtn = actions.querySelector(".speak-btn");
@@ -984,6 +1013,27 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     }
     think("Planned the picture from the description and painted it");
     return { answer: visionAnswer(question), saved: nothingSaved, source: "vision" };
+  }
+
+  // Things people tell MK.ai about themselves ("my name is …", "what do you know about me")
+  const personal = !attachment && personalAnswer(question, auth.currentUser?.uid);
+  if (personal) {
+    think("This is about you: using what you've told me");
+    return { answer: personal, saved: nothingSaved, source: "local" };
+  }
+  // "Quiz me on capitals"
+  if (!attachment && wantsQuiz(question)) {
+    const quiz = await quizAnswer(question).catch(() => null);
+    if (quiz) {
+      think("Made a quiz question from my knowledge");
+      return { answer: quiz, saved: nothingSaved, source: "local" };
+    }
+  }
+  // "Summarise: <pasted text>"
+  const pasted = !attachment && question.match(/^(?:please\s+)?(?:summari[sz]e|sum up|give (?:me )?(?:a )?summary of|make (?:a )?summary of)(?:\s+(?:this|the following|it))?(?:\s*(?:text|paragraph|passage))?\s*[:\-]?\s+([\s\S]{200,})$/i);
+  if (pasted) {
+    think("Picked out the most important sentences");
+    return { answer: `📝 **Summary:**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
   }
 
   think("Checking my own brain (maths, science, coding, conversations)");
@@ -1377,6 +1427,13 @@ composer.addEventListener("submit", async (e) => {
     if (result.thoughts) msg.setThoughts(result.thoughts, result.thoughtMs);
     if (spoken && stillHere()) msg.speakNow(result.answer);
     if (result.credit) msg.setCredit(result.credit);
+    if (result.source === "knowledge" && answerMode !== "deep") {
+      const asked = question.trim().toLowerCase().replace(/[?.!]+$/, "");
+      const more = relatedEntries(question, result.matched || null, 3)
+        .map((r) => r.question)
+        .filter((q) => q.toLowerCase().replace(/[?.!]+$/, "") !== asked);
+      if (more.length) msg.setFollowUps(more);
+    }
     if (result.teachable) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
     const saved = record(chatId, {

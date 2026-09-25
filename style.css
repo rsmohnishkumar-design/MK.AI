@@ -1311,6 +1311,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 .msg-bot .search-suggestions,
 .msg-bot .answer-actions,
 .msg-bot .pulling { margin-left: 32px; }
+.msg-bot .follow-ups { margin-left: 32px; }
 .msg-bot .answer-actions { gap: 2px; margin-top: 10px; }
 .msg-bot .answer-actions button {
   border-color: transparent;
@@ -1332,9 +1333,26 @@ a.side-btn { text-align: center; text-decoration: none; }
   .msg-bot .search-suggestions,
   .msg-bot .answer-actions,
   .msg-bot .pulling { margin-left: 0; }
+  .msg-bot .follow-ups { margin-left: 0; }
 }
 
 /* Suggestion buttons on the empty chat */
 .suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px auto 0; max-width: 560px; }
 .suggest button { background: var(--panel); border: 1px solid var(--panel-border); color: var(--paper); border-radius: 18px; padding: 8px 14px; font: 14px var(--font-body); cursor: pointer; text-align: left; }
 .suggest button:hover, .suggest button:focus-visible { border-color: var(--brass); color: var(--brass); }
+
+/* Follow-up questions under an answer */
+.follow-ups { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 2px; }
+.follow-ups span { font: 11px var(--font-mono); color: var(--paper-dim); margin-right: 2px; }
+.follow-ups button { background: transparent; border: 1px solid var(--panel-border); color: var(--paper); border-radius: 14px; padding: 4px 10px; font: 13px var(--font-body); cursor: pointer; }
+.follow-ups button:hover, .follow-ups button:focus-visible { border-color: var(--brass); color: var(--brass); }
+/* Quiz */
+.msg-bot .quiz-box { margin-left: 32px; }
+.quiz-box { display: grid; gap: 8px; margin: 8px 0; max-width: 520px; }
+.quiz-option { text-align: left; background: var(--panel); border: 1px solid var(--panel-border); color: var(--paper); border-radius: 10px; padding: 10px 14px; font: 15px var(--font-body); cursor: pointer; }
+.quiz-option:hover:not(:disabled) { border-color: var(--brass); }
+.quiz-option:disabled { cursor: default; opacity: 0.8; }
+.quiz-option.right { border-color: var(--sage); background: rgba(143, 169, 152, 0.18); opacity: 1; }
+.quiz-option.wrong { border-color: var(--error); background: rgba(201, 106, 74, 0.15); opacity: 1; }
+.quiz-result { margin: 4px 0 0; font-size: 14px; color: var(--paper-dim); }
+.quiz-next { justify-self: start; background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer; }
