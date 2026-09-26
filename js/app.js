@@ -273,10 +273,10 @@ const creatorOff = () => {
 const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
 const unlimitedOnly = (what) =>
-  `🔒 ${what === "Alpaca Vision" ? "Pictures and videos are" : "This is"} for unlimited members.\n\n` +
+  `${what === "Alpaca Vision" ? "Pictures and videos are" : "This is"} available to unlimited members.\n\n` +
   "**Want unlimited access?** Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. " +
   "The admin gives unlimited access to people who help.\n\n" +
-  "Already have an access code? Tap **🔑 enter access code** under your email.";
+  "Already have an access code? Tap **Enter access code** under your email.";
 
 // The empty chat greets the person by name, a little differently each time
 function nameOf(email = "") {
@@ -290,7 +290,7 @@ function renderGreeting() {
   const name = nameOf(auth.currentUser?.email);
   const h = new Date().getHours();
   const part = h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-  const hellos = [`${part}, ${name}!`, `Hi ${name}! 👋`, `Hello, ${name}!`, `Vanakkam, ${name}! 🙏`, `Welcome back, ${name}!`, `Nice to see you, ${name}!`];
+  const hellos = [`${part}, ${name}.`, `Hi, ${name}.`, `Hello, ${name}.`, `Vanakkam, ${name}.`, `Welcome back, ${name}.`];
   const subs = [
     "What would you like to know today?",
     "Ask me anything: maths, science, coding or general knowledge.",
@@ -298,7 +298,7 @@ function renderGreeting() {
     "Got a question? I'm ready.",
     "Pick a topic, any topic.",
   ];
-  if (isUnlimited()) subs.push("Want a picture? Switch to 🎨 Alpaca Vision.", "Learning to code? The Code School is open for you.");
+  if (isUnlimited()) subs.push("Want a picture? Switch to Alpaca Vision.", "Learning to code? The Code School is open for you.");
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
   $("emptyTitle").textContent = pick(hellos);
   $("emptySub").textContent = pick(subs);
@@ -457,7 +457,7 @@ $("codeBtn").addEventListener("click", async () => {
     sendBtn.disabled = false;
     setModel(activeModel);
     const msg = createAiMessage();
-    msg.finish("🎉 **Unlimited access unlocked!** Alpaca Vision and the Code School are open for you now.");
+    msg.finish("**Unlimited access unlocked.** Alpaca Vision and the Code School are now available to you.");
     scrollToBottom();
   } catch {
     addErrorMessage("That access code isn't right. Check it and try again, or ask the admin.");
@@ -927,7 +927,7 @@ function createAiMessage() {
       box.className = "refine";
       const more = document.createElement("button");
       more.type = "button";
-      more.textContent = "🧠 more detail";
+      more.textContent = "More detail";
       more.addEventListener("click", () => {
         deepOnce = true;
         questionInput.value = question;
@@ -935,7 +935,7 @@ function createAiMessage() {
       });
       const simpler = document.createElement("button");
       simpler.type = "button";
-      simpler.textContent = "🧒 simpler";
+      simpler.textContent = "Simpler";
       simpler.addEventListener("click", () => {
         questionInput.value = `explain simply: ${question}`;
         composer.requestSubmit();
@@ -969,7 +969,7 @@ function createAiMessage() {
     },
     setThoughts(steps, ms) {
       const box = el.querySelector(".thoughts");
-      box.querySelector("summary").textContent = `🧠 Thought for ${howLong(ms || 0)} · ${steps.length} steps`;
+      box.querySelector("summary").textContent = `Thought for ${howLong(ms || 0)} · ${steps.length} steps`;
       const list = box.querySelector("ol");
       list.replaceChildren(...steps.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
       box.classList.remove("hidden");
@@ -1166,13 +1166,13 @@ async function answer(question, onText, attachment = null, think = () => {}) {
       parts.length >= 2
         ? "\n" + parts.map((m) => `- **${m[1]}:** ${m[2]}`).join("\n")
         : sentencesOf(base.answer.replace(/\*\*/g, "")).slice(0, 2).join(" ");
-    return { answer: `🧒 **In simple words:** ${first || base.answer}`, saved: nothingSaved, source: "local", credit: easy?.source === "Simple English Wikipedia" ? "from Simple English Wikipedia" : null };
+    return { answer: `**In simple words:** ${first || base.answer}`, saved: nothingSaved, source: "local", credit: easy?.source === "Simple English Wikipedia" ? "from Simple English Wikipedia" : null };
   }
   // "Summarise: <pasted text>"
   const pasted = !attachment && question.match(/^(?:please\s+)?(?:summari[sz]e|sum up|give (?:me )?(?:a )?summary of|make (?:a )?summary of)(?:\s+(?:this|the following|it))?(?:\s*(?:text|paragraph|passage))?\s*[:\-]?\s+([\s\S]{200,})$/i);
   if (pasted) {
     think("Picked out the most important sentences");
-    return { answer: `📝 **Summary:**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
+    return { answer: `**Summary**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
   }
 
   think("Checking my own brain (maths, science, coding, conversations)");
@@ -1276,7 +1276,7 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     const fix = spellFix(question);
     if (fix) {
       think(`Fixed the spelling: “${fix.hit.question}”`);
-      return { answer: `🔤 Did you mean **“${fix.hit.question}”**?\n\n${fix.hit.answer}`, saved: nothingSaved, source: "knowledge", matched: fix.hit.question };
+      return { answer: `Did you mean **“${fix.hit.question}”**?\n\n${fix.hit.answer}`, saved: nothingSaved, source: "knowledge", matched: fix.hit.question };
     }
   }
 

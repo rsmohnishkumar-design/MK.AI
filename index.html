@@ -60,14 +60,14 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=67" />
+<link rel="stylesheet" href="style.css?v=68" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
 
     <section id="authScreen" class="auth-screen">
       <div class="auth-card">
-        <svg class="logo logo-auth" width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+        <svg class="logo logo-auth" width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#c9a227"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
         <h1>MK.ai</h1>
         <p class="auth-copy" id="authCopy">Sign in to start asking.</p>
 
@@ -92,7 +92,7 @@
       <aside class="sidebar" id="sidebar" aria-label="Chats">
         <div class="sidebar-top">
           <div class="brand">
-            <svg class="logo logo-brand" id="secretMark" width="34" height="34" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+            <svg class="logo logo-brand" id="secretMark" width="34" height="34" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#c9a227"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
             <span class="brand-name">MK.ai</span>
           </div>
           <button type="button" class="icon-btn" id="sidebarClose" title="Close sidebar" aria-label="Close sidebar">
@@ -124,8 +124,8 @@
               <span class="account-email" id="accountEmail"></span>
               <span id="tierBadge" class="tier-badge"></span>
               <span class="side-meter" id="sideMeter" hidden><span></span></span>
-              <button type="button" id="codeBtn" class="link-btn code-link" hidden>🔑 enter access code</button>
-              <span id="upgradeNote" class="upgrade-note" hidden>✨ Want unlimited access? Chat with MK.ai and help train it. The admin gives unlimited access to people who help.</span>
+              <button type="button" id="codeBtn" class="link-btn code-link" hidden>Enter access code</button>
+              <span id="upgradeNote" class="upgrade-note" hidden>Want unlimited access? Chat with MK.ai and help train it. The admin gives unlimited access to people who help.</span>
               <span id="learnStatus" class="learn-status" aria-live="polite"></span>
             </div>
           </div>
@@ -170,7 +170,7 @@
 
         <main class="reading-room" id="thread" aria-live="polite">
           <div class="empty-state" id="emptyState">
-            <svg class="logo logo-empty" width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+            <svg class="logo logo-empty" width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#c9a227"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
             <h2 class="empty-title" id="emptyTitle">How can I help you today?</h2>
             <p id="emptySub">Ask me anything.</p>
             <div class="suggest" id="emptySuggest" aria-label="Suggestions"></div>
@@ -205,12 +205,12 @@
           </div>
           <div class="desk-foot">
             <select id="modelSelect" class="model-select hidden" aria-label="Model">
-              <option value="alpaca">🦙 Alpaca</option>
-              <option value="vision">🎨 Alpaca Vision</option>
+              <option value="alpaca">Alpaca</option>
+              <option value="vision">Alpaca Vision</option>
             </select>
             <div class="mode-switch" role="radiogroup" aria-label="How MK.ai answers">
-              <button type="button" class="mode-btn active" data-mode="normal" role="radio" aria-checked="true" title="Fast answers">⚡ Normal</button>
-              <button type="button" class="mode-btn" data-mode="deep" role="radio" aria-checked="false" title="Slower, more careful: checks its work, adds related facts and shows its steps">🧠 Deep think</button>
+              <button type="button" class="mode-btn active" data-mode="normal" role="radio" aria-checked="true" title="Fast answers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Normal</button>
+              <button type="button" class="mode-btn" data-mode="deep" role="radio" aria-checked="false" title="Slower, more careful: checks its work, adds related facts and shows its steps"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Deep think</button>
             </div>
             <p class="desk-hint">Enter to send · Shift + Enter for a new line</p>
           </div>
@@ -291,6 +291,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=67"></script>
+  <script type="module" src="js/app.js?v=68"></script>
 </body>
 </html>

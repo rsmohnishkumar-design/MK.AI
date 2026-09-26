@@ -49,7 +49,7 @@ export async function quizAnswer(question) {
   const wrong = [...new Set(rest.map((x) => x.a).filter((a) => a !== item.a))].slice(0, 3);
   const options = shuffle([item.a, ...wrong]);
   const block = { kind, label: KINDS[kind][3], q: item.q, options, answer: item.a, explain: item.explain };
-  return `📝 **Quiz: ${KINDS[kind][3]}**\n\n**${item.q}**\n\n\`\`\`mkai-quiz\n${JSON.stringify(block)}\n\`\`\``;
+  return `**Quiz · ${KINDS[kind][3]}**\n\n**${item.q}**\n\n\`\`\`mkai-quiz\n${JSON.stringify(block)}\n\`\`\``;
 }
 
 // Turns the quiz block into answer buttons. onNext(kind) asks for another question.
@@ -76,7 +76,7 @@ export function mountQuiz(container, text, onNext) {
         if (x.textContent === quiz.answer) x.classList.add("right");
       });
       if (!right) b.classList.add("wrong");
-      result.textContent = `${right ? "✅ Correct!" : `❌ Not quite. The answer is ${quiz.answer}.`} ${quiz.explain}`;
+      result.textContent = `${right ? "Correct." : `Not quite. The answer is ${quiz.answer}.`} ${quiz.explain}`;
       next.hidden = false;
     });
     return b;

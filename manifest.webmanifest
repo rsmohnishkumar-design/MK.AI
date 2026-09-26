@@ -1,7 +1,7 @@
 {
   "name": "MK.ai",
   "short_name": "MK.ai",
-  "description": "Ask anything — an AI assistant that learns from every conversation.",
+  "description": "MK.ai: a free AI assistant for maths, science, coding and general knowledge, powered by its own model, Alpaca.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
