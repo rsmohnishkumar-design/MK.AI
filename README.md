@@ -208,7 +208,7 @@ using the admin email from step 3. That's it.
 
 ## Accounts and access
 
-- Every new account gets a **3-hour trial**.
+- Every new account starts on the **free plan**: 10,000 tokens per 5-hour window and 100,000 per week (1 token ≈ 4 characters of question + answer; limits in `js/limits.js`). Usage is stored in the profile (`usage`), and the usage meter shows it.
 - Anyone who enters the **access code** (on sign-up or at login) gets
   unlimited use.
 - In the vault you can grant unlimited access, start a new trial, or
@@ -220,7 +220,7 @@ using the admin email from step 3. That's it.
 
 ## Access levels
 
-- **Trial accounts** (3 hours) chat with Alpaca. **Alpaca Vision** and the
+- **Free-plan accounts** chat with Alpaca within their token limits. **Alpaca Vision** and the
   **Code School** are for unlimited members; trial users see a message
   inviting them to help train MK.ai, since the admin gives unlimited access
   to people who help.

@@ -35,6 +35,7 @@ import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } 
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
+import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText } from "./limits.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -139,7 +140,7 @@ async function loadProfile(user, accessCode) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
   let notice = "";
-  const wrongCode = `That access code isn't right — you're on the ${TRIAL_HOURS}-hour trial.`;
+  const wrongCode = "That access code isn't right. You're on the free plan.";
 
   if (!snap.exists()) {
     if (accessCode) {
@@ -257,9 +258,22 @@ let stopLearner = null; // the background self-learner
 
 function hasAccess() {
   if (!profile) return false;
-  if (profile.tier === "unlimited") return true;
-  if (profile.tier !== "trial" || !profile.expiresAt) return false;
-  return profile.expiresAt.toMillis() > Date.now();
+  return profile.tier === "unlimited" || profile.tier === "trial";
+}
+// Free plan: has this account used up its 5-hour or weekly tokens?
+const outOfTokens = () => (profile?.tier === "trial" ? limitReached(profile.usage) : null);
+function limitMessage(hit) {
+  return hit.which === "week"
+    ? `You've used this week's free limit (${LIMITS.weekTokens.toLocaleString()} tokens). It resets ${resetText(hit.resetAt)}.`
+    : `You've used your free limit for now (${LIMITS.windowTokens.toLocaleString()} tokens per 5 hours). It resets ${resetText(hit.resetAt)}.`;
+}
+// Counts the tokens of a question and its answer against the free plan
+function spendTokens(question, answer) {
+  if (profile?.tier !== "trial" || !auth.currentUser) return;
+  profile = { ...profile, usage: addUsage(profile.usage, tokensFor(question, answer)) };
+  saveSession(auth.currentUser.uid, profile);
+  updateDoc(doc(db, "users", auth.currentUser.uid), { usage: profile.usage }).catch((err) => console.warn("Couldn't save usage:", err));
+  renderTier();
 }
 
 // The creator can step out of creator mode on this device (saying "I created you" brings it back)
@@ -336,8 +350,8 @@ function countQuestion() {
     $("usageCount").textContent = String(n);
   } catch {}
 }
-function renderUsage(msLeft) {
-  const trial = profile?.tier === "trial" && msLeft != null;
+function renderUsage() {
+  const trial = profile?.tier === "trial";
   const unlimited = profile?.tier === "unlimited";
   $("usage").hidden = !trial && !unlimited;
   $("sideMeter").hidden = !trial;
@@ -356,18 +370,18 @@ function renderUsage(msLeft) {
     return;
   }
   if (!trial) return;
-  $("usageHead").textContent = "Free trial usage";
+  const s = usageSummary(profile.usage);
+  $("usageHead").textContent = "Free plan usage";
   $("usageExtras").textContent = "Unlimited plan";
-  const total = TRIAL_HOURS * 3600000;
-  const used = Math.min(100, Math.max(0, Math.round((1 - msLeft / total) * 100)));
-  const h = Math.floor(Math.max(0, msLeft) / 3600000);
-  const m = Math.floor((Math.max(0, msLeft) % 3600000) / 60000);
-  const left = msLeft <= 0 ? "ended" : h ? `${h}h ${m}m` : `${m} min`;
-  $("usageShort").textContent = msLeft <= 0 ? "trial ended" : left;
+  const used = Math.max(s.windowPct, s.weekPct);
+  $("usageShort").textContent = `${used}% used`;
   $("usageRing").style.setProperty("--used", used);
-  $("usageTimeText").textContent = msLeft <= 0 ? "Trial ended" : `${used}% used · ${left} left`;
-  $("usageTimeBar").style.width = `${used}%`;
-  $("usageTimeBar").parentElement.classList.toggle("low", used >= 80);
+  $("usageWinText").textContent = s.windowReset ? `${s.windowPct}% · resets ${resetText(s.windowReset)}` : "0% · starts with your next message";
+  $("usageWeekText").textContent = s.weekReset ? `${s.weekPct}% · resets ${resetText(s.weekReset)}` : "0%";
+  $("usageWinBar").style.width = `${s.windowPct}%`;
+  $("usageWeekBar").style.width = `${s.weekPct}%`;
+  $("usageWinBar").parentElement.classList.toggle("low", s.windowPct >= 80);
+  $("usageWeekBar").parentElement.classList.toggle("low", s.weekPct >= 80);
   $("sideMeter").firstElementChild.style.width = `${used}%`;
 }
 $("usageBtn").addEventListener("click", (e) => {
@@ -400,7 +414,7 @@ $("usageCodeBtn").addEventListener("click", () => {
 
 function renderTier() {
   clearInterval(trialTimer);
-  renderUsage(null);
+  renderUsage();
   renderGreeting();
   // Alpaca Vision and the Code School only appear for unlimited members
   const unlimited = isUnlimited();
@@ -412,7 +426,7 @@ function renderTier() {
   if (!unlimited && activeModel === "vision") setModel("alpaca");
 
   if (profile.tier === "unlimited") {
-    renderUsage(null);
+    renderUsage();
     tierBadge.textContent = isCreator() ? "creator · unlimited" : "unlimited";
     tierBadge.className = "tier-badge unlimited";
     return;
@@ -425,19 +439,17 @@ function renderTier() {
   }
 
   const update = () => {
-    const msLeft = profile.expiresAt.toMillis() - Date.now();
-    renderUsage(msLeft);
-    if (msLeft <= 0) {
-      tierBadge.textContent = "trial expired";
-      tierBadge.className = "tier-badge expired";
-      clearInterval(trialTimer);
-      lockChat("Your trial has ended. Have an access code? Tap 🔑 enter access code, or ask the admin for unlimited access.");
-      return;
+    renderUsage();
+    const hit = outOfTokens();
+    tierBadge.textContent = `${isCreator() ? "creator · " : ""}free plan${hit ? " · limit reached" : ""}`;
+    tierBadge.className = `tier-badge ${hit ? "expired" : "trial"}`;
+    if (hit) {
+      lockChat(limitMessage(hit));
+    } else if (questionInput.disabled && !answering) {
+      questionInput.disabled = false;
+      sendBtn.disabled = false;
+      setModel(activeModel);
     }
-    const h = Math.floor(msLeft / 3600000);
-    const m = Math.floor((msLeft % 3600000) / 60000);
-    tierBadge.textContent = `${isCreator() ? "creator · " : ""}trial · ${h}h ${m}m left`;
-    tierBadge.className = "tier-badge trial";
   };
 
   update();
@@ -1526,7 +1538,7 @@ composer.addEventListener("submit", async (e) => {
   let question = questionInput.value.trim().slice(0, 4000);
   if (!question && !attachment) return;
   if (!question) question = attach.defaultQuestion(attachment);
-  if (!hasAccess()) {
+  if (!hasAccess() || outOfTokens()) {
     renderTier();
     return;
   }
@@ -1594,6 +1606,7 @@ composer.addEventListener("submit", async (e) => {
             );
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
+    spendTokens(question, result.answer);
     if (result.thoughts) msg.setThoughts(result.thoughts, result.thoughtMs);
     if (spoken && stillHere()) msg.speakNow(result.answer);
     if (result.credit) msg.setCredit(result.credit);

@@ -36,10 +36,10 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function changed() { return incoming().diff(resource.data).affectedKeys(); }
 
-    // Unlimited accounts always, trial accounts until their time runs out.
+    // Unlimited and free-plan accounts (the free plan's token limits are counted in the app).
     function hasAccess() {
       let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return profile.tier == 'unlimited' || (profile.tier == 'trial' && profile.expiresAt > request.time);
+      return profile.tier == 'unlimited' || profile.tier == 'trial';
     }
 
     // --- Accounts: one profile per user, created at first sign-in ---
@@ -70,6 +70,11 @@ service cloud.firestore {
         && incoming().tier == 'unlimited'
         && incoming().expiresAt == null
         && incoming().accessCode == unlimitedCode()
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['usage'])
+        && incoming().usage is map
+        && incoming().usage.keys().hasOnly(['windowStart', 'windowTokens', 'weekStart', 'weekTokens'])
       ) || (
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['creator', 'creatorCode'])
