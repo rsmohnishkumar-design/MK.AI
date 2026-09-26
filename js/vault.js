@@ -153,8 +153,8 @@ if (configured && gatePassed()) {
     // The security rules decide who the admin is (by email).
     if (!(await isAdmin())) {
       loginError.textContent =
-        `You were signed in as ${user.email}, which isn't an admin. Log in below with the admin email, ` +
-        `or open the chat with your own account, say "I created you" and enter the creator code: the creator is an admin too.`;
+        `${user.email} isn't an admin yet. To make it one (once only): go back to the chat, type "I created you" and enter your creator code. ` +
+        `After that, 5 taps on the logo and the vault password open the vault straight away. Or log in below with the admin email.`;
       // Stay signed in to the chat: logging in below switches accounts anyway.
       vaultScreen.classList.add("hidden");
       loginScreen.classList.remove("hidden");
