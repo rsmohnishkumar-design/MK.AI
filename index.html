@@ -60,7 +60,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=66" />
+<link rel="stylesheet" href="style.css?v=67" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -131,6 +131,7 @@
           </div>
           <div class="account-actions">
             <button type="button" id="installBtn" class="side-btn hidden" title="Install MK.ai as an app">install app</button>
+            <button type="button" id="creatorExitBtn" class="side-btn" title="Use MK.ai as a normal member" hidden>exit creator</button>
             <a href="about.html" class="side-btn about-link" title="About MK.ai, privacy and terms">about</a>
             <button type="button" id="signOutBtn" class="side-btn" title="Sign out">sign out</button>
           </div>
@@ -149,13 +150,17 @@
               <span class="usage-ring" id="usageRing" aria-hidden="true"></span><span id="usageShort">3h 0m</span>
             </button>
             <div class="usage-panel" id="usagePanel" role="dialog" aria-label="Free trial usage" hidden>
-              <p class="usage-head">Free trial usage</p>
-              <div class="usage-row"><span>Trial time</span><span id="usageTimeText"></span></div>
-              <div class="usage-bar"><span id="usageTimeBar"></span></div>
+              <p class="usage-head" id="usageHead">Free trial usage</p>
+              <div class="usage-trial">
+                <div class="usage-row"><span>Trial time</span><span id="usageTimeText"></span></div>
+                <div class="usage-bar"><span id="usageTimeBar"></span></div>
+              </div>
               <div class="usage-row"><span>Questions asked</span><span id="usageCount">0</span></div>
-              <div class="usage-row muted"><span>🎨 Alpaca Vision · 💻 Code School</span><span>🔒 unlimited</span></div>
-              <p class="usage-note">Want unlimited access? Chat with MK.ai and help train it: the admin gives unlimited access to people who help.</p>
-              <button type="button" class="usage-code" id="usageCodeBtn">🔑 Enter access code</button>
+              <div class="usage-row muted"><span>Alpaca Vision · Code School</span><span id="usageExtras">Unlimited plan</span></div>
+              <div class="usage-trial">
+                <p class="usage-note">Want unlimited access? Chat with MK.ai and help train it: the admin gives unlimited access to people who help.</p>
+                <button type="button" class="usage-code" id="usageCodeBtn">Enter access code</button>
+              </div>
             </div>
           </div>
           <button type="button" class="icon-btn" id="newChatTop" title="New chat" aria-label="New chat">
@@ -214,6 +219,18 @@
       </div>
     </div>
   </div>
+
+  <dialog class="vault-gate" id="vaultGate" aria-labelledby="vaultGateTitle">
+    <form method="dialog" id="vaultGateForm">
+      <p class="vault-gate-title" id="vaultGateTitle">Vault</p>
+      <input type="password" id="vaultGatePass" inputmode="numeric" autocomplete="off" placeholder="Password" aria-label="Vault password" />
+      <p class="vault-gate-error" id="vaultGateError" aria-live="polite"></p>
+      <div class="vault-gate-actions">
+        <button type="button" id="vaultGateCancel" class="secondary">Cancel</button>
+        <button type="submit" id="vaultGateOk">Open</button>
+      </div>
+    </form>
+  </dialog>
 
   <template id="msg-user">
     <div class="msg msg-user">
@@ -274,6 +291,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=66"></script>
+  <script type="module" src="js/app.js?v=67"></script>
 </body>
 </html>

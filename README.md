@@ -202,7 +202,7 @@ using the admin email from step 3. That's it.
 - **Install it:** on Android, tap **Install app** in the header (or the
   browser menu → **Add to Home screen**). On iPhone, Share → **Add to
   Home Screen**.
-- **Open the admin vault:** tap the **MK** logo at the top left 7 times
+- **Open the admin vault:** tap the **MK** logo at the top left 5 times and enter the vault password
   quickly, and log in with the admin account. The account verified as the
   creator (see "Creator mode") is an admin too.
 

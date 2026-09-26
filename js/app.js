@@ -261,7 +261,16 @@ function hasAccess() {
   return profile.expiresAt.toMillis() > Date.now();
 }
 
-const isCreator = () => profile?.creator === true;
+// The creator can step out of creator mode on this device (saying "I created you" brings it back)
+const creatorOffKey = () => `mkai-creator-off-${auth.currentUser?.uid || "guest"}`;
+const creatorOff = () => {
+  try {
+    return localStorage.getItem(creatorOffKey()) === "1";
+  } catch {
+    return false;
+  }
+};
+const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
 const unlimitedOnly = (what) =>
   `🔒 ${what === "Alpaca Vision" ? "Pictures and videos are" : "This is"} for unlimited members.\n\n` +
@@ -328,9 +337,26 @@ function countQuestion() {
 }
 function renderUsage(msLeft) {
   const trial = profile?.tier === "trial" && msLeft != null;
-  $("usage").hidden = !trial;
+  const unlimited = profile?.tier === "unlimited";
+  $("usage").hidden = !trial && !unlimited;
   $("sideMeter").hidden = !trial;
+  $("creatorExitBtn").hidden = !isCreator();
+  $("usagePanel").classList.toggle("unlimited", unlimited);
+  let asked = 0;
+  try {
+    asked = Number(localStorage.getItem(usageKey())) || 0;
+  } catch {}
+  $("usageCount").textContent = String(asked);
+  if (unlimited) {
+    $("usageHead").textContent = isCreator() ? "Creator · Unlimited plan" : "Unlimited plan";
+    $("usageShort").textContent = "Unlimited";
+    $("usageRing").style.setProperty("--used", 100);
+    $("usageExtras").textContent = "Included";
+    return;
+  }
   if (!trial) return;
+  $("usageHead").textContent = "Free trial usage";
+  $("usageExtras").textContent = "Unlimited plan";
   const total = TRIAL_HOURS * 3600000;
   const used = Math.min(100, Math.max(0, Math.round((1 - msLeft / total) * 100)));
   const h = Math.floor(Math.max(0, msLeft) / 3600000);
@@ -342,11 +368,6 @@ function renderUsage(msLeft) {
   $("usageTimeBar").style.width = `${used}%`;
   $("usageTimeBar").parentElement.classList.toggle("low", used >= 80);
   $("sideMeter").firstElementChild.style.width = `${used}%`;
-  let asked = 0;
-  try {
-    asked = Number(localStorage.getItem(usageKey())) || 0;
-  } catch {}
-  $("usageCount").textContent = String(asked);
 }
 $("usageBtn").addEventListener("click", (e) => {
   e.stopPropagation();
@@ -359,6 +380,17 @@ document.addEventListener("click", (e) => {
     $("usagePanel").hidden = true;
     $("usageBtn").setAttribute("aria-expanded", "false");
   }
+});
+$("creatorExitBtn").addEventListener("click", () => {
+  try {
+    localStorage.setItem(creatorOffKey(), "1");
+  } catch {}
+  renderTier();
+  emptyState.classList.contains("hidden") || renderGreeting();
+  const msg = createAiMessage();
+  msg.finish('You\'ve left creator mode on this device, so MK.ai treats you as a normal member now. To come back, say **"I created you"** and enter your creator code.');
+  emptyState.classList.add("hidden");
+  scrollToBottom();
 });
 $("usageCodeBtn").addEventListener("click", () => {
   $("usagePanel").hidden = true;
@@ -379,7 +411,8 @@ function renderTier() {
   if (!unlimited && activeModel === "vision") setModel("alpaca");
 
   if (profile.tier === "unlimited") {
-    tierBadge.textContent = isCreator() ? "👑 creator · unlimited" : "unlimited";
+    renderUsage(null);
+    tierBadge.textContent = isCreator() ? "creator · unlimited" : "unlimited";
     tierBadge.className = "tier-badge unlimited";
     return;
   }
@@ -402,7 +435,7 @@ function renderTier() {
     }
     const h = Math.floor(msLeft / 3600000);
     const m = Math.floor((msLeft % 3600000) / 60000);
-    tierBadge.textContent = `${isCreator() ? "👑 creator · " : ""}trial · ${h}h ${m}m left`;
+    tierBadge.textContent = `${isCreator() ? "creator · " : ""}trial · ${h}h ${m}m left`;
     tierBadge.className = "tier-badge trial";
   };
 
@@ -1362,6 +1395,9 @@ let awaitingCode = false;
 async function checkCreatorCode(code) {
   const outcome = await creator.verifyCode(auth.currentUser.uid, code);
   if (outcome === "ok") {
+    try {
+      localStorage.removeItem(creatorOffKey());
+    } catch {}
     profile = { ...profile, creator: true };
     saveSession(auth.currentUser.uid, profile);
     renderTier();
@@ -1583,17 +1619,38 @@ composer.addEventListener("submit", async (e) => {
   }
 });
 
-// --- Hidden vault entrance: click the MK logo 7 times within 3 seconds ---
+// --- Hidden vault entrance: tap the MK logo 5 times, then enter the vault password ---
+// (A quick lock for this device; the vault itself still only opens for admin accounts.)
+const VAULT_HASH = "783c287f76b51ce9f543bba6e998126ca97bd3a26eae04eeab73d9d3dee7b43b";
+async function vaultHash(text) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`mkai-vault:${text}`));
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 let clickCount = 0;
 let clickTimer = null;
 secretMark.addEventListener("click", () => {
   clickCount += 1;
   clearTimeout(clickTimer);
   clickTimer = setTimeout(() => (clickCount = 0), 3000);
-
-  if (clickCount >= 7) {
+  if (clickCount >= 5) {
     clickCount = 0;
+    $("vaultGatePass").value = "";
+    $("vaultGateError").textContent = "";
+    $("vaultGate").showModal();
+    $("vaultGatePass").focus();
+  }
+});
+$("vaultGateCancel").addEventListener("click", () => $("vaultGate").close());
+$("vaultGateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if ((await vaultHash($("vaultGatePass").value.trim())) === VAULT_HASH) {
+    try {
+      sessionStorage.setItem("mkai-vault-pass", VAULT_HASH);
+    } catch {}
     window.location.href = "vault.html";
+  } else {
+    $("vaultGateError").textContent = "Wrong password.";
+    $("vaultGatePass").select();
   }
 });
 

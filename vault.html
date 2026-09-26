@@ -14,6 +14,17 @@
 <body>
   <div class="vault-app">
 
+    <section id="gateScreen" class="login-screen hidden">
+      <a href="./" class="back-link login-back">&larr; back to chat</a>
+      <form class="login-card" id="gateForm">
+        <div class="header-mark">🔒</div>
+        <h1>The Vault</h1>
+        <input id="gatePass" type="password" inputmode="numeric" autocomplete="off" placeholder="vault password" aria-label="Vault password" />
+        <button type="submit">Unlock</button>
+        <p class="login-error" id="gateError" aria-live="polite"></p>
+      </form>
+    </section>
+
     <section id="loginScreen" class="login-screen">
       <a href="./" class="back-link login-back">&larr; back to chat</a>
       <div class="login-card">

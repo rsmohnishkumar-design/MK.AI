@@ -112,7 +112,37 @@ async function isAdmin() {
   }
 }
 
-if (configured) {
+// The vault password (tap the MK logo 5 times in the chat, or enter it here)
+const VAULT_HASH = "783c287f76b51ce9f543bba6e998126ca97bd3a26eae04eeab73d9d3dee7b43b";
+const gatePassed = () => {
+  try {
+    return sessionStorage.getItem("mkai-vault-pass") === VAULT_HASH;
+  } catch {
+    return false;
+  }
+};
+async function vaultHash(text) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`mkai-vault:${text}`));
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+if (!gatePassed()) {
+  loginScreen.classList.add("hidden");
+  $("gateScreen").classList.remove("hidden");
+  $("gatePass").focus();
+}
+$("gateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if ((await vaultHash($("gatePass").value.trim())) !== VAULT_HASH) {
+    $("gateError").textContent = "Wrong password.";
+    return;
+  }
+  try {
+    sessionStorage.setItem("mkai-vault-pass", VAULT_HASH);
+  } catch {}
+  location.reload();
+});
+
+if (configured && gatePassed()) {
   onAuthStateChanged(auth, async (user) => {
     resendBtn.classList.add("hidden");
     if (!user) {
