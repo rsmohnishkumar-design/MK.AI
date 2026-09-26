@@ -34,6 +34,7 @@ import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./visi
 import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
+import { converse, needsCare } from "./converse.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -1136,6 +1137,11 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     return { answer: visionAnswer(question), saved: nothingSaved, source: "vision" };
   }
 
+  // Someone in distress gets care and helplines before anything else
+  if (!attachment && needsCare(question)) {
+    think("This sounds serious: sharing people who can help right now");
+    return { answer: converse(question), saved: nothingSaved, source: "local" };
+  }
   // Things people tell MK.ai about themselves ("my name is …", "what do you know about me")
   const personal = !attachment && personalAnswer(question, auth.currentUser?.uid);
   if (personal) {
@@ -1173,6 +1179,14 @@ async function answer(question, onText, attachment = null, think = () => {}) {
   if (pasted) {
     think("Picked out the most important sentences");
     return { answer: `**Summary**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
+  }
+
+  // Everyday conversation: feelings, small talk, stories, riddles, games…
+  // (the creator's personal greetings from the local brain come first)
+  const chat = !attachment && (!isCreator() || !localAnswer(question, { creator: true })) && converse(question);
+  if (chat) {
+    think("Talking with you like a friend");
+    return { answer: chat, saved: nothingSaved, source: "local" };
   }
 
   think("Checking my own brain (maths, science, coding, conversations)");
