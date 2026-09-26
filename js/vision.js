@@ -219,7 +219,7 @@ function finishPhoto(spec, raw) {
 const HORDE = "https://aihorde.net/api/v2";
 const HORDE_HEADERS = { "Content-Type": "application/json", apikey: "0000000000", "Client-Agent": "MK.ai:1.0:https://mkai-c042b.web.app" };
 const HORDE_MODELS = ["AlbedoBase XL (SDXL)", "Juggernaut XL", "ICBINP - I Can't Believe It's Not Photography", "Realistic Vision", "Deliberate"];
-const NEGATIVE = "text, letters, watermark, signature, blurry, low quality, deformed, extra fingers, bad hands, nsfw, nude";
+const NEGATIVE = "text, letters, watermark, signature, blurry, low quality, deformed, extra fingers, bad hands, nsfw, nude, violence, blood, gore, weapon, dead body, injury";
 // Horde sizes: multiples of 64, longest side 768
 export function hordeSize(spec) {
   const [W, H] = sizeOf(spec);
@@ -249,8 +249,26 @@ async function hordeJson(path, options = {}) {
 }
 
 // Things Alpaca Vision won't make
-const BLOCKED = /\b(nude|naked|nudity|nsfw|porn\w*|sex|sexy|sexual|topless|undress\w*|lingerie|erotic|genitals?|gore|gory|beheading|decapitat\w*|dead bod(?:y|ies)|corpse|mutilat\w*|self.?harm|suicide|child abuse)\b/i;
-export const isBlockedPicture = (q) => BLOCKED.test(q);
+const BLOCKED = new RegExp(
+  "\\b(" +
+    [
+      // adult content
+      "nude|naked|nudity|nsfw|porn\\w*|sex|sexy|sexual|topless|undress\\w*|lingerie|erotic|genitals?|bikini|kiss\\w*",
+      // death and dying
+      "die|dies|died|dying|dead|death\\w*|corpse\\w*|funeral|grave|coffin|skull|skeleton",
+      // violence and weapons
+      "kill\\w*|murder\\w*|stab\\w*|shooting|shot dead|gun\\w*|rifle|pistol|weapon\\w*|knife|knives|sword|bomb\\w*|explo(?:sion|de|ding)\\w*|terror\\w*|attack\\w*|fight\\w*|punch\\w*|beat(?:en|ing)|violen\\w*|war crime|massacre|execution|torture\\w*|hang(?:ed|ing)|noose|kidnap\\w*|hostage",
+      // injury, blood and harm
+      "gore|gory|blood\\w*|bleed\\w*|injur\\w*|wound\\w*|hurt\\w*|beheading|decapitat\\w*|mutilat\\w*|drown\\w*|self.?harm|suicid\\w*|cutting (?:myself|himself|herself)|abuse\\w*|bully\\w*|accident victim",
+      // drugs and hate
+      "drugs?|cocaine|heroin|smoking|cigarette\\w*|alcohol|drunk|racis\\w*|nazi\\w*",
+    ].join("|") +
+    ")\\b",
+  "i"
+);
+// Harmless phrases that contain a blocked word
+const ALLOWED = /\b(dead sea|death valley|dead end|screenshot|photo ?shoot|fight(?:ing)? for (?:freedom|justice)|pillow fight|water fight|snowball fight|fire ?fight\w*)\b/gi;
+export const isBlockedPicture = (q) => BLOCKED.test(q.replace(ALLOWED, " "));
 
 // A sentence saying what was drawn
 export function describePicture(spec) {
@@ -1665,7 +1683,7 @@ export function mountVision(container, specText) {
 
 // The chat answer for a picture or video request.
 export function visionAnswer(question) {
-  if (isBlockedPicture(question)) return "🙏 I can't create that kind of picture. Try describing something else — a place, a festival, nature, people doing everyday things, or an idea you like.";
+  if (isBlockedPicture(question)) return "🙏 I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
   const spec = planPicture(question);
   const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
