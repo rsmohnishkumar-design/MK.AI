@@ -540,3 +540,8 @@
 
 /* Way back to the chat from the vault's login page */
 .login-back { position: fixed; top: 16px; left: 16px; z-index: 5; }
+
+/* Learning report: what MK.ai learned recently */
+.learn-report { margin: 4px 0 12px; padding: 10px 12px; border: 1px solid var(--panel-border); border-radius: 8px; font-size: 13px; line-height: 1.5; color: var(--paper); background: var(--ink-soft); }
+.learn-report:empty { display: none; }
+.learn-report b { color: var(--brass); }

@@ -112,6 +112,26 @@ async function isAdmin() {
   }
 }
 
+// Learning report: what MK.ai taught itself in the last day, and overnight
+function renderLearnReport(learned) {
+  const now = Date.now();
+  const when = (e) => e.createdAt?.toMillis?.() || 0;
+  const self = learned.filter((e) => e.source === "wikipedia");
+  const day = self.filter((e) => now - when(e) < 86400000);
+  const night = day.filter((e) => {
+    const d = new Date(when(e));
+    const m = d.getHours() * 60 + d.getMinutes();
+    return m >= 115 && m < 335; // 1:55 to 5:35
+  });
+  const latest = self[0];
+  $("learnReport").innerHTML = "";
+  const parts = [
+    `📚 Learned by itself in the last 24 hours: <b>${day.length}</b>`,
+    `🌙 During last night's learning time (2:00–5:30): <b>${night.length}</b>`,
+    latest ? `Latest: “${escapeHtml(latest.question)}” at ${new Date(when(latest)).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}` : "Nothing learned by itself yet.",
+  ];
+  $("learnReport").innerHTML = parts.join("<br>");
+}
 // The vault password (tap the MK logo 5 times in the chat, or enter it here)
 const VAULT_HASH = "783c287f76b51ce9f543bba6e998126ca97bd3a26eae04eeab73d9d3dee7b43b";
 const gatePassed = () => {
@@ -226,6 +246,7 @@ async function loadEntries() {
     const learned = learnedSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
     vaultCount.textContent = `(${vault.length})`;
     learnedCount.textContent = `(${learned.length})`;
+    renderLearnReport(learned);
     renderList(vaultList, vault, "vault");
     renderList(learnedList, learned, "learned");
   } catch (err) {

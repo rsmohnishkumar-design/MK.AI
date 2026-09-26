@@ -240,6 +240,22 @@ export async function learnCurriculum(max = 5, onLearned = () => {}) {
   return learned;
 }
 
+// A note of each night's learning on this device ("Last night: learned 42 topics")
+const nightKey = (d = new Date()) => `mkai-night-${d.toDateString()}`;
+function noteNight(n) {
+  try {
+    localStorage.setItem(nightKey(), String((Number(localStorage.getItem(nightKey())) || 0) + n));
+  } catch {}
+}
+export function lastNightText() {
+  try {
+    const n = Number(localStorage.getItem(nightKey())) || 0;
+    return n ? `🌙 Last night I learned ${n} new topic${n === 1 ? "" : "s"}.` : "";
+  } catch {
+    return "";
+  }
+}
+
 export function isNight(date = new Date()) {
   const m = date.getHours() * 60 + date.getMinutes();
   return m >= NIGHT.from && m < NIGHT.to;
@@ -295,7 +311,7 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
     const night = isNight() || forceNight();
     const idle = Date.now() - lastActivity > IDLE_MS;
     keepAwake(night);
-    if (!night && !idle) return onStatus("");
+    if (!night && !idle) return onStatus(lastNightText());
     busy = true;
     try {
       onStatus(night ? "🌙 Learning mode: studying…" : "📚 Learning while you're away…");
@@ -321,7 +337,8 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
           n = await learnCurriculum(5, said);
         }
       }
-      if (!n) onStatus(night ? "🌙 Learning mode: all caught up for now" : "");
+      if (n && night) noteNight(n);
+      if (!n) onStatus(night ? "🌙 Learning mode: all caught up for now" : lastNightText());
     } catch (err) {
       console.warn("Self-learning:", err);
       onStatus("");
@@ -331,6 +348,7 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
   };
   const timer = setInterval(tick, 30000);
   setTimeout(tick, 5000);
+  if (!isNight()) onStatus(lastNightText());
   return () => {
     clearInterval(timer);
     keepAwake(false);
