@@ -18,6 +18,7 @@ import {
   deleteDoc,
   increment,
   serverTimestamp,
+  where,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 import { knowledgeAnswer } from "./kb.js";
@@ -132,12 +133,40 @@ const SKIP_TITLE = /^(Main Page|Special:|Deaths in|List of|Lists of|\d{4} in |In
 
 // Learns one Wikipedia article as "what is X" / "who is X", unless MK.ai
 // already knows it. Returns the question when it learned something new.
+// Titles already learned (on this device), so the same topic is never saved twice
+const DONE_KEY = "mkai-learned-titles";
+function doneTitles() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DONE_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+function markDone(title) {
+  const done = doneTitles();
+  done.add(title.toLowerCase());
+  try {
+    localStorage.setItem(DONE_KEY, JSON.stringify([...done].slice(-5000)));
+  } catch {}
+}
+// Is this exact question already in shared memory (from any device)?
+async function alreadyLearned(question) {
+  const snap = await getDocs(query(collection(db, "learned"), where("question", "==", question), limit(1))).catch(() => null);
+  return !!snap && !snap.empty;
+}
+
 async function learnArticle(title, description, extract) {
   if (!title || !extract || SKIP_TITLE.test(title)) return null;
+  if (doneTitles().has(title.toLowerCase())) return null;
   const question = `${PERSON.test(description || "") ? "who is" : "what is"} ${title}`;
-  if (await knowledgeAnswer(question).catch(() => null)) return null;
-  const known = await lookup(question).catch(() => null);
-  if (known?.memory) return null;
+  const other = question.startsWith("who") ? `what is ${title}` : `who is ${title}`;
+  const skip =
+    (await knowledgeAnswer(question).catch(() => null)) ||
+    (await alreadyLearned(question)) ||
+    (await alreadyLearned(other)) ||
+    (await lookup(question).catch(() => null))?.memory;
+  markDone(title);
+  if (skip) return null;
   await learn(question, firstSentences(extract), "wikipedia");
   return question;
 }

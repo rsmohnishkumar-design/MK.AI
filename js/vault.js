@@ -655,9 +655,13 @@ $("prepareBtn").addEventListener("click", async () => {
 $("trendingBtn")?.addEventListener("click", async () => {
   $("trendingBtn").disabled = true;
   setStatus("prepareStatus", "📰 Reading today's most popular topics…");
-  const n = await learnTrending(25, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`)).catch(() => 0);
+  // Today's list first; once that's known, the days before it
+  let n = 0;
+  for (let day = 1; day <= 14 && n === 0; day++) {
+    n = await learnTrending(25, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`), day).catch(() => 0);
+  }
   $("trendingBtn").disabled = false;
-  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now.` : "Nothing new: MK.ai already knows today's popular topics.", n ? "good" : "");
+  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now. Tap again for more.` : "Nothing new: MK.ai already knows the last two weeks' popular topics.", n ? "good" : "");
 });
 
 // Learns 20 of Wikipedia's most important topics right now
