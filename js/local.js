@@ -312,6 +312,7 @@ const RULES = [
         "- **Knowledge:** science, countries, India and Tamil Nadu, history, people, festivals, careers, full forms, important days, proverbs and the Thirukkural",
         "- **Conversions, time and date:** \"10 km to miles\", \"37 c to f\"",
         "- **🧠 Deep think:** switch it on under the message box for careful, step-by-step answers",
+        "- **Office files:** \"make a ppt on the solar system\", \"word document on pollution\", \"excel sheet for student marks\"",
         "- **Chat:** \"tell me a story\", \"tell me a riddle\", \"motivate me\", \"I'm stressed about exams\"",
         "- **Quiz me:** \"quiz me on capitals\", \"quiz me on full forms\"",
         "- **Summaries:** \"summarise: <paste a long text>\"",

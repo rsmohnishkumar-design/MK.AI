@@ -1400,3 +1400,34 @@ a.side-btn { text-align: center; text-decoration: none; }
 .vault-gate-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .vault-gate-actions button { border-radius: 8px; padding: 8px 16px; font: 600 14px var(--font-body); cursor: pointer; border: 0; background: var(--brass); color: var(--ink); }
 .vault-gate-actions button.secondary { background: transparent; color: var(--paper-dim); border: 1px solid var(--panel-border); }
+
+/* Office files: preview and download */
+.msg-bot .office-box { margin-left: 32px; }
+.office-box { margin: 10px 0; border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden; background: var(--ink-soft); max-width: 720px; }
+.office-head { display: flex; align-items: baseline; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); }
+.office-type { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--brass); }
+.office-title { font-weight: 600; }
+.office-body { max-height: 440px; overflow: auto; padding: 12px; }
+.office-ppt .office-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.office-slide { position: relative; aspect-ratio: 16 / 9; background: #fff; color: #1f2933; border-radius: 6px; padding: 10px 12px 8px; overflow: hidden; font-size: 9px; line-height: 1.35; border-top: 18px solid #14181c; }
+.office-slide.dark { background: #14181c; color: #fff; border-top-color: #14181c; display: flex; flex-direction: column; justify-content: center; }
+.office-slide-title { margin: -24px 0 8px; font: 700 11px var(--font-body); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 18px; }
+.office-slide.dark .office-slide-title { margin: 0 0 4px; font-size: 15px; white-space: normal; }
+.office-slide-sub { margin: 0; color: #c9a227; font-size: 10px; }
+.office-slide ul { margin: 0; padding-left: 14px; }
+.office-slide li { margin-bottom: 3px; }
+.office-num { position: absolute; top: -15px; right: 6px; font: 10px var(--font-mono); color: #c9a227; }
+.office-slide.dark .office-num { top: 6px; }
+.office-page { background: #fff; color: #1f2933; padding: 24px 28px; border-radius: 4px; font-size: 13px; line-height: 1.6; }
+.office-page h3 { margin: 0 0 12px; font-size: 20px; text-align: center; }
+.office-page h4 { margin: 16px 0 6px; font-size: 15px; color: #14181c; }
+.office-page p { margin: 0 0 8px; text-align: justify; }
+.office-table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.office-table th, .office-table td { border: 1px solid var(--panel-border); padding: 5px 8px; text-align: left; white-space: nowrap; }
+.office-table th { background: var(--panel); color: var(--brass); font-weight: 600; }
+.office-table td.formula { color: var(--sage); }
+.office-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--panel-border); }
+.office-download { background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px 14px; font: 600 13px var(--font-body); cursor: pointer; }
+.office-download:disabled { opacity: 0.7; cursor: default; }
+.office-source { font-size: 11px; color: var(--paper-dim); }
+@media (max-width: 640px) { .msg-bot .office-box { margin-left: 0; } }

@@ -36,6 +36,7 @@ import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
 import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText } from "./limits.js";
+import { officeKind, officeAnswer, mountOffice } from "./office.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -43,6 +44,7 @@ import { TRIAL_HOURS } from "../firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
+registerBlock("mkai-office", mountOffice);
 registerBlock("mkai-quiz", (container, text) =>
   mountQuiz(container, text, (label) => {
     questionInput.value = `quiz me on ${label}`;
@@ -1191,6 +1193,13 @@ async function answer(question, onText, attachment = null, think = () => {}) {
   if (pasted) {
     think("Picked out the most important sentences");
     return { answer: `**Summary**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
+  }
+
+  // PowerPoint, Word and Excel files
+  if (!attachment && officeKind(question)) {
+    think("Researching the topic and building the file");
+    const office = await officeAnswer(question).catch((err) => (console.warn(err), null));
+    if (office) return { answer: office, saved: nothingSaved, source: "local" };
   }
 
   // Everyday conversation: feelings, small talk, stories, riddles, games…
