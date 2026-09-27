@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar System Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #000; color: #e2e8f0; font-family: system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  .ui { position: fixed; top: 10px; left: 10px; background: rgba(15,23,42,.85); padding: 12px; border-radius: 10px; width: min(300px, calc(100vw - 20px)); font-size: 14px; }
+  h1 { margin: 0 0 6px; font-size: 17px; color: #fbbf24; }
+  input { width: 100%; }
+  #info { margin-top: 8px; color: #cbd5e1; min-height: 60px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="ui">
+  <h1>Solar System Simulator</h1>
+  <label>Speed: <span id="sv">1 day per frame</span></label>
+  <input type="range" id="speed" min="0" max="30" value="1">
+  <div id="info">Tap a planet to learn about it. Distances and sizes are not to scale.</div>
+</div>
+<script>
+  // Planets orbit at their real relative periods (in Earth days).
+  const planets = [
+    { name: "Mercury", color: "#a8a29e", size: 3, orbit: 50, period: 88, fact: "Smallest planet and closest to the Sun. A year lasts 88 days." },
+    { name: "Venus", color: "#fcd34d", size: 5, orbit: 75, period: 225, fact: "Hottest planet (about 465 °C) because of its thick CO₂ atmosphere." },
+    { name: "Earth", color: "#3b82f6", size: 5.5, orbit: 105, period: 365, fact: "Our home: the only planet known to have life. One Moon." },
+    { name: "Mars", color: "#ef4444", size: 4, orbit: 135, period: 687, fact: "The Red Planet, with the tallest volcano, Olympus Mons. India's Mangalyaan reached it in 2014." },
+    { name: "Jupiter", color: "#f59e0b", size: 12, orbit: 190, period: 4333, fact: "Largest planet: over 1,300 Earths could fit inside. It has a giant storm, the Great Red Spot." },
+    { name: "Saturn", color: "#fde68a", size: 10, orbit: 245, period: 10759, fact: "Famous for its bright rings of ice and rock." },
+    { name: "Uranus", color: "#67e8f9", size: 7, orbit: 295, period: 30687, fact: "Spins on its side, tilted about 98°." },
+    { name: "Neptune", color: "#6366f1", size: 7, orbit: 340, period: 60190, fact: "Windiest planet: winds up to 2,000 km/h." },
+  ];
+  const c = document.getElementById("c"), x = c.getContext("2d");
+  let W, H, scale, day = 0, speed = 1;
+  const stars = Array.from({ length: 200 }, () => [Math.random(), Math.random(), Math.random() * 1.5]);
+  function resize() { W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio; scale = Math.min(W, H) / 760; }
+  addEventListener("resize", resize); resize();
+  document.getElementById("speed").oninput = (e) => { speed = Number(e.target.value); document.getElementById("sv").textContent = speed ? `${speed} day${speed > 1 ? "s" : ""} per frame` : "paused"; };
+  function pos(p) { const a = (day / p.period) * Math.PI * 2; return [W / 2 + Math.cos(a) * p.orbit * scale, H / 2 + Math.sin(a) * p.orbit * scale]; }
+  c.addEventListener("click", (e) => {
+    const mx = e.clientX * devicePixelRatio, my = e.clientY * devicePixelRatio;
+    for (const p of planets) { const [px, py] = pos(p); if (Math.hypot(mx - px, my - py) < (p.size + 10) * scale) { document.getElementById("info").innerHTML = `<b style="color:${p.color}">${p.name}</b>: ${p.fact}<br>Year: ${p.period.toLocaleString()} Earth days.`; } }
+  });
+  function frame() {
+    day += speed;
+    x.fillStyle = "#000"; x.fillRect(0, 0, W, H);
+    for (const [sx, sy, r] of stars) { x.fillStyle = "#ffffffaa"; x.fillRect(sx * W, sy * H, r, r); }
+    const g = x.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 30 * scale); g.addColorStop(0, "#fff7ae"); g.addColorStop(1, "#f59e0b");
+    x.fillStyle = g; x.beginPath(); x.arc(W / 2, H / 2, 22 * scale, 0, 7); x.fill();
+    for (const p of planets) {
+      x.strokeStyle = "#ffffff22"; x.beginPath(); x.arc(W / 2, H / 2, p.orbit * scale, 0, 7); x.stroke();
+      const [px, py] = pos(p);
+      x.fillStyle = p.color; x.beginPath(); x.arc(px, py, p.size * scale, 0, 7); x.fill();
+      if (p.name === "Saturn") { x.strokeStyle = "#fde68a99"; x.lineWidth = 2 * scale; x.beginPath(); x.ellipse(px, py, p.size * 1.9 * scale, p.size * 0.6 * scale, 0.4, 0, 7); x.stroke(); x.lineWidth = 1; }
+      x.fillStyle = "#cbd5e1"; x.font = `${11 * scale}px sans-serif`; x.fillText(p.name, px + p.size * scale + 4, py - 4);
+    }
+    x.fillStyle = "#94a3b8"; x.font = `${12 * scale}px sans-serif`; x.fillText(`Earth years: ${(day / 365).toFixed(1)}`, 12 * scale, H - 14 * scale);
+    requestAnimationFrame(frame);
+  }
+  frame();
+</script>
+</body>
+</html>

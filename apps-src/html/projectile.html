@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projectile Motion Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; padding: 14px; }
+  h1 { margin: 0 0 8px; font-size: 20px; color: #fbbf24; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  label { font-size: 14px; }
+  input[type=range] { width: 100%; }
+  canvas { width: 100%; height: 360px; background: linear-gradient(#0b1b3a, #10254d); border-radius: 12px; display: block; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+  .stat { background: #1e293b; border-radius: 10px; padding: 10px; }
+  .stat b { display: block; font-size: 20px; color: #fbbf24; }
+  button { padding: 10px 18px; border: 0; border-radius: 10px; background: #fbbf24; color: #0f172a; font-weight: 700; cursor: pointer; }
+  .formula { font-size: 13px; color: #94a3b8; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>Projectile Motion Simulator</h1>
+<div class="row">
+  <label>Speed u: <b id="uv">25</b> m/s<input type="range" id="u" min="5" max="60" value="25"></label>
+  <label>Angle θ: <b id="av">45</b>°<input type="range" id="a" min="5" max="85" value="45"></label>
+  <label>Gravity g: <b id="gv">9.8</b> m/s²<select id="g"><option value="9.8">Earth 9.8</option><option value="1.62">Moon 1.62</option><option value="3.71">Mars 3.71</option><option value="24.79">Jupiter 24.79</option></select></label>
+  <div><button id="fire">Launch 🚀</button></div>
+</div>
+<canvas id="c"></canvas>
+<div class="stats">
+  <div class="stat">Range<b id="range">–</b></div>
+  <div class="stat">Max height<b id="height">–</b></div>
+  <div class="stat">Time of flight<b id="time">–</b></div>
+</div>
+<p class="formula">Range R = u² sin 2θ / g · Max height H = u² sin²θ / 2g · Time T = 2u sin θ / g (no air resistance)</p>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const c = $("c"), x = c.getContext("2d");
+  let trail = [], anim = 0;
+  const vals = () => ({ u: Number($("u").value), a: (Number($("a").value) * Math.PI) / 180, g: Number($("g").value) });
+  function stats() {
+    const { u, a, g } = vals();
+    $("uv").textContent = $("u").value; $("av").textContent = $("a").value; $("gv").textContent = g;
+    const R = (u * u * Math.sin(2 * a)) / g, H = (u * u * Math.sin(a) ** 2) / (2 * g), T = (2 * u * Math.sin(a)) / g;
+    $("range").textContent = R.toFixed(1) + " m"; $("height").textContent = H.toFixed(1) + " m"; $("time").textContent = T.toFixed(2) + " s";
+    return { R, H, T };
+  }
+  function draw(scale) {
+    const W = (c.width = c.clientWidth * devicePixelRatio), H = (c.height = c.clientHeight * devicePixelRatio);
+    x.fillStyle = "#14532d"; x.fillRect(0, H - 20, W, 20);
+    x.strokeStyle = "#ffffff22"; x.fillStyle = "#94a3b8"; x.font = `${11 * devicePixelRatio}px sans-serif`;
+    for (let m = 0; m * scale < W; m += 20) { x.beginPath(); x.moveTo(20 + m * scale, H - 20); x.lineTo(20 + m * scale, H - 26); x.stroke(); x.fillText(m + "m", 22 + m * scale, H - 6); }
+    x.strokeStyle = "#fbbf24"; x.lineWidth = 2 * devicePixelRatio; x.beginPath();
+    trail.forEach(([px, py], i) => { const X = 20 + px * scale, Y = H - 20 - py * scale; i ? x.lineTo(X, Y) : x.moveTo(X, Y); });
+    x.stroke();
+    const last = trail[trail.length - 1];
+    if (last) { x.fillStyle = "#f87171"; x.beginPath(); x.arc(20 + last[0] * scale, H - 20 - last[1] * scale, 7 * devicePixelRatio, 0, 7); x.fill(); }
+  }
+  $("fire").onclick = () => {
+    cancelAnimationFrame(anim);
+    const { u, a, g } = vals(), s = stats();
+    const W = c.clientWidth * devicePixelRatio, H = c.clientHeight * devicePixelRatio;
+    const scale = Math.min((W - 40) / Math.max(s.R, 1), (H - 40) / Math.max(s.H, 1)) * 0.95;
+    trail = []; const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(((now - t0) / 1000) * 1.5, s.T);
+      trail.push([u * Math.cos(a) * t, Math.max(0, u * Math.sin(a) * t - 0.5 * g * t * t)]);
+      draw(scale);
+      if (t < s.T) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  };
+  for (const id of ["u", "a", "g"]) $(id).oninput = stats;
+  stats(); draw(4);
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vending Machine Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1c1917; color: #fafaf9; font-family: system-ui, sans-serif; display: grid; place-items: center; padding: 16px; }
+  .machine { width: min(560px, 100%); background: #b91c1c; border-radius: 18px; padding: 16px; display: grid; grid-template-columns: 1fr 180px; gap: 14px; }
+  @media (max-width: 520px) { .machine { grid-template-columns: 1fr; } }
+  .glass { background: #0c0a09; border-radius: 10px; padding: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .item { background: #292524; border-radius: 8px; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; border: 2px solid transparent; }
+  .item:hover { border-color: #fbbf24; }
+  .item .emoji { font-size: 28px; }
+  .item .code { color: #fbbf24; font-weight: 700; }
+  .item.out { opacity: .35; cursor: not-allowed; }
+  .side { background: #292524; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .screen { background: #052e16; color: #86efac; font-family: monospace; padding: 10px; border-radius: 6px; min-height: 70px; font-size: 14px; }
+  .coins { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  button { padding: 9px; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer; background: #fbbf24; color: #1c1917; }
+  button.gray { background: #57534e; color: #fafaf9; }
+  .tray { background: #0c0a09; border-radius: 8px; min-height: 48px; padding: 8px; font-size: 22px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="machine">
+  <div class="glass" id="glass"></div>
+  <div class="side">
+    <div class="screen" id="screen">Insert money, then choose an item.</div>
+    <div class="coins" id="coins"></div>
+    <button class="gray" id="refund">Return money</button>
+    <div>Collect here:</div>
+    <div class="tray" id="tray"></div>
+  </div>
+</div>
+<script>
+  // Insert coins/notes, pick an item, get the item and your change.
+  const items = [
+    ["A1", "🥤", "Cola", 40, 5], ["A2", "🧃", "Juice", 30, 4], ["A3", "💧", "Water", 20, 8],
+    ["B1", "🍫", "Chocolate", 50, 3], ["B2", "🍪", "Biscuits", 25, 6], ["B3", "🥜", "Peanuts", 15, 5],
+    ["C1", "🍟", "Chips", 20, 7], ["C2", "🍬", "Candy", 10, 10], ["C3", "☕", "Coffee", 35, 2],
+  ];
+  let credit = 0;
+  const $ = (id) => document.getElementById(id);
+  const say = (t) => ($("screen").textContent = t);
+  function render() {
+    $("glass").innerHTML = "";
+    for (const it of items) {
+      const [code, emoji, name, price, stock] = it;
+      const d = document.createElement("div");
+      d.className = "item" + (stock ? "" : " out");
+      d.innerHTML = `<div class="emoji">${emoji}</div><div>${name}</div><div class="code">${code} · ₹${price}</div><div>${stock ? stock + " left" : "Sold out"}</div>`;
+      d.onclick = () => buy(it);
+      $("glass").append(d);
+    }
+  }
+  for (const v of [5, 10, 20, 50, 100]) {
+    const b = document.createElement("button");
+    b.textContent = "+ ₹" + v;
+    b.onclick = () => { credit += v; say(`Credit: ₹${credit}`); };
+    $("coins").append(b);
+  }
+  function change(amount) {
+    const out = [];
+    for (const c of [100, 50, 20, 10, 5]) while (amount >= c) { out.push(c); amount -= c; }
+    return out;
+  }
+  function buy(it) {
+    const [code, emoji, name, price, stock] = it;
+    if (!stock) return say(`${name} is sold out.`);
+    if (credit < price) return say(`${name} costs ₹${price}. Insert ₹${price - credit} more.`);
+    it[4]--; credit -= price;
+    const c = change(credit);
+    $("tray").textContent = emoji + (c.length ? "  💰" : "");
+    say(`Enjoy your ${name}! ${credit ? `Change ₹${credit} (${c.map((x) => "₹" + x).join(" + ")})` : "No change."}`);
+    credit = 0;
+    render();
+  }
+  $("refund").onclick = () => { say(credit ? `Returned ₹${credit}.` : "Nothing to return."); credit = 0; };
+  render();
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 // "tic tac toe in python" → a complete, tested program from data/apps.json,
 // ready to run (▶ run), download or copy. No outside service is used.
 
+import { isManagementRequest, fieldsIn, managementAnswer } from "./builder.js";
 import { knowledgeAnswer } from "./kb.js";
 import { wikiAnswer, wikiFind } from "./wiki.js";
 
@@ -120,6 +121,12 @@ export async function appAnswer(question) {
   }
   if (listing) return listApps();
   const lang = languageOf(q);
+  // "library management system with book name, author and year": a record-keeping
+  // app with those fields (a tested template wins when one fits, like "expense tracker")
+  if (isManagementRequest(question)) {
+    const tpl = findApp(q, "html", false);
+    if (!tpl || tpl.lang !== "html" || fieldsIn(question).length) return managementAnswer(question);
+  }
   const explicit = THING.test(q.replace(/\bcode\b/, "")) || /\b(in|using|with) (python|html|javascript|js)\b/.test(q);
   const app = findApp(q, lang, !explicit);
   if (!app) return BUILD.test(q) && explicit && !/^(what|who|why|when|where|which|is|are|does|explain|define)\b/.test(q) ? buildFromResearch(q) : null;
@@ -186,7 +193,7 @@ async function buildFromResearch(q) {
     "**Next steps:**",
     "- Tap **▶ run** to try it, or **⬇ download** to save it.",
     `- Tell me what it should do (for example “${title}: add a start/stop button”), and change the sections and the script to match.`,
-    '- Say "what apps can you make" to see the 33 complete apps I can build straight away.'
+    '- Say "what apps can you make" to see the complete apps I can build straight away.'
   );
   return lines.join("\n");
 }

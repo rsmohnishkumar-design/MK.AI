@@ -37,6 +37,7 @@ import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
 import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText } from "./limits.js";
 import { officeKind, officeAnswer, mountOffice } from "./office.js";
+import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
 import { startMeaning } from "./meaning.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -45,6 +46,7 @@ import { TRIAL_HOURS } from "../firebase-config.js";
 const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
 registerBlock("mkai-office", mountOffice);
+registerBlock("mkai-voice", mountVoiceover);
 registerBlock("mkai-quiz", (container, text) =>
   mountQuiz(container, text, (label) => {
     questionInput.value = `quiz me on ${label}`;
@@ -1200,6 +1202,13 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     think("Researching the topic and building the file");
     const office = await officeAnswer(question).catch((err) => (console.warn(err), null));
     if (office) return { answer: office, saved: nothingSaved, source: "local" };
+  }
+
+  // AI voiceover: a script (given or written by MK.ai) read aloud
+  if (!attachment && isVoiceoverRequest(question)) {
+    think("Writing the voiceover script");
+    const voice = await voiceoverAnswer(question).catch((err) => (console.warn(err), null));
+    if (voice) return { answer: voice, saved: nothingSaved, source: "local" };
   }
 
   // Everyday conversation: feelings, small talk, stories, riddles, games…

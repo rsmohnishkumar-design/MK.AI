@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elevator Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; display: grid; place-items: center; padding: 16px; }
+  .wrap { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .shaft { position: relative; width: 190px; border: 2px solid #334155; border-radius: 8px; background: #111827; }
+  .floor { height: 60px; border-bottom: 1px dashed #334155; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; font-size: 13px; color: #94a3b8; }
+  .floor:last-child { border-bottom: 0; }
+  .floor button { padding: 4px 8px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; cursor: pointer; }
+  .floor button.lit { background: #f59e0b; color: #111827; }
+  .car { position: absolute; left: 50%; width: 64px; height: 52px; margin-left: -32px; background: #e2e8f0; border-radius: 4px; transition: bottom .9s linear; display: grid; place-items: center; color: #0f172a; font-weight: 700; overflow: hidden; }
+  .door { position: absolute; top: 0; bottom: 0; width: 50%; background: #64748b; transition: transform .5s; }
+  .door.l { left: 0; } .door.r { right: 0; }
+  .car.open .l { transform: translateX(-100%); } .car.open .r { transform: translateX(100%); }
+  .panel { width: min(300px, 90vw); background: #1e293b; border-radius: 14px; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 8px; color: #fbbf24; }
+  .display { font-size: 42px; font-weight: 700; text-align: center; background: #000; color: #f87171; border-radius: 10px; padding: 6px; font-family: monospace; }
+  .inside { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+  .inside button { padding: 12px; border-radius: 50%; border: 2px solid #475569; background: #0f172a; color: #e2e8f0; font-size: 16px; cursor: pointer; aspect-ratio: 1; }
+  .inside button.lit { border-color: #f59e0b; color: #f59e0b; }
+  .log { margin-top: 12px; font-size: 12px; color: #94a3b8; max-height: 120px; overflow: auto; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="shaft" id="shaft"><div class="car" id="car"><span id="carLabel">G</span><div class="door l"></div><div class="door r"></div></div></div>
+  <div class="panel">
+    <h1>Elevator Simulator</h1>
+    <div class="display" id="display">G ▪</div>
+    <div class="inside" id="inside"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+<script>
+  // One lift, 6 floors. It keeps moving in one direction while there are
+  // requests ahead (the SCAN / "elevator" algorithm), then turns around.
+  const FLOORS = 6;
+  const name = (f) => (f === 0 ? "G" : String(f));
+  const shaft = document.getElementById("shaft");
+  const requests = new Set();
+  let floor = 0, dir = 0, busy = false;
+  const log = (t) => { const el = document.getElementById("log"); el.textContent = `${new Date().toLocaleTimeString()} ${t}\n` + el.textContent; };
+
+  for (let f = FLOORS - 1; f >= 0; f--) {
+    const row = document.createElement("div");
+    row.className = "floor";
+    row.innerHTML = `<span>Floor ${name(f)}</span>`;
+    const b = document.createElement("button");
+    b.textContent = "Call";
+    b.id = "call" + f;
+    b.onclick = () => request(f);
+    row.append(b);
+    shaft.insertBefore(row, document.getElementById("car"));
+  }
+  const inside = document.getElementById("inside");
+  for (let f = FLOORS - 1; f >= 0; f--) {
+    const b = document.createElement("button");
+    b.textContent = name(f);
+    b.id = "in" + f;
+    b.onclick = () => request(f);
+    inside.append(b);
+  }
+  function light(f, on) { for (const id of ["call" + f, "in" + f]) document.getElementById(id).classList.toggle("lit", on); }
+  function draw() {
+    document.getElementById("car").style.bottom = floor * 60 + 4 + "px";
+    document.getElementById("carLabel").textContent = name(floor);
+    document.getElementById("display").textContent = name(floor) + " " + (dir > 0 ? "▲" : dir < 0 ? "▼" : "▪");
+  }
+  function request(f) {
+    if (f === floor && !busy) return openDoors();
+    requests.add(f); light(f, true); log(`request floor ${name(f)}`);
+    if (!busy) step();
+  }
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function openDoors() {
+    const car = document.getElementById("car");
+    car.classList.add("open"); log(`doors open at ${name(floor)}`);
+    await wait(1500);
+    car.classList.remove("open");
+    await wait(600);
+  }
+  async function step() {
+    busy = true;
+    while (requests.size) {
+      const ahead = [...requests].some((f) => (dir >= 0 ? f > floor : f < floor));
+      if (!ahead) dir = dir >= 0 ? -1 : 1;
+      if (requests.has(floor)) { requests.delete(floor); light(floor, false); await openDoors(); continue; }
+      if (![...requests].some((f) => (dir > 0 ? f > floor : f < floor))) dir = -dir || 1;
+      floor += dir; draw(); await wait(950);
+      if (requests.has(floor)) { requests.delete(floor); light(floor, false); await openDoors(); }
+    }
+    dir = 0; draw(); busy = false;
+  }
+  draw();
+</script>
+</body>
+</html>
