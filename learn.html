@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MK.ai Code School</title>
 <meta name="description" content="Learn the fundamentals of coding with MK.ai: 11 short lessons with code you can run, demos and quizzes." />
-<meta name="theme-color" content="#111113" />
+<meta name="theme-color" content="#0b1020" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -20,7 +20,7 @@
     --ink: #161a1f;
     --muted: #59616b;
     --line: #d6d9d2;
-    --accent: #18181b;
+    --accent: #2f6bff;
     --accent-ink: #ffffff;
     --accent-soft: rgba(138, 106, 14, 0.12);
     --code-bg: #171c22;
@@ -41,17 +41,17 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #111113;
-      --surface: #18181b;
-      --surface-2: #1f1f23;
-      --ink: #ececee;
-      --muted: #9b9ba6;
-      --line: #2e2e34;
-      --accent: #ececee;
-      --accent-ink: #111113;
-      --accent-soft: rgba(236, 236, 238, 0.1);
-      --code-bg: #0c0c0e;
-      --code-head: #18181b;
+      --bg: #0b1020;
+      --surface: #10172b;
+      --surface-2: #161f38;
+      --ink: #eef2ff;
+      --muted: #97a3c4;
+      --line: #253154;
+      --accent: #2f6bff;
+      --accent-ink: #ffffff;
+      --accent-soft: rgba(47, 107, 255, 0.16);
+      --code-bg: #070b16;
+      --code-head: #10172b;
       --good: #8cc3a1;
       --good-soft: rgba(140, 195, 161, 0.12);
       --bad: #e38c6c;
@@ -60,17 +60,17 @@
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #111113;
-    --surface: #18181b;
-    --surface-2: #1f1f23;
-    --ink: #ececee;
-    --muted: #9b9ba6;
-    --line: #2e2e34;
-    --accent: #ececee;
-    --accent-ink: #111113;
-    --accent-soft: rgba(236, 236, 238, 0.1);
-    --code-bg: #0c0c0e;
-    --code-head: #18181b;
+    --bg: #0b1020;
+    --surface: #10172b;
+    --surface-2: #161f38;
+    --ink: #eef2ff;
+    --muted: #97a3c4;
+    --line: #253154;
+    --accent: #2f6bff;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(47, 107, 255, 0.16);
+    --code-bg: #070b16;
+    --code-head: #10172b;
     --good: #8cc3a1;
     --good-soft: rgba(140, 195, 161, 0.12);
     --bad: #e38c6c;
@@ -293,7 +293,7 @@
   <aside class="rail">
     <a class="back" href="./">← Back to MK.ai chat</a>
     <div class="brand">
-      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#ececee"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#2f6bff"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#ffffff" letter-spacing="-3">MK</text></svg>
       <div><b>Code School</b><span>by MK.ai</span></div>
     </div>
     <div class="progress">
@@ -1002,7 +1002,7 @@ if (hour < 12) {
         el.style.cssText = "position:fixed;inset:0;z-index:999;display:grid;place-items:center;padding:24px;background:rgba(10,12,16,.96);color:#f1ead8;font:16px/1.6 system-ui,sans-serif;text-align:center";
         document.body.append(el);
       }
-      el.innerHTML = `<div style="max-width:460px"><div style="font-size:44px"></div><h2 style="margin:8px 0">The Code School is for unlimited members</h2><p>${text}</p><p><a href="./" style="color:#ececee">← Back to MK.ai</a></p></div>`;
+      el.innerHTML = `<div style="max-width:460px"><div style="font-size:44px"></div><h2 style="margin:8px 0">The Code School is for unlimited members</h2><p>${text}</p><p><a href="./" style="color:#6ea8ff">← Back to MK.ai</a></p></div>`;
     };
     onAuthStateChanged(auth, async (user) => {
       school.onSave = null;

@@ -1,16 +1,16 @@
 :root {
-  /* Graphite and white: calm, professional */
-  --ink: #111113;
-  --ink-soft: #18181b;
-  --panel: #1f1f23;
-  --panel-border: #2e2e34;
-  --paper: #ececee;
-  --paper-dim: #9b9ba6;
-  --sage: #6fc2a1;
-  --brass: #ececee;
-  --brass-dim: #3c3c44;
-  --accent: #8ab4f8;
-  --error: #f07167;
+  /* Deep navy with an electric-blue accent: bold and confident */
+  --ink: #0b1020;
+  --ink-soft: #10172b;
+  --panel: #161f38;
+  --panel-border: #253154;
+  --paper: #eef2ff;
+  --paper-dim: #97a3c4;
+  --sage: #34d399;
+  --brass: #2f6bff;
+  --brass-dim: #1e3a8a;
+  --accent: #6ea8ff;
+  --error: #f87171;
 
   --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -357,7 +357,7 @@ body {
 
 #sendBtn {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 3px;
   padding: 0 22px;
@@ -369,7 +369,7 @@ body {
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
-#sendBtn:hover { background: #ffffff; }
+#sendBtn:hover { background: #5a8cff; }
 #sendBtn:active { transform: scale(0.97); }
 #sendBtn:disabled {
   background: var(--panel-border);
@@ -483,7 +483,7 @@ html.has-session #chatScreen.hidden { display: flex !important; }
 
 #authForm button {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 3px;
   padding: 11px 0;
@@ -492,7 +492,7 @@ html.has-session #chatScreen.hidden { display: flex !important; }
   font-weight: 500;
   cursor: pointer;
 }
-#authForm button:hover { background: #ffffff; }
+#authForm button:hover { background: #5a8cff; }
 
 .auth-error {
   color: var(--error);
@@ -538,7 +538,7 @@ html.has-session #chatScreen.hidden { display: flex !important; }
   white-space: nowrap;
 }
 .tier-badge.unlimited {
-  background: rgba(236, 236, 238, 0.18);
+  background: rgba(47, 107, 255, 0.18);
   color: var(--brass);
 }
 .tier-badge.trial {
@@ -604,7 +604,7 @@ html.has-session #chatScreen.hidden { display: flex !important; }
 .teach-form button {
   align-self: flex-start;
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   padding: 8px 14px;
@@ -832,7 +832,7 @@ body.chat-page { overflow: hidden; }
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1004,7 +1004,7 @@ body.chat-page { overflow: hidden; }
 .mode-btn { display: inline-flex; align-items: center; gap: 5px; }
 .mode-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .mode-btn[data-mode="normal"] svg { fill: currentColor; stroke: none; }
-.mode-btn.active { background: var(--brass); color: #14181c; font-weight: 600; }
+.mode-btn.active { background: var(--brass); color: #ffffff; font-weight: 600; }
 .mode-btn:not(.active):hover { color: var(--paper); }
 .model-select {
   background: var(--ink-soft);
@@ -1309,7 +1309,7 @@ a.side-btn { text-align: center; text-decoration: none; }
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23ececee'/%3E%3Ctext x='50' y='53' text-anchor='middle' dominant-baseline='central' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='46' fill='%23111113' letter-spacing='-3'%3EMK%3C/text%3E%3C/svg%3E") center / contain no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232f6bff'/%3E%3Ctext x='50' y='53' text-anchor='middle' dominant-baseline='central' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='46' fill='%23ffffff' letter-spacing='-3'%3EMK%3C/text%3E%3C/svg%3E") center / contain no-repeat;
 }
 .msg-bot .msg-body {
   font-size: 15.5px;
@@ -1367,12 +1367,12 @@ a.side-btn { text-align: center; text-decoration: none; }
 .quiz-option.right { border-color: var(--sage); background: rgba(143, 169, 152, 0.18); opacity: 1; }
 .quiz-option.wrong { border-color: var(--error); background: rgba(201, 106, 74, 0.15); opacity: 1; }
 .quiz-result { margin: 4px 0 0; font-size: 14px; color: var(--paper-dim); }
-.quiz-next { justify-self: start; background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer; }
+.quiz-next { justify-self: start; background: var(--brass); color: #ffffff; border: 0; border-radius: 8px; padding: 8px 14px; font: 600 14px var(--font-body); cursor: pointer; }
 
 /* "More detail" and "Simpler" under explanations */
 .refine { display: inline-flex; gap: 2px; margin-left: 6px; }
 .refine button { background: transparent; border: 0; color: var(--paper-dim); font: 12px var(--font-mono); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
-.refine button:hover, .refine button:focus-visible { color: var(--brass); background: rgba(236, 236, 238, 0.08); }
+.refine button:hover, .refine button:focus-visible { color: var(--brass); background: rgba(47, 107, 255, 0.08); }
 
 /* Usage meter for free (trial) users */
 .usage { position: relative; flex-shrink: 0; }
@@ -1391,7 +1391,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 .usage-bar span { display: block; height: 100%; width: 0; background: var(--brass); border-radius: 3px; transition: width 0.4s; }
 .usage-bar.low span { background: var(--error); }
 .usage-note { margin: 12px 0 10px; font-size: 12px; line-height: 1.45; color: var(--paper-dim); }
-.usage-code { width: 100%; background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px; font: 600 13px var(--font-body); cursor: pointer; }
+.usage-code { width: 100%; background: var(--brass); color: #ffffff; border: 0; border-radius: 8px; padding: 8px; font: 600 13px var(--font-body); cursor: pointer; }
 .side-meter { display: block; height: 4px; margin: 4px 0 2px; border-radius: 2px; background: var(--panel-border); overflow: hidden; }
 .side-meter[hidden] { display: none; }
 .side-meter span { display: block; height: 100%; width: 0; background: var(--sage); }
@@ -1405,7 +1405,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 .vault-gate input:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
 .vault-gate-error { min-height: 18px; margin: 8px 0 4px; color: var(--error); font-size: 13px; }
 .vault-gate-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.vault-gate-actions button { border-radius: 8px; padding: 8px 16px; font: 600 14px var(--font-body); cursor: pointer; border: 0; background: var(--brass); color: var(--ink); }
+.vault-gate-actions button { border-radius: 8px; padding: 8px 16px; font: 600 14px var(--font-body); cursor: pointer; border: 0; background: var(--brass); color: #ffffff; }
 .vault-gate-actions button.secondary { background: transparent; color: var(--paper-dim); border: 1px solid var(--panel-border); }
 
 /* Office files: preview and download */
@@ -1434,7 +1434,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 .office-table th { background: var(--panel); color: var(--brass); font-weight: 600; }
 .office-table td.formula { color: var(--sage); }
 .office-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--panel-border); }
-.office-download { background: var(--brass); color: var(--ink); border: 0; border-radius: 8px; padding: 8px 14px; font: 600 13px var(--font-body); cursor: pointer; }
+.office-download { background: var(--brass); color: #ffffff; border: 0; border-radius: 8px; padding: 8px 14px; font: 600 13px var(--font-body); cursor: pointer; }
 .office-download:disabled { opacity: 0.7; cursor: default; }
 .office-source { font-size: 11px; color: var(--paper-dim); }
 .voice-body { padding: 12px 14px; display: grid; gap: 10px; }

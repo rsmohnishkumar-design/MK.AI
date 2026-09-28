@@ -58,7 +58,7 @@
 
 #loginForm button, #gateForm button {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -193,7 +193,7 @@
 
 .add-form button {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -426,7 +426,7 @@
 
 .groq-form button {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -491,7 +491,7 @@
 .train-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
 .train-actions button, .file-btn {
   background: var(--brass);
-  color: var(--ink);
+  color: #ffffff;
   border: 1px solid var(--brass);
   border-radius: 4px;
   padding: 8px 14px;
