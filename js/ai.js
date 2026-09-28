@@ -13,7 +13,7 @@ import { needsVision, withFileText } from "./attach.js";
 
 const BASE_PROMPT = `You are Alpaca, the AI model inside MK.ai, a free AI assistant created by Mohnishkumar in Tamil Nadu, India.
 If someone asks who you are, say you are Alpaca, MK.ai's model. If someone asks which company's technology you run on, say honestly that Alpaca is built on large language models such as Google Gemini, with MK.ai's own knowledge and memory on top.
-Answer the user's question directly and clearly, like a knowledgeable friend. Use Indian examples, rupees (₹) and metric units when they fit.
+Answer the user's question directly and clearly, like a knowledgeable friend. Use Indian examples, rupees (₹) and metric units when they fit. Keep a professional tone and do not use emojis.
 Give only the answer: never mention your sources, search results, websites or citations, and never write reference numbers like [1].
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings or tables.
 When you write code, give the complete program with correct indentation inside a fenced code block that names the language (for example \`\`\`python), then explain it briefly in plain text.
@@ -151,8 +151,8 @@ function geminiModel(model, search) {
       key,
       getGenerativeModel(ai, {
         model,
-        systemInstruction: search ? SEARCH_PROMPT : NO_SEARCH_PROMPT,
-        ...(search ? { tools: [{ googleSearch: {} }] } : {}),
+        systemInstruction: search === true ? SEARCH_PROMPT : NO_SEARCH_PROMPT,
+        ...(search === true ? { tools: [{ googleSearch: {} }] } : search === "url" ? { tools: [{ urlContext: {} }] } : {}),
       })
     );
   }
@@ -221,14 +221,15 @@ function knowledgeNote({ good = [], bad = [], docs = [] }) {
 
 // Gemini with the key saved in the vault, through its own API (it can search
 // Google and see photos and PDFs).
+// search: true = Google Search, "url" = read the web pages linked in the question
 function keyedGemini(key, model, search) {
   return {
-    key: search ? "geminikey:google-search" : `geminikey:${model}`,
+    key: search === true ? "geminikey:google-search" : search === "url" ? `geminikey:url:${model}` : `geminikey:${model}`,
     run: async (ctx, onText) => {
       const body = {
-        systemInstruction: { parts: [{ text: search ? SEARCH_PROMPT : NO_SEARCH_PROMPT }] },
+        systemInstruction: { parts: [{ text: search === true ? SEARCH_PROMPT : NO_SEARCH_PROMPT }] },
         contents: ctx.contents,
-        ...(search ? { tools: [{ google_search: {} }] } : {}),
+        ...(search === true ? { tools: [{ google_search: {} }] } : search === "url" ? { tools: [{ url_context: {} }] } : {}),
       };
       const { text, complete, suggestions } = await geminiStream(key, model, body, (t) => {
         const shown = clean(t);
@@ -243,16 +244,16 @@ async function keyedGeminiModels(keys) {
   return (await modelsFor(providerById("gemini"), keys.gemini)).slice(0, 3);
 }
 
-// Photos and PDFs: only Gemini can see them.
-async function visionPlan() {
+// Photos, PDFs, YouTube videos and web links: only Gemini can see them.
+async function visionPlan(mode = false) {
   if (!navigator.onLine) return [];
   const keys = await savedKeys();
-  const keyed = (await keyedGeminiModels(keys)).map((m) => keyedGemini(keys.gemini, m, false));
+  const keyed = (await keyedGeminiModels(keys)).map((m) => keyedGemini(keys.gemini, m, mode));
   return available([
     ...keyed,
     ...GEMINI_MODELS.map((model) => ({
-      key: `gemini:${model}`,
-      run: (ctx, onText) => geminiAnswer(model, false, ctx.contents, onText),
+      key: mode === "url" ? `gemini:url:${model}` : `gemini:${model}`,
+      run: (ctx, onText) => geminiAnswer(model, mode, ctx.contents, onText),
     })),
   ]);
 }
@@ -315,6 +316,9 @@ const DEEP_NOTE =
 const CREATOR_NOTE =
   "(The person asking is your creator. Be extra warm, kind and respectful, but keep the answer itself general: don't mention their name or that they created you unless they ask.)";
 
+export const YOUTUBE = /https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?[^\s]*v=|shorts\/|live\/|embed\/)|youtu\.be\/)[\w-]{6,}[^\s)]*/i;
+export const WEB_LINK = /https?:\/\/[^\s)]+\.[^\s)]+/i;
+
 // history: [{ role: "user" | "assistant", content }], oldest first, ending on "assistant".
 // onText(textSoFar) is called as the answer streams in.
 // attachment: a photo or PDF (sent to Gemini, which can see them) or a text
@@ -324,6 +328,10 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   const note = [system, deep ? DEEP_NOTE : "", creator ? CREATOR_NOTE : "", knowledgeNote(knowledge)].filter(Boolean).join("\n\n");
   const userText = note ? `${note}\n\nQuestion: ${asked}` : asked;
   const media = needsVision(attachment) ? [{ inlineData: { mimeType: attachment.mimeType, data: attachment.data } }] : [];
+  // A YouTube link: Gemini watches the video. Any other link: Gemini reads the page.
+  const video = !media.length && question.match(YOUTUBE)?.[0];
+  if (video) media.push({ fileData: { fileUri: video, mimeType: "video/mp4" } });
+  const link = !media.length && !attachment && WEB_LINK.test(question);
   const ctx = {
     contents: [
       ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
@@ -337,7 +345,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   };
 
   let lastError = httpError(503, "all AI services are resting (used up or unavailable) — try again later");
-  const attempts = media.length ? await visionPlan() : await plan(question);
+  const attempts = media.length ? await visionPlan() : link ? await visionPlan("url") : await plan(question);
   if (media.length && !navigator.onLine) lastError = httpError(503, "reading photos and files needs the internet");
   for (const attempt of attempts) {
     let text = "";

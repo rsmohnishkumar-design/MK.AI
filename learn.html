@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MK.ai Code School</title>
 <meta name="description" content="Learn the fundamentals of coding with MK.ai: 11 short lessons with code you can run, demos and quizzes." />
-<meta name="theme-color" content="#14181c" />
+<meta name="theme-color" content="#111113" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f3f4f1;
@@ -20,7 +20,7 @@
     --ink: #161a1f;
     --muted: #59616b;
     --line: #d6d9d2;
-    --accent: #8a6a0e;
+    --accent: #18181b;
     --accent-ink: #ffffff;
     --accent-soft: rgba(138, 106, 14, 0.12);
     --code-bg: #171c22;
@@ -34,24 +34,24 @@
     --good-soft: rgba(47, 115, 80, 0.12);
     --bad: #ab4628;
     --bad-soft: rgba(171, 70, 40, 0.1);
-    --display: "Fraunces", Georgia, "Times New Roman", serif;
-    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --bg: #14181c;
-      --surface: #1b2127;
-      --surface-2: #232b33;
-      --ink: #ede9e0;
-      --muted: #a4acb6;
-      --line: #313b46;
-      --accent: #d4ad33;
-      --accent-ink: #14181c;
-      --accent-soft: rgba(212, 173, 51, 0.14);
-      --code-bg: #0f1317;
-      --code-head: #181e24;
+      --bg: #111113;
+      --surface: #18181b;
+      --surface-2: #1f1f23;
+      --ink: #ececee;
+      --muted: #9b9ba6;
+      --line: #2e2e34;
+      --accent: #ececee;
+      --accent-ink: #111113;
+      --accent-soft: rgba(236, 236, 238, 0.1);
+      --code-bg: #0c0c0e;
+      --code-head: #18181b;
       --good: #8cc3a1;
       --good-soft: rgba(140, 195, 161, 0.12);
       --bad: #e38c6c;
@@ -60,17 +60,17 @@
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #14181c;
-    --surface: #1b2127;
-    --surface-2: #232b33;
-    --ink: #ede9e0;
-    --muted: #a4acb6;
-    --line: #313b46;
-    --accent: #d4ad33;
-    --accent-ink: #14181c;
-    --accent-soft: rgba(212, 173, 51, 0.14);
-    --code-bg: #0f1317;
-    --code-head: #181e24;
+    --bg: #111113;
+    --surface: #18181b;
+    --surface-2: #1f1f23;
+    --ink: #ececee;
+    --muted: #9b9ba6;
+    --line: #2e2e34;
+    --accent: #ececee;
+    --accent-ink: #111113;
+    --accent-soft: rgba(236, 236, 238, 0.1);
+    --code-bg: #0c0c0e;
+    --code-head: #18181b;
     --good: #8cc3a1;
     --good-soft: rgba(140, 195, 161, 0.12);
     --bad: #e38c6c;
@@ -293,7 +293,7 @@
   <aside class="rail">
     <a class="back" href="./">← Back to MK.ai chat</a>
     <div class="brand">
-      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#c9a227"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#ececee"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>
       <div><b>Code School</b><span>by MK.ai</span></div>
     </div>
     <div class="progress">
@@ -355,7 +355,7 @@
         <p class="demo-label">Try it: build MK.ai's send button</p>
         <div class="controls">
           <label class="field">Button text (HTML)<input type="text" id="btnText" value="Send" maxlength="24"></label>
-          <label class="field">Colour (CSS)<input type="color" id="btnColor" value="#c9a227"></label>
+          <label class="field">Colour (CSS)<input type="color" id="btnColor" value="#2563eb"></label>
           <label class="field">Roundness (CSS): <span id="btnRoundVal">10</span>px<input type="range" id="btnRound" min="0" max="30" value="10"></label>
         </div>
         <div class="trio">
@@ -509,7 +509,7 @@ for (let chat of chats) {
       <div class="runner" data-runner>
         <div class="runner-top"><span>edit me · javascript</span><div class="btns"><button class="btn ghost" type="button" data-reset>Reset</button><button class="btn" type="button" data-run>Run ▸</button></div></div>
         <textarea wrap="off" spellcheck="false" aria-label="Code to run">function greet(name) {
-  return "Good morning, " + name + "! 👑";
+  return "Good morning, " + name + "! ";
 }
 
 function areaOfRectangle(width, height) {
@@ -829,7 +829,7 @@ if (hour < 12) {
         if (err instanceof EvalError || /unsafe-eval|content security/i.test(err.message)) {
           out.textContent = "This viewer doesn't allow running code. Copy it into your browser console instead: press F12, click Console, paste, press Enter.";
         } else {
-          out.textContent = (lines.length ? lines.join("\n") + "\n" : "") + `⚠ ${err.name}: ${err.message}\nCheck the spelling, quotes and brackets, then try again.`;
+          out.textContent = (lines.length ? lines.join("\n") + "\n" : "") + `${err.name}: ${err.message}\nCheck the spelling, quotes and brackets, then try again.`;
         }
       }
     }
@@ -870,19 +870,19 @@ if (hour < 12) {
     `<span class="k">let</span> msg = message.toLowerCase();`,
     ``,
     `<span class="k">if</span> (msg === <span class="s">"hi"</span> || msg === <span class="s">"hello"</span>) {`,
-    `  reply(<span class="s">"Hello! 👋"</span>);`,
+    `  reply(<span class="s">"Hello! "</span>);`,
     `} <span class="k">else if</span> (msg === <span class="s">"bye"</span>) {`,
     `  reply(<span class="s">"Goodbye!"</span>);`,
     `} <span class="k">else if</span> (looksLikeMaths(msg)) {`,
     `  reply(calculate(msg));`,
     `} <span class="k">else</span> {`,
-    `  reply(<span class="s">"I don't know that yet 🤔"</span>);`,
+    `  reply(<span class="s">"I don't know that yet "</span>);`,
     `}`,
   ];
   function renderIf() {
     const msg = $("#ifInput").value.trim().toLowerCase();
     let line, reply;
-    if (msg === "hi" || msg === "hello") { line = 3; reply = "Hello! 👋"; }
+    if (msg === "hi" || msg === "hello") { line = 3; reply = "Hello! "; }
     else if (msg === "bye") { line = 5; reply = "Goodbye!"; }
     else if (/^[\d\s.+\-*/()x×÷]+$/.test(msg) && /\d/.test(msg) && /[+\-*/x×÷]/.test(msg)) {
       line = 7;
@@ -891,7 +891,7 @@ if (hour < 12) {
       if (/^[\d\s.+\-*/()]+$/.test(expr)) { try { value = Function(`"use strict";return (${expr})`)(); } catch {} }
       reply = `${msg} = ${Number.isFinite(value) ? Math.round(value * 1e6) / 1e6 : "?"}`;
     }
-    else { line = 9; reply = "I don't know that yet 🤔"; }
+    else { line = 9; reply = "I don't know that yet "; }
     $("#ifCode").innerHTML = IF_LINES.map((l, i) => (i === line ? `<span class="hl">${l}</span>` : l)).join("\n");
     $("#ifOut").textContent = msg ? `MK.ai replies: ${reply}` : "Type something above.";
   }
@@ -903,7 +903,7 @@ if (hour < 12) {
     const n = Number($("#loopRange").value);
     $("#loopN").textContent = n;
     $("#loopNCode").textContent = n;
-    $("#loopOut").textContent = Array.from({ length: n }, (_, i) => `💬 message ${i + 1}`).join("   ");
+    $("#loopOut").textContent = Array.from({ length: n }, (_, i) => `message ${i + 1}`).join("   ");
   }
   $("#loopRange").addEventListener("input", renderLoop);
   renderLoop();
@@ -1002,7 +1002,7 @@ if (hour < 12) {
         el.style.cssText = "position:fixed;inset:0;z-index:999;display:grid;place-items:center;padding:24px;background:rgba(10,12,16,.96);color:#f1ead8;font:16px/1.6 system-ui,sans-serif;text-align:center";
         document.body.append(el);
       }
-      el.innerHTML = `<div style="max-width:460px"><div style="font-size:44px">🔒</div><h2 style="margin:8px 0">The Code School is for unlimited members</h2><p>${text}</p><p><a href="./" style="color:#c9a227">← Back to MK.ai</a></p></div>`;
+      el.innerHTML = `<div style="max-width:460px"><div style="font-size:44px"></div><h2 style="margin:8px 0">The Code School is for unlimited members</h2><p>${text}</p><p><a href="./" style="color:#ececee">← Back to MK.ai</a></p></div>`;
     };
     onAuthStateChanged(auth, async (user) => {
       school.onSave = null;
@@ -1013,7 +1013,7 @@ if (hour < 12) {
       try {
         const me = await getDoc(doc(db, "users", user.uid));
         if (me.data()?.tier !== "unlimited") {
-          lock("Want unlimited access? Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. The admin gives unlimited access to people who help. Have an access code? Tap 🔑 enter access code in the chat.");
+          lock("Want unlimited access? Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. The admin gives unlimited access to people who help. Have an access code? Tap enter access code in the chat.");
           return;
         }
       } catch {}

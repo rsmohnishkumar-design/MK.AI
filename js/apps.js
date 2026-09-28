@@ -74,7 +74,7 @@ function listApps() {
   const web = apps.filter((a) => a.lang === "html" && a.names.length).map((a) => a.title);
   const py = apps.filter((a) => a.lang === "python").map((a) => a.title.replace(/^Python /, ""));
   return [
-    "🛠️ I can build these for you — complete and tested, ready to run:",
+    "I can build these for you — complete and tested, ready to run:",
     "",
     `**Web apps** (HTML, CSS & JavaScript — run them right here with ▶ run): ${web.join(", ")}.`,
     "",
@@ -85,7 +85,7 @@ function listApps() {
 }
 
 function present(app, note = "") {
-  const lines = [`🛠️ **${app.title}** — ${app.lang === "html" ? "HTML, CSS & JavaScript in one file" : "Python 3"}`, "", app.about];
+  const lines = [`**${app.title}** — ${app.lang === "html" ? "HTML, CSS & JavaScript in one file" : "Python 3"}`, "", app.about];
   if (note) lines.push("", note);
   lines.push("", "```" + app.lang + "\n" + app.code + "```", "");
   if (app.lang === "html") {
@@ -179,7 +179,7 @@ async function alpacaBuild(question, lang, onText) {
   const text = result?.answer || "";
   const block = text.match(/```(\w+)?\n([\s\S]*?)```/);
   if (!block || block[2].split("\n").length < 8 || result.partial) return null;
-  return `🛠️ ${text.trim()}`;
+  return `${text.trim()}`;
 }
 
 // --- No template? Research the subject and make a starter ------------------------------
@@ -220,8 +220,8 @@ async function buildFromResearch(q) {
   const title = titleCase(subject.replace(/[^a-z0-9 +#-]/g, "")).slice(0, 60);
   const summary = about ? about.replace(/\s+/g, " ").match(/^(.{20,300}?[.!?])(\s|$)/)?.[1] || about.slice(0, 300) : `Your ${title} app.`;
   const code = starter.code.replaceAll("{{TITLE}}", esc(title)).replaceAll("{{ABOUT}}", esc(summary));
-  const lines = [`🛠️ **${title}** — a starter app, made for you`, ""];
-  if (about) lines.push(`🔎 I looked it up (${source}):`, "", about.trim(), "");
+  const lines = [`**${title}** — a starter app, made for you`, ""];
+  if (about) lines.push(`I looked it up (${source}):`, "", about.trim(), "");
   else lines.push(`I couldn't find information about “${subject}” right now, so here's a starter you can shape.`, "");
   lines.push(
     "I don't have a ready-made template for this one yet, so here's a starter with a dashboard, an item list and an activity log, titled for your project:",

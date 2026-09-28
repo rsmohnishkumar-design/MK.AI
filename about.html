@@ -5,41 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>About MK.ai</title>
 <meta name="description" content="About MK.ai and its models Alpaca and Alpaca Vision, with the privacy policy and terms of use." />
-<meta name="theme-color" content="#14181c" />
+<meta name="theme-color" content="#111113" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #14181c; --panel: #202730; --panel-border: #323d49;
-    --paper: #ede9e0; --paper-dim: #a9b0ba; --sage: #8fa998; --brass: #c9a227;
+    --ink: #111113; --panel: #1f1f23; --panel-border: #2e2e34;
+    --paper: #ececee; --paper-dim: #9b9ba6; --sage: #6fc2a1; --brass: #ececee;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   body { margin: 0; background: var(--ink); color: var(--paper); font: 16px/1.65 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  a { color: var(--brass); }
+  a { color: #8ab4f8; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 32px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 600; color: var(--paper); text-decoration: none; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: Inter, system-ui, sans-serif; font-size: 22px; font-weight: 600; color: var(--paper); text-decoration: none; }
   .brand svg { flex: none; }
-  .back { font: 500 13px "IBM Plex Mono", monospace; color: var(--paper-dim); text-decoration: none; border: 1px solid var(--panel-border); border-radius: 8px; padding: 7px 12px; }
+  .back { font: 500 13px Inter, system-ui, sans-serif; color: var(--paper-dim); text-decoration: none; border: 1px solid var(--panel-border); border-radius: 8px; padding: 7px 12px; }
   .back:hover { color: var(--brass); border-color: var(--brass); }
-  h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: clamp(30px, 7vw, 44px); line-height: 1.15; margin: 0 0 12px; }
+  h1 { font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: clamp(30px, 7vw, 44px); line-height: 1.15; margin: 0 0 12px; }
   .lead { color: var(--paper-dim); font-size: 18px; margin: 0 0 28px; }
   nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
-  nav.toc a { font: 500 13px "IBM Plex Mono", monospace; text-decoration: none; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 6px 12px; }
-  h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 26px; margin: 44px 0 12px; scroll-margin-top: 16px; }
+  nav.toc a { font: 500 13px Inter, system-ui, sans-serif; text-decoration: none; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 20px; padding: 6px 12px; }
+  h2 { font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 26px; margin: 44px 0 12px; scroll-margin-top: 16px; }
   h3 { font-size: 17px; margin: 22px 0 6px; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
   .card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px; }
-  .card b { display: block; font-family: Fraunces, Georgia, serif; font-size: 19px; margin-bottom: 4px; }
+  .card b { display: block; font-family: Inter, system-ui, sans-serif; font-size: 19px; margin-bottom: 4px; }
   .card span { color: var(--paper-dim); font-size: 14px; }
-  .tag { display: inline-block; font: 500 11px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .05em; color: var(--sage); margin-bottom: 6px; }
+  .tag { display: inline-block; font: 500 11px Inter, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .05em; color: var(--sage); margin-bottom: 6px; }
   ul { padding-left: 20px; }
   li { margin: 4px 0; }
-  .note { border-left: 3px solid var(--brass); background: rgba(201,162,39,.08); padding: 12px 14px; border-radius: 0 8px 8px 0; }
+  .note { border-left: 3px solid var(--brass); background: rgba(236,236,238,.08); padding: 12px 14px; border-radius: 0 8px 8px 0; }
   .muted { color: var(--paper-dim); font-size: 14px; }
   footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--panel-border); color: var(--paper-dim); font-size: 14px; }
 </style>
@@ -47,7 +47,7 @@
 <body>
 <div class="wrap">
   <div class="top">
-    <a class="brand" href="./"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#c9a227"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>MK.ai</a>
+    <a class="brand" href="./"><svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#ececee"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#14181c" letter-spacing="-3">MK</text></svg>MK.ai</a>
     <a class="back" href="./">← back to chat</a>
   </div>
 
@@ -60,10 +60,10 @@
 
   <h2 id="models">Models</h2>
   <div class="cards">
-    <div class="card"><span class="tag">Answers</span><b>🦙 Alpaca</b><span>MK.ai's model, in four modes. <b>Instant</b>: maths, science, conversions and its knowledge base of about 2,650 answers run right in your browser. <b>Pro</b>: writing, explaining, advice, code, apps and office files, using large language models such as Google Gemini. <b>Live</b>: news and anything happening now, with Google Search. <b>Deep</b>: careful step-by-step thinking. Every answer it looks up is saved to its memory, so it keeps getting smarter.</span></div>
-    <div class="card"><span class="tag">Pictures &amp; videos</span><b>🎨 Alpaca Vision</b><span>Makes pictures and short videos from a description: HD pictures with Google's image model, realistic photos from a free volunteer-run image service, and logos, cards, charts and patterns drawn by Alpaca itself. For unlimited members.</span></div>
+    <div class="card"><span class="tag">Answers</span><b>Alpaca</b><span>MK.ai's model, in four modes. <b>Instant</b>: maths, science, conversions and its knowledge base of about 2,650 answers run right in your browser. <b>Pro</b>: writing, explaining, advice, code, apps and office files, using large language models such as Google Gemini. <b>Live</b>: news and anything happening now, with Google Search. <b>Deep</b>: careful step-by-step thinking. Every answer it looks up is saved to its memory, so it keeps getting smarter.</span></div>
+    <div class="card"><span class="tag">Pictures &amp; videos</span><b>Alpaca Vision</b><span>Makes pictures and short videos from a description: HD pictures with Google's image model, realistic photos from a free volunteer-run image service, and logos, cards, charts and patterns drawn by Alpaca itself. For unlimited members.</span></div>
   </div>
-  <p class="muted">Two ways to answer: <b>⚡ Normal</b> for quick answers, and <b>🧠 Deep think</b>, which splits the question into parts, double-checks maths, thinks step by step with Alpaca Deep and shows its steps.</p>
+  <p class="muted">Two ways to answer: <b>Normal</b> for quick answers, and <b>Deep think</b>, which splits the question into parts, double-checks maths, thinks step by step with Alpaca Deep and shows its steps.</p>
 
   <h2 id="abilities">What it can do</h2>
   <ul>
@@ -72,10 +72,14 @@
     <li><b>Coding:</b> explanations, examples in many languages, 39 ready-to-run apps (including ATM, traffic light, elevator, vending machine, solar system and projectile simulators), any <i>management system</i> you describe ("make a library management system with book name, author and year" gives a working app with a form, search, sorting, totals and CSV export), and a Code School for beginners.</li>
     <li><b>Knowledge:</b> countries, India and Tamil Nadu, history, people, inventions, festivals, careers, full forms, important days, proverbs and the Thirukkural.</li>
     <li><b>Photos and documents:</b> attach a photo, a PDF (homework, a bill, a notice) or a text or code file and ask about it, or say "summarise:" and paste a long text.</li>
+    <li><b>YouTube and web pages:</b> paste a link and ask for a summary, notes or answers from it.</li>
+    <li><b>Study packs:</b> notes, flashcards, practice questions and an answer key for any topic and class.</li>
+    <li><b>Run code in the chat:</b> Python and JavaScript run right under the code; HTML apps open in a preview. If something fails, Fix with Alpaca corrects it.</li>
+    <li><b>Personalities and voice chat:</b> from the ⋯ menu, pick Tutor, Coder, Writer, Career guide or Friend, or talk hands-free.</li>
     <li><b>Quizzes:</b> "quiz me on capitals", "quiz me on full forms": multiple-choice questions with instant marking.</li>
-    <li><b>Feels like a real assistant:</b> answers are typed out, spelling slips are corrected ("Did you mean…?"), and explanations offer 🧠 more detail or 🧒 simpler.</li>
+    <li><b>Feels like a real assistant:</b> answers are typed out, spelling slips are corrected ("Did you mean…?"), and explanations offer more detail or simpler.</li>
     <li><b>Office files:</b> "make a ppt on the solar system", "write a word document on pollution", "make an excel sheet for student marks": MK.ai researches the topic, shows a preview, and gives a real .pptx, .docx or .xlsx (Excel sheets come with working formulas).</li>
-    <li><b>AI voiceovers:</b> "make a voiceover: Welcome to our annual day…" or "make a voiceover about the water cycle" (MK.ai writes the script). Choose a voice, a style (narrator, energetic, calm, deep, cartoon), speed and pitch; on a computer, 🔴 Record saves the narration as an audio file. The voices come from your device.</li>
+    <li><b>AI voiceovers:</b> "make a voiceover: Welcome to our annual day…" or "make a voiceover about the water cycle" (MK.ai writes the script). Choose a voice, a style (narrator, energetic, calm, deep, cartoon), speed and pitch; on a computer, Record saves the narration as an audio file. The voices come from your device.</li>
     <li><b>Talks like a friend:</b> feelings and advice (with helplines if someone is in distress), small talk, stories, riddles, fun facts, quotes, poems, games and everyday choices.</li>
     <li><b>Remembers you:</b> tell it your name, class or what you like, and it greets you by name. This stays on your device only.</li>
   </ul>
@@ -105,8 +109,9 @@
   <ul>
     <li><b>Google Firebase</b> hosts the site and stores the data above.</li>
     <li><b>Wikipedia and Wiktionary</b> receive the search words of questions MK.ai looks up.</li>
-    <li><b>Google Gemini</b> (and, if the admin adds them, Groq, Cerebras, OpenRouter or GitHub Models) receives Alpaca Pro, Live and Deep questions, attached photos and files, voiceover scripts for HD voices and picture descriptions, and questions MK.ai couldn't answer by itself. The answer is saved to MK.ai's memory so next time MK.ai answers on its own.</li>
+    <li><b>Google Gemini</b> (and, if the admin adds them, Groq, Cerebras, OpenRouter or GitHub Models) receives Alpaca Pro, Live and Deep questions, attached photos and files, links you paste (YouTube videos and web pages), voiceover scripts for HD voices and picture descriptions, and questions MK.ai couldn't answer by itself. The answer is saved to MK.ai's memory so next time MK.ai answers on its own.</li>
     <li><b>AI Horde</b> receives the description of a photo you ask Alpaca Vision for, and nothing else.</li>
+    <li><b>jsDelivr</b> (a public code library) supplies the Python engine the first time you run Python code. Your code runs on your device and isn't sent anywhere.</li>
   </ul>
   <h3>What we never do</h3>
   <ul>

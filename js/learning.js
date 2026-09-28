@@ -251,7 +251,7 @@ function noteNight(n) {
 export function lastNightText() {
   try {
     const n = Number(localStorage.getItem(nightKey())) || 0;
-    return n ? `🌙 Last night I learned ${n} new topic${n === 1 ? "" : "s"}.` : "";
+    return n ? `Last night I learned ${n} new topic${n === 1 ? "" : "s"}.` : "";
   } catch {
     return "";
   }
@@ -322,8 +322,8 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
     if (!night && !idle) return onStatus(lastNightText());
     busy = true;
     try {
-      onStatus(night ? "🌙 Learning mode: studying…" : "📚 Learning while you're away…");
-      const said = (q) => onStatus(`📚 Just learned: ${q.slice(0, 60)}`);
+      onStatus(night ? "Learning mode: studying…" : "Learning while you're away…");
+      const said = (q) => onStatus(`Just learned: ${q.slice(0, 60)}`);
       let n = await learnFromList(night ? 5 : 1, said);
       if (!n && night) {
         // The list is done: popular topics from the last week (once each per
@@ -334,19 +334,19 @@ export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = (
           daysDone = Number(localStorage.getItem(key)) || 0;
         } catch {}
         if (daysDone < 7) {
-          onStatus("🌙 Learning mode: reading the week's most popular topics…");
+          onStatus("Learning mode: reading the week's most popular topics…");
           n = await learnTrending(10, said, daysDone + 1);
           try {
             localStorage.setItem(key, String(daysDone + 1));
           } catch {}
         }
         if (!n) {
-          onStatus("🌙 Learning mode: studying important topics…");
+          onStatus("Learning mode: studying important topics…");
           n = await learnCurriculum(5, said);
         }
       }
       if (n && night) noteNight(n);
-      if (!n) onStatus(night ? "🌙 Learning mode: all caught up for now" : lastNightText());
+      if (!n) onStatus(night ? "Learning mode: all caught up for now" : lastNightText());
     } catch (err) {
       console.warn("Self-learning:", err);
       onStatus("");

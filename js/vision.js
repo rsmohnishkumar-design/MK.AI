@@ -1632,10 +1632,10 @@ export function mountVision(container, specText) {
       started = performance.now();
       loop();
     } else frame(canvas, 0);
-    if (playBtn) playBtn.textContent = on ? "⏸ pause" : "▶ play";
+    if (playBtn) playBtn.textContent = on ? "⏸ pause" : "▶ Play";
   };
   const setLabel = () => {
-    const kind = photos ? (spec.video ? `🎬 ${spec.duration} s video · ${photos.length} AI photos` : "📷 AI photo") : spec.video ? `🎬 ${spec.duration} s animation` : "🖼️ drawing";
+    const kind = photos ? (spec.video ? `${spec.duration} s video · ${photos.length} AI photos` : "AI photo") : spec.video ? `${spec.duration} s animation` : "Drawing";
     label.textContent = kind;
   };
 
@@ -1651,7 +1651,7 @@ export function mountVision(container, specText) {
     let waitText = "Asking for a real photo…";
     const showWaiting = () => {
       paint(canvas, spec, 0);
-      label.textContent = `⏳ real ${spec.video ? "video" : "photo"}: ${waitText} (drawing shown meanwhile)`;
+      label.textContent = `Real ${spec.video ? "video" : "photo"}: ${waitText} (drawing shown meanwhile)`;
     };
     showWaiting();
     const got = await loadPhotos(spec, (text) => {
@@ -1669,10 +1669,10 @@ export function mountVision(container, specText) {
   }
 
   if (spec.video) {
-    playBtn = btn("▶ play", () => setPlaying(!playing));
+    playBtn = btn("▶ Play", () => setPlaying(!playing));
     actions.append(playBtn);
     actions.append(
-      btn("⬇ video", async (e) => {
+      btn("⬇ Video", async (e) => {
         const b = e.currentTarget;
         const was = b.textContent;
         b.disabled = true;
@@ -1690,10 +1690,10 @@ export function mountVision(container, specText) {
     );
   }
   actions.append(
-    btn("⬇ image", () => {
+    btn("⬇ Image", () => {
       canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
     }),
-    btn("🔄 new version", () => {
+    btn("New version", () => {
       spec = { ...spec, seed: (spec.seed + 7919) >>> 0 };
       load().then(() => spec.video && playing && setPlaying(true));
     })
@@ -1712,19 +1712,19 @@ export function mountVision(container, specText) {
 
 // The chat answer for a picture or video request.
 export function visionAnswer(question) {
-  if (isBlockedPicture(question)) return "🙏 I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
+  if (isBlockedPicture(question)) return "I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
   const spec = planPicture(question);
   const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
-    `🎨 **Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
+    `**Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
     "",
     "```alpaca-vision\n" + JSON.stringify(spec) + "\n```",
     "",
   ];
-  if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and turn them into a short film with camera moves. It plays right here; tap **⬇ video** to save it, or **🔄 new version** for different shots.");
-  else if (spec.photo && spec.kind === "card") lines.push("A real photo background with your wishes on top. Tap **⬇ image** to save or share it, or **🔄 new version** for a different photo.");
-  else if (spec.photo) lines.push("A real AI photo (it takes a few seconds). Tap **⬇ image** to save it, or **🔄 new version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting) or \"video\" to change it.");
-  else if (spec.video) lines.push("It plays right here. Tap **⬇ video** to save it as a video file, **⬇ image** for a still, or **🔄 new version** for a different take.");
-  else lines.push("Tap **⬇ image** to save it, or **🔄 new version** for a different take.");
+  if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and turn them into a short film with camera moves. It plays right here; tap **⬇ Video** to save it, or **New version** for different shots.");
+  else if (spec.photo && spec.kind === "card") lines.push("A real photo background with your wishes on top. Tap **⬇ Image** to save or share it, or **New version** for a different photo.");
+  else if (spec.photo) lines.push("A real AI photo (it takes a few seconds). Tap **⬇ Image** to save it, or **New version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting) or \"video\" to change it.");
+  else if (spec.video) lines.push("It plays right here. Tap **⬇ Video** to save it as a video file, **⬇ Image** for a still, or **New version** for a different take.");
+  else lines.push("Tap **⬇ Image** to save it, or **New version** for a different take.");
   return lines.join("\n");
 }

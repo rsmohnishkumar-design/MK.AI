@@ -95,7 +95,7 @@ export function runPreview(code) {
   const withReporter = ERROR_REPORTER + code;
   frame.srcdoc = withReporter;
   const errors = [];
-  const fix = button("🛠 Fix with Alpaca", "code-copy code-fix", () => {
+  const fix = button("Fix with Alpaca", "code-copy code-fix", () => {
     close();
     fixHandler?.(code, errors.slice(0, 3).join("\n"));
   });
@@ -103,7 +103,7 @@ export function runPreview(code) {
   const onMessage = (e) => {
     if (e.source !== frame.contentWindow || !e.data?.mkaiPreviewError) return;
     errors.push(String(e.data.mkaiPreviewError).slice(0, 300));
-    title.textContent = `⚠️ ${errors[0]}`;
+    title.textContent = `${errors[0]}`;
     fix.hidden = !fixHandler;
   };
   window.addEventListener("message", onMessage);
@@ -113,7 +113,7 @@ export function runPreview(code) {
     window.removeEventListener("message", onMessage);
   };
   const onKey = (e) => e.key === "Escape" && close();
-  bar.append(title, fix, button("reload", "code-copy", () => ((errors.length = 0), (fix.hidden = true), (title.textContent = "▶ Running your app"), (frame.srcdoc = withReporter))), button("✕ close", "code-copy", close));
+  bar.append(title, fix, button("Reload", "code-copy", () => ((errors.length = 0), (fix.hidden = true), (title.textContent = "▶ Running your app"), (frame.srcdoc = withReporter))), button("Close", "code-copy", close));
   overlay.append(bar, frame);
   document.body.append(overlay);
   document.addEventListener("keydown", onKey);
@@ -129,14 +129,43 @@ function codeBlock(lang, code) {
   const actions = document.createElement("span");
   actions.className = "code-actions";
   if (lang === "html" && /<(html|body|script|div|button)\b/i.test(code)) {
-    actions.append(button("▶ run", "code-copy code-run", () => runPreview(code)));
+    actions.append(button("▶ Run", "code-copy code-run", () => runPreview(code)));
   }
-  if (EXT[lang] && code.split("\n").length > 3) actions.append(button("⬇ download", "code-copy", () => download(lang, code)));
-  const copy = button("copy", "code-copy", async () => {
+  // Python and JavaScript run right here, with their output under the code
+  const runnable = /^(python|py|python3)$/.test(lang) ? "python" : /^(javascript|js)$/.test(lang) && !/\b(document|window)\.|<\w+[\s>]|\brequire\(|^\s*import\s/m.test(code) ? "javascript" : null;
+  let out = null;
+  if (runnable) {
+    const run = button("▶ Run", "code-copy code-run", async () => {
+      if (!out) {
+        out = document.createElement("div");
+        out.className = "code-output";
+        box.append(out);
+      }
+      out.replaceChildren(Object.assign(document.createElement("pre"), { className: "code-output-text", textContent: "" }));
+      const text = out.firstChild;
+      run.disabled = true;
+      try {
+        const { runPython, runJavaScript } = await import("./coderun.js");
+        const show = (t) => (text.textContent = t);
+        const { output, error } = runnable === "python" ? await runPython(code, show, (s) => (text.textContent = s)) : await runJavaScript(code, show);
+        if (!output) text.textContent = "(The program ran and printed nothing.)";
+        if (error && fixHandler) {
+          out.append(button("Fix with Alpaca", "code-copy code-fix", () => fixHandler(code, error, runnable)));
+        }
+      } catch (err) {
+        text.textContent = navigator.onLine === false ? "Running Python needs the internet the first time." : `Couldn't start ${runnable === "python" ? "Python" : "the program"}: ${err.message}`;
+      } finally {
+        run.disabled = false;
+      }
+    });
+    actions.append(run);
+  }
+  if (EXT[lang] && code.split("\n").length > 3) actions.append(button("⬇ Download", "code-copy", () => download(lang, code)));
+  const copy = button("Copy", "code-copy", async () => {
     try {
       await navigator.clipboard.writeText(code);
-      copy.textContent = "copied";
-      setTimeout(() => (copy.textContent = "copy"), 1500);
+      copy.textContent = "Copied";
+      setTimeout(() => (copy.textContent = "Copy"), 1500);
     } catch {}
   });
   actions.append(copy);
@@ -193,7 +222,27 @@ export function registerBlock(lang, render) {
   BLOCKS.set(lang, render);
 }
 
+// A professional look: emojis are left out of answers (media and check symbols stay).
+const EMOJI_RUN = /[ \t]*(?:(?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\uFE0F|\u200D\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|\u20E3)*[ \t]*)+/gu;
+const KEEP_SYMBOLS = /^[\s▶⏸⏹⬇✓✔✦★©®™↔→←↑↓↩]+$/u;
+export function calm(text) {
+  return text
+    .replace(/✅|✔️/g, "✓")
+    .replace(/❌|✖️/g, "✗")
+    .replace(EMOJI_RUN, (run, at, all) => {
+      if (KEEP_SYMBOLS.test(run)) return run;
+      const before = all[at - 1] || "";
+      const after = all[at + run.length] || "";
+      if (!before || before === "\n" || !after || after === "\n") return "";
+      // "I don't know yet 🤔 I've added it" → "I don't know yet. I've added it"
+      if (/[\p{L}\p{N}]/u.test(before) && /\p{Lu}/u.test(after)) return ". ";
+      return " ";
+    })
+    .replace(/^([ \t]*[-*][ \t]+)[ \t]+/gm, "$1");
+}
+
 export function renderAnswer(container, text) {
+  text = calm(text);
   container.replaceChildren();
   let last = 0;
   for (const m of text.matchAll(FENCE)) {

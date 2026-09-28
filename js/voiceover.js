@@ -108,10 +108,10 @@ export async function voiceoverAnswer(question) {
   const tamil = /[஀-௿]/.test(script);
   const plan = { title, script, style, lang: tamil ? "ta" : "en", source };
   const intro = wrote
-    ? `🎙️ **Voiceover: ${title}** — I wrote a script for you${source ? ` (from ${source})` : ""} and it's ready to play.`
+    ? `**Voiceover: ${title}** — I wrote a script for you${source ? ` (from ${source})` : ""} and it's ready to play.`
     : script
-      ? "🎙️ **Your voiceover is ready.** Press ▶ Play to hear it."
-      : `🎙️ **Voiceover studio** — type or paste your script in the box, then press ▶ Play.${title !== "Your voiceover" ? ` (I couldn't find information about “${title}” right now, so write the script yourself or try another topic.)` : ""}`;
+      ? "**Your voiceover is ready.** Press ▶ Play to hear it."
+      : `**Voiceover studio** — type or paste your script in the box, then press ▶ Play.${title !== "Your voiceover" ? ` (I couldn't find information about “${title}” right now, so write the script yourself or try another topic.)` : ""}`;
   return [
     intro,
     "",
@@ -119,7 +119,7 @@ export async function voiceoverAnswer(question) {
     "",
     "```mkai-voice\n" + JSON.stringify(plan) + "\n```",
     "",
-    "ℹ️ **▶ Play** uses your device's voices. For a studio-quality voice you can download as an audio file on any device (English, Tamil, Hindi and more), press **✨ Make HD audio**.",
+    "**▶ Play** uses your device's voices. For a studio-quality voice you can download as an audio file on any device (English, Tamil, Hindi and more), press **Make HD audio**.",
   ].join("\n");
 }
 
@@ -193,11 +193,11 @@ export function mountVoiceover(container, text) {
 
   // Alpaca HD voice: natural voices made by Gemini, saved as a real audio file
   const hd = el("div", "voice-hd");
-  const hdTitle = el("p", "voice-hd-title", "✨ Alpaca HD voice — natural studio voices you can download (any device)");
+  const hdTitle = el("p", "voice-hd-title", "Alpaca HD voice — natural studio voices you can download (any device)");
   const hdVoice = el("select", "voice-select");
   hdVoice.setAttribute("aria-label", "HD voice");
   for (const [name, about] of HD_VOICES) hdVoice.add(new Option(`${name} · ${about}`, name));
-  const hdMake = el("button", "office-download", "✨ Make HD audio");
+  const hdMake = el("button", "office-download", "Make HD audio");
   hdMake.type = "button";
   const hdOut = el("div", "voice-hd-out");
   const hdRow = el("div", "voice-hd-row");
@@ -230,7 +230,7 @@ export function mountVoiceover(container, text) {
       hdOut.textContent = /vault|key/i.test(err.message) ? err.message : "The HD studio is busy right now (its free daily limit may be used up). Try again later, or use ▶ Play with your device's voices.";
     } finally {
       hdMake.disabled = false;
-      hdMake.textContent = "✨ Make HD audio";
+      hdMake.textContent = "Make HD audio";
     }
   });
   box.append(body);
@@ -243,7 +243,7 @@ export function mountVoiceover(container, text) {
   for (const b of [play, pause, stop, save]) b.type = "button";
   bar.append(play, pause, stop, save);
   const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && window.MediaRecorder) && !/Android|iPhone|iPad/i.test(navigator.userAgent);
-  const rec = el("button", "voice-btn", "🔴 Record");
+  const rec = el("button", "voice-btn", "Record");
   rec.type = "button";
   rec.title = "Save the narration as an audio file (computer only): choose this tab and turn on “Share tab audio”.";
   if (canRecord) bar.append(rec);
@@ -298,7 +298,7 @@ export function mountVoiceover(container, text) {
     u.lang = v?.lang || (wantLang() === "ta" ? "ta-IN" : "en-IN");
     u.rate = Number(rate.input.value);
     u.pitch = Number(pitch.input.value);
-    u.onstart = () => (now.textContent = "🔊 " + part);
+    u.onstart = () => (now.textContent = "" + part);
     u.onend = speakNext;
     u.onerror = (e) => (e.error === "interrupted" || e.error === "canceled" ? null : finish("Couldn't play that voice. Choose another voice and try again."));
     synth.speak(u);
@@ -310,7 +310,7 @@ export function mountVoiceover(container, text) {
     // One sentence at a time: long text in one go gets cut off in Chrome
     queue = sentences(text);
     speaking = true;
-    play.textContent = "↻ Restart";
+    play.textContent = "Restart";
     speakNext();
   };
   play.addEventListener("click", start);
@@ -355,7 +355,7 @@ export function mountVoiceover(container, text) {
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     recorder.onstop = () => {
       audio.forEach((t) => t.stop());
-      rec.textContent = "🔴 Record";
+      rec.textContent = "Record";
       const a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob(chunks, { type: recorder.mimeType || "audio/webm" }));
       a.download = (plan.title || "voiceover").replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".webm";

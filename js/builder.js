@@ -318,7 +318,7 @@ export function managementAnswer(question) {
   const fieldList = plan.fields.map((x) => `**${x.label}**${x.type !== "text" ? ` (${x.type === "select" ? x.options.join(" / ") : x.type})` : ""}`).join(", ");
   const python = /\bpython\b/i.test(question);
   const lines = [
-    `🛠️ **${plan.title}** — built for you from your request`,
+    `**${plan.title}** — built for you from your request`,
     "",
     plan.fromRequest ? `I used the fields you asked for: ${fieldList}.` : `I chose the usual fields for this: ${fieldList}. Want different ones? Say, for example, “make a ${plan.title.toLowerCase()} with name, phone and date”.`,
     "",

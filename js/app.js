@@ -31,7 +31,7 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock, setFixHandler } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
-import { askAlpaca } from "./ai.js";
+import { askAlpaca, YOUTUBE, WEB_LINK } from "./ai.js";
 import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
@@ -48,9 +48,9 @@ const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
 registerBlock("mkai-office", mountOffice);
 registerBlock("mkai-voice", mountVoiceover);
-// "🛠 Fix with Alpaca" in an app preview: send the code and the error back to Alpaca
-setFixHandler((code, error) => {
-  questionInput.value = `Fix this app. When it runs it shows this error:\n${error}\n\nGive me the complete corrected file.\n\n\`\`\`html\n${code}\n\`\`\``;
+// "Fix with Alpaca" in an app preview: send the code and the error back to Alpaca
+setFixHandler((code, error, lang = "html") => {
+  questionInput.value = `Fix this ${lang === "html" ? "app" : `${lang === "python" ? "Python" : "JavaScript"} program`}. When it runs it shows this error:\n${error}\n\nGive me the complete corrected code.\n\n\`\`\`${lang}\n${code}\n\`\`\``;
   composer.requestSubmit();
 });
 registerBlock("mkai-quiz", (container, text) =>
@@ -786,8 +786,9 @@ function renderChatList() {
     return;
   }
   let group = null;
+  chats.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
   for (const chat of chats) {
-    const g = dayGroup(chat.updatedAt);
+    const g = chat.pinned ? "Pinned" : dayGroup(chat.updatedAt);
     if (g !== group) {
       group = g;
       const label = document.createElement("div");
@@ -803,14 +804,18 @@ function renderChatList() {
     open.textContent = chat.title;
     open.title = chat.title;
     open.addEventListener("click", () => openChat(chat.id));
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "chat-delete";
-    del.textContent = "×";
-    del.title = "Delete chat";
-    del.setAttribute("aria-label", `Delete chat: ${chat.title}`);
-    del.addEventListener("click", () => deleteChat(chat.id));
-    item.append(open, del);
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "chat-more";
+    more.innerHTML = DOTS;
+    more.title = "More";
+    more.setAttribute("aria-label", `More options: ${chat.title}`);
+    more.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openMenu(more, chatMenu(chat.id));
+    });
+    if (chat.pinned) open.prepend(Object.assign(document.createElement("span"), { className: "pin-mark", innerHTML: PIN_ICON }));
+    item.append(open, more);
     list.appendChild(item);
   }
 }
@@ -845,6 +850,131 @@ function deleteChat(id) {
   renderThread();
   renderChatList();
 }
+
+// --- "⋯" menus ---
+const DOTS = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
+const PIN_ICON = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 17v5M9 3h6l-1 6 4 4H6l4-4-1-6z"/></svg>';
+let menuEl = null;
+function closeMenu() {
+  menuEl?.remove();
+  menuEl = null;
+}
+// items: [{ label, run, danger }] or "-" for a divider
+function openMenu(anchor, items) {
+  closeMenu();
+  menuEl = document.createElement("div");
+  menuEl.className = "pop-menu";
+  menuEl.setAttribute("role", "menu");
+  for (const it of items) {
+    if (it === "-") {
+      menuEl.append(Object.assign(document.createElement("hr"), { className: "pop-sep" }));
+      continue;
+    }
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("role", "menuitem");
+    b.className = "pop-item" + (it.danger ? " danger" : "");
+    b.textContent = it.label;
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeMenu();
+      it.run();
+    });
+    menuEl.append(b);
+  }
+  document.body.append(menuEl);
+  const r = anchor.getBoundingClientRect();
+  const w = menuEl.offsetWidth;
+  const h = menuEl.offsetHeight;
+  menuEl.style.left = `${Math.max(8, Math.min(r.right - w, innerWidth - w - 8))}px`;
+  menuEl.style.top = `${r.bottom + 4 + h > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
+  menuEl.querySelector("button")?.focus();
+}
+document.addEventListener("click", (e) => menuEl && !menuEl.contains(e.target) && closeMenu());
+document.addEventListener("keydown", (e) => e.key === "Escape" && closeMenu());
+addEventListener("resize", closeMenu);
+
+function chatText(chat) {
+  return chat.messages.map((m) => `${m.role === "user" ? "You" : "MK.ai"}: ${m.text || ""}`).join("\n\n");
+}
+function renameChat(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat) return;
+  const name = prompt("Rename chat", chat.title);
+  if (!name || !name.trim()) return;
+  chat.title = name.trim().slice(0, 120);
+  saveChats();
+  uploadChat(id);
+  renderChatList();
+  if (store.currentId === id) $("chatTitle").textContent = chat.title;
+}
+function togglePin(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat) return;
+  chat.pinned = !chat.pinned;
+  saveChats();
+  renderChatList();
+}
+async function shareChat(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat) return;
+  const text = `${chat.title}\n\n${chatText(chat)}\n\n— shared from MK.ai (https://mkai-c042b.web.app)`;
+  try {
+    if (navigator.share) return await navigator.share({ title: chat.title, text });
+  } catch (err) {
+    if (err?.name === "AbortError") return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Chat copied. Paste it anywhere to share.");
+  } catch {
+    toast("Couldn't share this chat.");
+  }
+}
+function downloadChat(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([`# ${chat.title}\n\n${chatText(chat)}\n`], { type: "text/markdown" }));
+  a.download = `${chat.title.replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").slice(0, 50) || "chat"}.md`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function chatMenu(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  return [
+    { label: "Rename", run: () => renameChat(id) },
+    { label: chat?.pinned ? "Unpin" : "Pin", run: () => togglePin(id) },
+    { label: "Share", run: () => shareChat(id) },
+    { label: "Download", run: () => downloadChat(id) },
+    "-",
+    { label: "Delete", danger: true, run: () => deleteChat(id) },
+  ];
+}
+function toast(text) {
+  const t = Object.assign(document.createElement("div"), { className: "toast", textContent: text });
+  document.body.append(t);
+  setTimeout(() => t.remove(), 2600);
+}
+$("chatMoreTop")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const id = store.currentId;
+  const items = id && store.chats.some((c) => c.id === id) ? [...chatMenu(id).slice(0, 4), "-"] : [];
+  items.push(
+    { label: "New chat", run: newChat },
+    ...(voice.canListen && voice.canSpeak ? [{ label: voiceChat ? "End voice chat" : "Voice chat (hands-free)", run: () => setVoiceChat(!voiceChat) }] : []),
+    {
+      label: `Personality: ${PERSONAS[persona].label.replace(" (default)", "")}`,
+      run: () => {
+        const btn = $("chatMoreTop");
+        setTimeout(() => openMenu(btn, Object.entries(PERSONAS).map(([k, v]) => ({ label: `${k === persona ? "✓ " : ""}${v.label}`, run: () => setPersona(k) }))), 0);
+      },
+    },
+    { label: "About MK.ai", run: () => (location.href = "about.html") },
+  );
+  if (id && store.chats.some((c) => c.id === id)) items.push("-", { label: "Delete chat", danger: true, run: () => deleteChat(id) });
+  openMenu(e.currentTarget, items);
+});
 
 $("newChatBtn").addEventListener("click", newChat);
 $("newChatTop").addEventListener("click", newChat);
@@ -938,8 +1068,8 @@ function createAiMessage() {
       copyBtn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(answer);
-          copyBtn.textContent = "copied";
-          setTimeout(() => (copyBtn.textContent = "copy"), 1500);
+          copyBtn.textContent = "Copied";
+          setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
         } catch {}
       });
       actions.classList.remove("hidden");
@@ -988,7 +1118,7 @@ function createAiMessage() {
     // Reads the answer aloud (after a spoken question).
     speakNow(answer) {
       const speakBtn = actions.querySelector(".speak-btn");
-      if (voice.canSpeak) toggleSpeaking(speakBtn, answer);
+      if (voice.canSpeak) toggleSpeaking(speakBtn, answer, () => voiceChat && setTimeout(() => voiceChat && !stopVoiceTyping && micBtn.click(), 350));
     },
     setThoughts(steps, ms) {
       const box = el.querySelector(".thoughts");
@@ -1018,7 +1148,7 @@ function createAiMessage() {
           logActivity(question, "taught");
           form.replaceWith(Object.assign(document.createElement("p"), {
             className: "answer-credit",
-            textContent: "Thanks! 🧠 I'll remember that from now on.",
+            textContent: "Thanks! I'll remember that from now on.",
           }));
         } catch (err) {
           console.warn("Couldn't save what was taught:", err);
@@ -1043,20 +1173,21 @@ function createAiMessage() {
 let speakingBtn = null;
 function resetSpeakingBtn() {
   speakingBtn?.classList.remove("speaking");
-  if (speakingBtn) speakingBtn.textContent = "listen";
+  if (speakingBtn) speakingBtn.textContent = "Listen";
   speakingBtn = null;
 }
-function toggleSpeaking(btn, text) {
+function toggleSpeaking(btn, text, onDone) {
   const wasThis = speakingBtn === btn;
   voice.stopSpeaking();
   resetSpeakingBtn();
   if (wasThis) return;
   speakingBtn = btn;
   btn.classList.add("speaking");
-  btn.textContent = "stop";
+  btn.textContent = "Stop";
   voice.speak(text, {
     onEnd: () => {
       if (speakingBtn === btn) resetSpeakingBtn();
+      onDone?.();
     },
   });
 }
@@ -1089,7 +1220,68 @@ function scrollToBottom() {
 
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 // --- Alpaca's router ---
-const ALPACA_LABEL = { pro: "✦ Alpaca Pro", live: "✦ Alpaca Live · searched the web", deep: "✦ Alpaca Deep", follow: "✦ Alpaca Pro" };
+const ALPACA_LABEL = {
+  pro: "✦ Alpaca Pro",
+  live: "✦ Alpaca Live · searched the web",
+  deep: "✦ Alpaca Deep",
+  follow: "✦ Alpaca Pro",
+  video: "✦ Alpaca Pro · watched the video",
+  link: "✦ Alpaca Pro · read the page",
+  study: "✦ Alpaca Pro · study pack",
+};
+const ALPACA_STEP = {
+  live: "Alpaca Live: searching the web for the latest",
+  deep: "Alpaca Deep: thinking it through step by step",
+  video: "Alpaca is watching the video",
+  link: "Alpaca is reading the page",
+  study: "Alpaca is making your study pack",
+};
+// Alpaca personalities: how Pro answers are written (chosen in the ⋯ menu)
+const PERSONAS = {
+  assistant: { label: "Assistant (default)", note: "" },
+  tutor: { label: "Tutor", note: "Personality: a patient teacher. Explain step by step with simple examples, check understanding, and for homework give hints and guide the student to the answer instead of only giving it, unless they ask for the full answer." },
+  coder: { label: "Coder", note: "Personality: a senior software engineer. Give complete, correct, well-structured code with brief comments, mention edge cases and complexity when relevant, prefer modern best practices, and explain how to run it. Keep prose short." },
+  writer: { label: "Writer", note: "Personality: a skilled writer and editor. Write polished, natural, well-structured text in the right format and tone (letters, emails, essays, posts, speeches), and offer a short improved alternative when useful." },
+  career: { label: "Career guide", note: "Personality: a practical career counsellor for Indian students and job seekers. Give realistic paths, courses, entrance exams, skills, salaries in ₹ and next steps." },
+  friend: { label: "Friend", note: "Personality: a warm, supportive friend. Be kind, casual and encouraging, keep answers short and conversational." },
+};
+const PERSONA_KEY = "mkai-persona";
+let persona = (() => {
+  try {
+    const p = localStorage.getItem(PERSONA_KEY);
+    return PERSONAS[p] ? p : "assistant";
+  } catch {
+    return "assistant";
+  }
+})();
+function personaNote() {
+  return PERSONAS[persona]?.note || "";
+}
+function setPersona(p) {
+  persona = PERSONAS[p] ? p : "assistant";
+  try {
+    localStorage.setItem(PERSONA_KEY, persona);
+  } catch {}
+  const badge = $("personaBadge");
+  if (badge) {
+    badge.textContent = persona === "assistant" ? "" : `Alpaca ${PERSONAS[persona].label}`;
+    badge.classList.toggle("hidden", persona === "assistant");
+  }
+}
+setPersona(persona);
+$("personaBadge")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openMenu(e.currentTarget, Object.entries(PERSONAS).map(([k, v]) => ({ label: `${k === persona ? "✓ " : ""}${v.label}`, run: () => setPersona(k) })));
+});
+
+// "Make a study pack / notes / flashcards / mock test on …"
+const STUDY_ASK = /\b(study pack|study material|revision notes|short notes|make notes|notes (on|for|about)|flash ?cards|mock test|practice test|question paper|important questions|test paper|worksheet)\b/i;
+const STUDY_NOTE = `The user wants study material. Make a complete, well-organised study pack for their topic and level (assume Indian school syllabus, CBSE/State Board, if a class is given):
+1. **Key notes**: the important points as short, clear bullets, with definitions, formulas and examples.
+2. **Flashcards**: 8-10 as "**Q:** … / **A:** …".
+3. **Practice questions**: 5 multiple-choice (options a-d) and 3 short-answer questions.
+4. **Answer key** at the end.
+If they asked for only one part (for example only flashcards or only a question paper), give just that part, done well.`;
 // Asking for writing, reasoning, advice or code (not a plain "what is X")
 const PRO_ASK =
   /^(please |pls |can you |could you |kindly )?(write|compose|draft|create|generate|explain|why|how (do|does|did|can|could|would|should|to|is|are|was|were|will|much|many|long)|compare|contrast|what(?:'s| is| are) the (difference|best|pros|advantages|disadvantages|benefits|reasons?|causes?|effects?|impact)|differentiate|plan|suggest|recommend|give me|help me|translate|rewrite|rephrase|improve|correct|fix|debug|solve|analy[sz]e|review|evaluate|describe|elaborate|discuss|list|outline|prepare|teach me|guide me|should i|is it (good|bad|safe|better|worth)|which is better|what should|what would|what if|brainstorm|tips|ideas)\b/i;
@@ -1106,8 +1298,8 @@ function alpacaRoute(question, { contextual = false, deep = false } = {}) {
 }
 
 const DONT_KNOW = [
-  "I don't know that one yet 🤔 I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
-  "Hmm, that's new to me! 🧠 It's on my learning list now. If you know the answer, teach me below.",
+  "I don't know that one yet. I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
+  "Hmm, that's new to me! It's on my learning list now. If you know the answer, teach me below.",
 ];
 
 // MK.ai answers everything itself, in this order, stopping at the first that works:
@@ -1138,8 +1330,8 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   if (attachment && attachment.kind !== "text") {
     return {
       answer: navigator.onLine
-        ? "I couldn't read that file right now 😕 The big models are busy. Try again in a minute, or copy the text in and ask me about it."
-        : "Reading photos and PDFs needs the internet. 📴 Connect and try again.",
+        ? "I couldn't read that file right now. The big models are busy. Try again in a minute, or copy the text in and ask me about it."
+        : "Reading photos and PDFs needs the internet. Connect and try again.",
       saved: nothingSaved,
       source: "file",
     };
@@ -1160,8 +1352,9 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
 
   async function tryAlpaca(route, knowledge = { good: [], bad: [], docs: [] }) {
-    think(route === "live" ? "Alpaca Live: searching the web for the latest" : route === "deep" ? "Alpaca Deep: thinking it through step by step" : "Alpaca Pro: writing a full answer");
-    const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep }).catch((err) => (console.warn("Alpaca:", err), null));
+    think(ALPACA_STEP[route] || "Alpaca Pro: writing a full answer");
+    const system = route === "study" ? STUDY_NOTE : personaNote();
+    const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep, system }).catch((err) => (console.warn("Alpaca:", err), null));
     if (!pro?.answer) return null;
     const keep = route === "pro" && !contextual && !pro.partial && !isTimeSensitive(question) && worthLearning(question) && question.length < 400;
     logActivity(question, "alpaca");
@@ -1173,9 +1366,11 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
       source: "alpaca",
     };
   }
-  // Code pasted with a question ("fix this", "explain this code"): straight to Alpaca Pro
-  if (/```[\s\S]{20,}```/.test(question) && navigator.onLine) {
-    const pro = await tryAlpaca(opts.deep ? "deep" : "pro");
+  // Straight to Alpaca: code pasted with a question ("fix this"), a YouTube video or
+  // web page link ("summarise https://…"), or a study pack
+  const direct = /```[\s\S]{20,}```/.test(question) ? "pro" : YOUTUBE.test(question) ? "video" : WEB_LINK.test(question) ? "link" : STUDY_ASK.test(question) ? "study" : null;
+  if (!attachment && direct && navigator.onLine) {
+    const pro = await tryAlpaca(opts.deep ? "deep" : direct);
     if (pro) return pro;
   }
 
@@ -1207,7 +1402,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
         ? stopped
           ? "⏹️ Stopped. I cancelled the real photo, and the drawing stays. Describe another picture whenever you like."
           : "⏹️ Nothing is being made right now. Describe a picture whenever you like."
-        : "😊 You're welcome! Describe another picture whenever you like.";
+        : "You're welcome! Describe another picture whenever you like.";
       return { answer, saved: nothingSaved, source: "vision" };
     }
     think("Planned the picture from the description and painted it");
@@ -1254,6 +1449,10 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // "Summarise: <pasted text>"
   const pasted = !attachment && question.match(/^(?:please\s+)?(?:summari[sz]e|sum up|give (?:me )?(?:a )?summary of|make (?:a )?summary of)(?:\s+(?:this|the following|it))?(?:\s*(?:text|paragraph|passage))?\s*[:\-]?\s+([\s\S]{200,})$/i);
   if (pasted) {
+    if (navigator.onLine) {
+      const pro = await tryAlpaca("pro");
+      if (pro) return pro;
+    }
     think("Picked out the most important sentences");
     return { answer: `**Summary**\n\n${summarise(pasted[1], 3)}`, saved: nothingSaved, source: "local" };
   }
@@ -1401,7 +1600,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
 
   if (!navigator.onLine) {
-    return { answer: "You're offline. 📴 Connect to the internet and ask me again.", saved: nothingSaved, source: "offline" };
+    return { answer: "You're offline. Connect to the internet and ask me again.", saved: nothingSaved, source: "offline" };
   }
   // More open sources: Wiktionary, Tamil Wikipedia, Simple English Wikipedia
   if (!contextual) {
@@ -1415,7 +1614,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // its memory so next time it answers on its own.
   if (worthLearning(question)) {
     think("Asking Alpaca Pro");
-    const taught = await askAlpaca(question, history.slice(-6), knowledge, onText, { creator: isCreator(), deep: opts.deep }).catch((err) => (console.warn("Gemini:", err), null));
+    const taught = await askAlpaca(question, history.slice(-6), knowledge, onText, { creator: isCreator(), deep: opts.deep, system: personaNote() }).catch((err) => (console.warn("Gemini:", err), null));
     // News, prices and scores change, so those answers aren't kept
     const fresh = isTimeSensitive(question);
     if (taught?.answer) {
@@ -1433,7 +1632,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // Gibberish isn't worth learning: say so honestly instead of promising to learn it
   if (!worthLearning(question)) {
     return {
-      answer: pickOne(["I didn't quite catch that 🤔 Could you ask it another way?", "Hmm, I'm not sure what you mean 🤔 Try asking a full question, like \"what is photosynthesis?\""]),
+      answer: pickOne(["I didn't quite catch that. Could you ask it another way?", "Hmm, I'm not sure what you mean. Try asking a full question, like \"what is photosynthesis?\""]),
       saved: nothingSaved,
       source: "unknown",
     };
@@ -1577,7 +1776,7 @@ try {
   activeModel = localStorage.getItem(MODEL_KEY) === "vision" ? "vision" : "alpaca";
 } catch {}
 const VISION_HELP = [
-  "🎨 **Alpaca Vision** turns your words into real photos and short photo-videos, plus greeting cards, logos, patterns and charts.",
+  "**Alpaca Vision** turns your words into real photos and short photo-videos, plus greeting cards, logos, patterns and charts.",
   "(For photos, your description is sent to the free AI Horde image service — it can take a minute or two; logos, charts and patterns are drawn by Alpaca itself. Say \"offline\" to have Alpaca draw a scene itself.)",
   "",
   "Try:",
@@ -1846,6 +2045,19 @@ composer.addEventListener("drop", (e) => {
   useFile(e.dataTransfer?.files?.[0]);
 });
 
+// --- Voice chat: hands-free, back and forth (listen, answer aloud, listen) ---
+let voiceChat = false;
+function setVoiceChat(on) {
+  voiceChat = on && voice.canListen && voice.canSpeak;
+  $("voiceChatBar")?.classList.toggle("hidden", !voiceChat);
+  if (!voiceChat) {
+    stopVoiceTyping?.();
+    voice.stopSpeaking();
+    resetSpeakingBtn();
+  } else if (!stopVoiceTyping) micBtn.click();
+}
+$("voiceChatEnd")?.addEventListener("click", () => setVoiceChat(false));
+
 // --- Voice typing: tap the mic, speak, and the question is sent ---
 const micBtn = $("micBtn");
 let askedByVoice = false;
@@ -1880,12 +2092,13 @@ micBtn.addEventListener("click", () => {
           questionInput.value = text;
           askedByVoice = true;
           composer.requestSubmit();
-        }
+        } else if (voiceChat) setVoiceChat(false);
       },
       onError: (code) => {
         stopVoiceTyping = null;
         setListening(false);
-        if (code !== "aborted") addErrorMessage(voice.listenErrorMessage(code));
+        if (voiceChat) setVoiceChat(false);
+        if (code !== "aborted" && code !== "no-speech") addErrorMessage(voice.listenErrorMessage(code));
       },
     });
   } catch (err) {

@@ -126,8 +126,8 @@ function renderLearnReport(learned) {
   const latest = self[0];
   $("learnReport").innerHTML = "";
   const parts = [
-    `📚 Learned by itself in the last 24 hours: <b>${day.length}</b>`,
-    `🌙 During last night's learning time (2:00–5:30): <b>${night.length}</b>`,
+    `Learned by itself in the last 24 hours: <b>${day.length}</b>`,
+    `During last night's learning time (2:00–5:30): <b>${night.length}</b>`,
     latest ? `Latest: “${escapeHtml(latest.question)}” at ${new Date(when(latest)).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}` : "Nothing learned by itself yet.",
   ];
   $("learnReport").innerHTML = parts.join("<br>");
@@ -225,7 +225,7 @@ function renderList(container, entries, kind) {
       stats.className = "entry-stats";
       stats.textContent =
         `${entry.source === "taught" ? "taught by a person · " : entry.source === "wikipedia" ? "from Wikipedia · " : ""}` +
-        `used ${entry.uses || 1}× · 👍 ${up} · 👎 ${down}` +
+        `used ${entry.uses || 1}× · helpful ${up} · not helpful ${down}` +
         (entry.timeSensitive ? " · time-sensitive" : "");
       actions.appendChild(stats);
       button("promote to vault", () => promoteLearned(entry));
@@ -705,11 +705,11 @@ $("prepareBtn").addEventListener("click", async () => {
 // Learns Wikipedia's most-read topics right now
 $("trendingBtn")?.addEventListener("click", async () => {
   $("trendingBtn").disabled = true;
-  setStatus("prepareStatus", "📰 Reading today's most popular topics…");
+  setStatus("prepareStatus", "Reading today's most popular topics…");
   // Today's list first; once that's known, the days before it
   let n = 0;
   for (let day = 1; day <= 14 && n === 0; day++) {
-    n = await learnTrending(25, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`), day).catch(() => 0);
+    n = await learnTrending(25, (q) => setStatus("prepareStatus", `Learned: ${q}`), day).catch(() => 0);
   }
   $("trendingBtn").disabled = false;
   setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now. Tap again for more.` : "Nothing new: MK.ai already knows the last two weeks' popular topics.", n ? "good" : "");
@@ -718,8 +718,8 @@ $("trendingBtn")?.addEventListener("click", async () => {
 // Learns 20 of Wikipedia's most important topics right now
 $("vitalBtn")?.addEventListener("click", async () => {
   $("vitalBtn").disabled = true;
-  setStatus("prepareStatus", "📚 Studying important topics…");
-  const n = await learnCurriculum(20, (q) => setStatus("prepareStatus", `📚 Learned: ${q}`)).catch(() => 0);
+  setStatus("prepareStatus", "Studying important topics…");
+  const n = await learnCurriculum(20, (q) => setStatus("prepareStatus", `Learned: ${q}`)).catch(() => 0);
   $("vitalBtn").disabled = false;
   setStatus("prepareStatus", n ? `✓ Learned ${n} important topics. Tap again for more.` : "Nothing new this time. Tap again to keep going.", n ? "good" : "");
 });
@@ -732,11 +732,11 @@ $("learnModeBtn")?.addEventListener("click", async () => {
   if (stopLearning) {
     stopLearning();
     stopLearning = null;
-    btn.textContent = "🌙 Start learning mode";
+    btn.textContent = "Start learning mode";
     return setStatus("prepareStatus", "Learning mode stopped.");
   }
   btn.textContent = "⏹ Stop learning mode";
-  setStatus("prepareStatus", "🌙 Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open MK.ai page.");
+  setStatus("prepareStatus", "Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open MK.ai page.");
   stopLearning = startAutoLearner({ canLearn: () => true, forceNight: () => true, onStatus: (t) => t && setStatus("prepareStatus", t) });
 });
 
