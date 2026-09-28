@@ -222,9 +222,80 @@ function excelPlan(question) {
 
 // ---------- The chat answer ----------
 
+// ---------- Alpaca writes the content ----------
+
+const OFFICE_NOTE = {
+  ppt: (n) => `Plan a PowerPoint presentation for the user's request. Reply with ONLY a JSON object, no other text:
+{"title": "...", "subtitle": "...", "slides": [{"title": "...", "bullets": ["...", "..."]}]}
+Use ${n - 2} content slides (the title and thank-you slides are added for you), 3-5 bullets each, each bullet one clear sentence under 22 words, facts accurate, ending with a "Key takeaways" or "Conclusion" slide. Write in the user's language.`,
+  word: `Write the document the user asks for. Reply with ONLY a JSON object, no other text:
+{"title": "...", "sections": [{"heading": "...", "paragraphs": ["...", "..."]}]}
+Use 5-9 sections with 1-3 well-written paragraphs each (an introduction first and a conclusion last, unless it's a letter, application or form, which should follow the proper format). Facts accurate. Write in the user's language.`,
+  excel: `Design the spreadsheet the user asks for. Reply with ONLY a JSON object, no other text:
+{"title": "...", "headers": ["...", "..."], "rows": [["...", 1, "=B2*C2"]]}
+Row 1 is the headers, so data starts on row 2. Use 6-15 realistic sample rows (Indian names and ₹ where it fits), numbers as numbers, and real Excel formulas (starting with =, using real cell references like B2, SUM, AVERAGE, IF, ROUND, COUNTIF) for totals and calculated columns. Add a totals row at the end if it makes sense.`,
+};
+
+function jsonIn(text) {
+  const raw = text || "";
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start < 0 || end < start) return null;
+  try {
+    return JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
+
+async function alpacaPlan(question, kind) {
+  if (typeof navigator === "undefined" || navigator.onLine === false) return null;
+  let askAlpaca;
+  try {
+    ({ askAlpaca } = await import("./ai.js"));
+  } catch {
+    return null;
+  }
+  const note = kind === "ppt" ? OFFICE_NOTE.ppt(slidesWanted(question)) : OFFICE_NOTE[kind];
+  const result = await askAlpaca(question, [], { good: [], bad: [], docs: [] }, () => {}, { system: note }).catch(() => null);
+  const j = jsonIn(result?.answer);
+  if (!j || !j.title) return null;
+  const str = (v) => String(v ?? "").trim();
+  if (kind === "ppt") {
+    const slides = (j.slides || []).filter((x) => x?.title && Array.isArray(x.bullets) && x.bullets.length).slice(0, 14);
+    if (slides.length < 2) return null;
+    return {
+      kind,
+      title: str(j.title),
+      source: "Alpaca",
+      slides: [
+        { type: "title", title: str(j.title), subtitle: str(j.subtitle) || `A presentation · ${new Date().toLocaleDateString([], { month: "long", year: "numeric" })}` },
+        ...slides.map((x) => ({ type: "bullets", title: str(x.title), bullets: x.bullets.slice(0, 6).map(str) })),
+        { type: "end", title: "Thank you", subtitle: "Questions?" },
+      ],
+    };
+  }
+  if (kind === "word") {
+    const blocks = (j.sections || []).filter((x) => x?.heading && Array.isArray(x.paragraphs)).map((x) => ({ h: str(x.heading), p: x.paragraphs.map(str).filter(Boolean) }));
+    return blocks.length >= 2 ? { kind, title: str(j.title), blocks, source: "Alpaca" } : null;
+  }
+  const headers = (j.headers || []).map(str);
+  const rows = (j.rows || []).filter(Array.isArray).slice(0, 60).map((r) => headers.map((_, i) => (typeof r[i] === "number" ? r[i] : str(r[i]))));
+  return headers.length >= 2 && rows.length ? { kind, title: str(j.title), headers, rows } : null;
+}
+
 export async function officeAnswer(question) {
   const kind = officeKind(question);
   if (!kind) return null;
+  // A ready template fits ("marks sheet", "budget"): instant. Otherwise Alpaca writes it.
+  const hasTemplate = kind === "excel" && SHEETS.some((t) => t.test.test(question.toLowerCase()));
+  if (!hasTemplate) {
+    const plan = await alpacaPlan(question, kind);
+    if (plan) {
+      const what = kind === "ppt" ? `a ${plan.slides.length}-slide PowerPoint presentation` : kind === "word" ? "a Word document" : `an Excel sheet with ${plan.rows.length} rows${plan.rows.some((r) => r.some((v) => typeof v === "string" && v.startsWith("="))) ? " and working formulas" : ""}`;
+      return `**${plan.title}**: ${what}, written by Alpaca. Preview it below and download the file.\n\n\`\`\`mkai-office\n${JSON.stringify(plan)}\n\`\`\``;
+    }
+  }
   if (kind === "excel") {
     const plan = excelPlan(question);
     return `**${plan.title}**: an Excel sheet with ${plan.rows.length} rows and working formulas. Change the names and numbers after downloading: the totals and averages update by themselves.\n\n\`\`\`mkai-office\n${JSON.stringify(plan)}\n\`\`\``;

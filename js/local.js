@@ -292,9 +292,9 @@ const RULES = [
   {
     test: /^(what|which) (ai )?(model|version|brain|llm|engine) (are you|is this|do you (use|run( on)?)|powers you|are you (using|running|built on))|^(what is|tell me about|who is) (the )?alpaca( model)?\b|^(your|mk ?ai'?s?) (model|version)\b/,
     creator: () =>
-      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 It's all my own: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and memory that grows as people teach me. My picture and video model is Alpaca Vision 🎨. No outside AI in chat.`,
+      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 Four modes: **Instant** (my own maths engine, science solver, knowledge base and memory, right in the browser), **Pro** (writing, explaining, code and office files, using large language models like Google Gemini), **Live** (news, with Google Search) and **Deep** (step-by-step thinking). Everything I look up is saved to my memory. My picture and video model is Alpaca Vision 🎨.`,
     reply: () =>
-      `I run on ${MODEL_NAME} 🦙, MK.ai's own model: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and a memory that learns from people. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …"). No outside AI is used in chat.`,
+      `I'm ${MODEL_NAME} 🦙, MK.ai's model, with four modes: **Instant** for maths, science, conversions and my own knowledge (right in your browser), **Pro** for writing, explaining, advice and code (built on large language models such as Google Gemini), **Live** for news and anything happening now (with Google Search), and **Deep** for careful step-by-step thinking. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …").`,
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
@@ -311,9 +311,13 @@ const RULES = [
         "- **Coding:** \"make a calculator app\", \"bubble sort in python\", \"what is recursion\"",
         "- **Build any management system:** \"make a library management system with book name, author and year\", \"create a hospital management system\"",
         "- **Simulators:** \"make an ATM simulator\", traffic light, elevator, vending machine, solar system, projectile motion",
-        "- **🎙️ AI voiceovers:** \"make a voiceover: <your script>\" or \"make a voiceover about the water cycle\"",
+        "- **🎙️ AI voiceovers:** \"make a voiceover: <your script>\" or \"make a voiceover about the water cycle\", with ✨ HD voices you can download",
+        "- **Build anything:** describe any app, game, website or simulator and I'll write it; if it shows an error, tap 🛠 Fix with Alpaca",
         "- **Knowledge:** science, countries, India and Tamil Nadu, history, people, festivals, careers, full forms, important days, proverbs and the Thirukkural",
         "- **Conversions, time and date:** \"10 km to miles\", \"37 c to f\"",
+        "- **✦ Alpaca Pro:** essays, letters, explanations, advice and code: just ask",
+        "- **✦ Alpaca Live:** news, scores and anything happening now, searched on the web",
+        "- **📎 Photos and PDFs:** attach one and ask about it (homework, bills, notices)",
         "- **🧠 Deep think:** switch it on under the message box for careful, step-by-step answers",
         "- **Office files:** \"make a ppt on the solar system\", \"word document on pollution\", \"excel sheet for student marks\"",
         "- **Chat:** \"tell me a story\", \"tell me a riddle\", \"motivate me\", \"I'm stressed about exams\"",

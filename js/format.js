@@ -68,6 +68,16 @@ function download(lang, code) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+const ERROR_REPORTER =
+  "<script>(function(){var s=function(m){try{parent.postMessage({mkaiPreviewError:m},'*')}catch(e){}};" +
+  "addEventListener('error',function(e){s((e.message||'Error')+(e.lineno?' (line '+e.lineno+')':''))});" +
+  "addEventListener('unhandledrejection',function(e){s('Unhandled: '+(e.reason&&e.reason.message||e.reason))})})();<\/script>\n";
+let fixHandler = null;
+// app.js: what happens when someone taps "Fix with Alpaca"
+export function setFixHandler(fn) {
+  fixHandler = fn;
+}
+
 // Runs an HTML app in a sealed-off frame: its own blank origin, so it can't
 // touch MK.ai's login, storage or pages.
 export function runPreview(code) {
@@ -81,13 +91,29 @@ export function runPreview(code) {
   frame.className = "preview-frame";
   frame.setAttribute("sandbox", "allow-scripts allow-modals allow-forms allow-popups allow-pointer-lock");
   frame.setAttribute("title", "App preview");
-  frame.srcdoc = code;
+  // Errors inside the app are reported back, so Alpaca can offer to fix them
+  const withReporter = ERROR_REPORTER + code;
+  frame.srcdoc = withReporter;
+  const errors = [];
+  const fix = button("🛠 Fix with Alpaca", "code-copy code-fix", () => {
+    close();
+    fixHandler?.(code, errors.slice(0, 3).join("\n"));
+  });
+  fix.hidden = true;
+  const onMessage = (e) => {
+    if (e.source !== frame.contentWindow || !e.data?.mkaiPreviewError) return;
+    errors.push(String(e.data.mkaiPreviewError).slice(0, 300));
+    title.textContent = `⚠️ ${errors[0]}`;
+    fix.hidden = !fixHandler;
+  };
+  window.addEventListener("message", onMessage);
   const close = () => {
     overlay.remove();
     document.removeEventListener("keydown", onKey);
+    window.removeEventListener("message", onMessage);
   };
   const onKey = (e) => e.key === "Escape" && close();
-  bar.append(title, button("reload", "code-copy", () => (frame.srcdoc = code)), button("✕ close", "code-copy", close));
+  bar.append(title, fix, button("reload", "code-copy", () => ((errors.length = 0), (fix.hidden = true), (title.textContent = "▶ Running your app"), (frame.srcdoc = withReporter))), button("✕ close", "code-copy", close));
   overlay.append(bar, frame);
   document.body.append(overlay);
   document.addEventListener("keydown", onKey);

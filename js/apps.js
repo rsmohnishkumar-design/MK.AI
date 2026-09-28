@@ -107,7 +107,9 @@ function present(app, note = "") {
 }
 
 // The answer for a build request, or null.
-export async function appAnswer(question) {
+export async function appAnswer(question, onText = () => {}) {
+  // Code pasted in ("fix this app ```…```") is for Alpaca Pro, not a template
+  if (/```/.test(question)) return null;
   const q = clean(question);
   if (!q) return null;
   const listing = /\b(what|which|list|show)\b.*\b(apps?|games?|programs?|projects?|websites?)\b.*\b(can you|you can|do you)\b.*\b(make|build|create|code|write)\b|^(what can you build|what apps can you make)/.test(q);
@@ -129,7 +131,20 @@ export async function appAnswer(question) {
   }
   const explicit = THING.test(q.replace(/\bcode\b/, "")) || /\b(in|using|with) (python|html|javascript|js)\b/.test(q);
   const app = findApp(q, lang, !explicit);
-  if (!app) return BUILD.test(q) && explicit && !/^(what|who|why|when|where|which|is|are|does|explain|define)\b/.test(q) ? buildFromResearch(q) : null;
+  const isQuestion = /^(what|who|why|when|where|which|is|are|does|explain|define)\b/.test(q);
+  if (!app) {
+    if (!BUILD.test(q) || isQuestion) return null;
+    // Anything else someone asks to build: Alpaca writes it, then the starter as a backup
+    if (explicit || OTHER_LANGS.some(([re]) => re.test(q))) return (await alpacaBuild(question, lang, onText)) || (explicit ? buildFromResearch(q) : null);
+    return null;
+  }
+  // A template, but with details of their own ("a portfolio website for a photographer
+  // with a gallery and dark theme"): Alpaca writes it to order
+  const extra = subjectOf(q).split(" ").filter((w) => w.length > 2 && !app.names.some((n) => n.includes(w)) && !app.title.toLowerCase().includes(w));
+  if (extra.length >= 3 && BUILD.test(q)) {
+    const custom = await alpacaBuild(question, lang, onText);
+    if (custom) return custom;
+  }
   // "calculator" alone is a thing to build only with a build word or "app/game/…"
   if (!BUILD.test(q) && !explicit) return null;
   // Questions *about* something ("what is a calculator") aren't build requests
@@ -142,6 +157,29 @@ export async function appAnswer(question) {
   else if (lang === "python" && app.lang !== "python") note = "I don't have a Python version of this one yet, so here it is as a web app.";
   else if (/\bandroid\b|\bmobile app\b|\bphone app\b|\biphone\b|\bios\b/.test(q)) note = "This web app works on Android and iPhone: open it in Chrome and choose “Add to Home screen” to use it like an installed app.";
   return present(app, note);
+}
+
+// --- Alpaca writes it: any app, game, simulator or program -----------------------------
+
+const BUILD_NOTE = `The user wants you to build something. Write ONE complete, working program for it.
+- For apps, games, websites, simulators and tools (unless another language is asked for): a single HTML file with inline CSS and JavaScript, no build step, no external libraries except from cdnjs.cloudflare.com if truly needed. It must look modern and polished, work on phones (responsive, touch-friendly) and on computers, and save the user's data in localStorage when that makes sense. Wrap any localStorage use in try/catch.
+- For other languages (Python, Java, C, C++…): one complete runnable file.
+- Never leave placeholders or "TODO": every button and feature must work.
+Reply in exactly this shape: one short sentence saying what you built, then the code in one fenced block with its language (\`\`\`html, \`\`\`python…), then a "How to use it:" list with 2-4 short points.`;
+
+async function alpacaBuild(question, lang, onText) {
+  if (typeof navigator === "undefined" || navigator.onLine === false) return null;
+  let askAlpaca;
+  try {
+    ({ askAlpaca } = await import("./ai.js"));
+  } catch {
+    return null;
+  }
+  const result = await askAlpaca(question, [], { good: [], bad: [], docs: [] }, onText, { system: BUILD_NOTE }).catch(() => null);
+  const text = result?.answer || "";
+  const block = text.match(/```(\w+)?\n([\s\S]*?)```/);
+  if (!block || block[2].split("\n").length < 8 || result.partial) return null;
+  return `🛠️ ${text.trim()}`;
 }
 
 // --- No template? Research the subject and make a starter ------------------------------

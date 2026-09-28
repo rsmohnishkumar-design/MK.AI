@@ -58,6 +58,20 @@ const STYLES = {
   cartoon: { label: "Cartoon", rate: 1.1, pitch: 1.7 },
 };
 
+// Gemini's studio voices
+const HD_VOICES = [
+  ["Kore", "firm, clear"], ["Puck", "upbeat"], ["Charon", "deep, informative"], ["Aoede", "breezy, warm"],
+  ["Fenrir", "excited"], ["Leda", "youthful"], ["Orus", "firm, low"], ["Zephyr", "bright"],
+  ["Achernar", "soft"], ["Sulafat", "warm"], ["Algenib", "gravelly"], ["Enceladus", "breathy, calm"],
+];
+const HD_STYLE = {
+  narrator: "Read this in a clear, warm, professional narrator voice",
+  energetic: "Read this with high energy and excitement, like an advert",
+  calm: "Read this calmly and softly, gently and slowly",
+  deep: "Read this in a deep, dramatic movie-trailer voice",
+  cartoon: "Read this in a playful, funny cartoon voice",
+};
+
 const cap = (t) => t.replace(/^\w/, (c) => c.toUpperCase());
 
 // A spoken script about a topic: a welcome, the facts, and a sign-off
@@ -105,7 +119,7 @@ export async function voiceoverAnswer(question) {
     "",
     "```mkai-voice\n" + JSON.stringify(plan) + "\n```",
     "",
-    "ℹ️ The voices come from your device (Android, Windows and Chrome each have their own, including Tamil and Hindi on many phones). To save the audio as a file, use **🔴 Record** on a computer, or a screen recorder on your tablet.",
+    "ℹ️ **▶ Play** uses your device's voices. For a studio-quality voice you can download as an audio file on any device (English, Tamil, Hindi and more), press **✨ Make HD audio**.",
   ].join("\n");
 }
 
@@ -176,6 +190,49 @@ export function mountVoiceover(container, text) {
 
   const now = el("p", "voice-now", "");
   body.append(now);
+
+  // Alpaca HD voice: natural voices made by Gemini, saved as a real audio file
+  const hd = el("div", "voice-hd");
+  const hdTitle = el("p", "voice-hd-title", "✨ Alpaca HD voice — natural studio voices you can download (any device)");
+  const hdVoice = el("select", "voice-select");
+  hdVoice.setAttribute("aria-label", "HD voice");
+  for (const [name, about] of HD_VOICES) hdVoice.add(new Option(`${name} · ${about}`, name));
+  const hdMake = el("button", "office-download", "✨ Make HD audio");
+  hdMake.type = "button";
+  const hdOut = el("div", "voice-hd-out");
+  const hdRow = el("div", "voice-hd-row");
+  hdRow.append(hdVoice, hdMake);
+  hd.append(hdTitle, hdRow, hdOut);
+  body.append(hd);
+  hdMake.addEventListener("click", async () => {
+    const text = script.value.trim();
+    if (!text) return (now.textContent = "Type a script first.");
+    hdMake.disabled = true;
+    hdMake.textContent = "Recording in the studio…";
+    hdOut.textContent = "";
+    try {
+      const [{ geminiModelsMatching }, { geminiSpeech }] = await Promise.all([import("./ai.js"), import("./gemini-rest.js")]);
+      const { key, models } = await geminiModelsMatching(/tts/i, ["gemini-2.5-flash-preview-tts", "gemini-2.5-pro-preview-tts"]);
+      if (!key) throw new Error("HD voices need the Gemini key in the vault (AI settings). Until then, use ▶ Play with your device's voices.");
+      const pace = Number(rate.input.value) < 0.9 ? ", at a slow, unhurried pace" : Number(rate.input.value) > 1.1 ? ", at a quick pace" : "";
+      const wav = await geminiSpeech(key, models, text.slice(0, 5000), hdVoice.value, HD_STYLE[styleSel.value] + pace);
+      const url = URL.createObjectURL(wav);
+      const audio = el("audio");
+      audio.controls = true;
+      audio.src = url;
+      const dl = el("a", "voice-btn", "⬇ Download audio (.wav)");
+      dl.href = url;
+      dl.download = (plan.title || "voiceover").replace(/[^\w -]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() + ".wav";
+      hdOut.append(audio, dl);
+      audio.play().catch(() => {});
+    } catch (err) {
+      console.warn("HD voice:", err);
+      hdOut.textContent = /vault|key/i.test(err.message) ? err.message : "The HD studio is busy right now (its free daily limit may be used up). Try again later, or use ▶ Play with your device's voices.";
+    } finally {
+      hdMake.disabled = false;
+      hdMake.textContent = "✨ Make HD audio";
+    }
+  });
   box.append(body);
 
   const bar = el("div", "office-bar");

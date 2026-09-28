@@ -60,10 +60,10 @@
 
   <h2 id="models">Models</h2>
   <div class="cards">
-    <div class="card"><span class="tag">Answers</span><b>🦙 Alpaca</b><span>MK.ai's own model. Everything runs in your browser: a maths engine (arithmetic to calculus), a science solver, a knowledge base of about 2,650 answers (plus essays and letter formats), coding help and an app builder. No outside AI is used for chat answers.</span></div>
-    <div class="card"><span class="tag">Pictures &amp; videos</span><b>🎨 Alpaca Vision</b><span>Makes pictures and short videos from a description: logos, cards, charts and patterns drawn by Alpaca itself, and realistic photos from a free, volunteer-run image service. For unlimited members.</span></div>
+    <div class="card"><span class="tag">Answers</span><b>🦙 Alpaca</b><span>MK.ai's model, in four modes. <b>Instant</b>: maths, science, conversions and its knowledge base of about 2,650 answers run right in your browser. <b>Pro</b>: writing, explaining, advice, code, apps and office files, using large language models such as Google Gemini. <b>Live</b>: news and anything happening now, with Google Search. <b>Deep</b>: careful step-by-step thinking. Every answer it looks up is saved to its memory, so it keeps getting smarter.</span></div>
+    <div class="card"><span class="tag">Pictures &amp; videos</span><b>🎨 Alpaca Vision</b><span>Makes pictures and short videos from a description: HD pictures with Google's image model, realistic photos from a free volunteer-run image service, and logos, cards, charts and patterns drawn by Alpaca itself. For unlimited members.</span></div>
   </div>
-  <p class="muted">Two ways to answer: <b>⚡ Normal</b> for quick answers, and <b>🧠 Deep think</b>, which splits the question into parts, double-checks maths and shows its steps.</p>
+  <p class="muted">Two ways to answer: <b>⚡ Normal</b> for quick answers, and <b>🧠 Deep think</b>, which splits the question into parts, double-checks maths, thinks step by step with Alpaca Deep and shows its steps.</p>
 
   <h2 id="abilities">What it can do</h2>
   <ul>
@@ -71,7 +71,7 @@
     <li><b>Science:</b> physics formulas with units, chemistry (molar mass, balancing equations), biology and space.</li>
     <li><b>Coding:</b> explanations, examples in many languages, 39 ready-to-run apps (including ATM, traffic light, elevator, vending machine, solar system and projectile simulators), any <i>management system</i> you describe ("make a library management system with book name, author and year" gives a working app with a form, search, sorting, totals and CSV export), and a Code School for beginners.</li>
     <li><b>Knowledge:</b> countries, India and Tamil Nadu, history, people, inventions, festivals, careers, full forms, important days, proverbs and the Thirukkural.</li>
-    <li><b>Documents and photos:</b> attach a file and ask about it, or say "summarise:" and paste a long text.</li>
+    <li><b>Photos and documents:</b> attach a photo, a PDF (homework, a bill, a notice) or a text or code file and ask about it, or say "summarise:" and paste a long text.</li>
     <li><b>Quizzes:</b> "quiz me on capitals", "quiz me on full forms": multiple-choice questions with instant marking.</li>
     <li><b>Feels like a real assistant:</b> answers are typed out, spelling slips are corrected ("Did you mean…?"), and explanations offer 🧠 more detail or 🧒 simpler.</li>
     <li><b>Office files:</b> "make a ppt on the solar system", "write a word document on pollution", "make an excel sheet for student marks": MK.ai researches the topic, shows a preview, and gives a real .pptx, .docx or .xlsx (Excel sheets come with working formulas).</li>
@@ -105,13 +105,13 @@
   <ul>
     <li><b>Google Firebase</b> hosts the site and stores the data above.</li>
     <li><b>Wikipedia and Wiktionary</b> receive the search words of questions MK.ai looks up.</li>
-    <li><b>Google Gemini</b> receives questions MK.ai couldn't answer by itself. The answer is saved to MK.ai's memory so next time MK.ai answers on its own.</li>
+    <li><b>Google Gemini</b> (and, if the admin adds them, Groq, Cerebras, OpenRouter or GitHub Models) receives Alpaca Pro, Live and Deep questions, attached photos and files, voiceover scripts for HD voices and picture descriptions, and questions MK.ai couldn't answer by itself. The answer is saved to MK.ai's memory so next time MK.ai answers on its own.</li>
     <li><b>AI Horde</b> receives the description of a photo you ask Alpaca Vision for, and nothing else.</li>
   </ul>
   <h3>What we never do</h3>
   <ul>
     <li>We never sell your data or show ads.</li>
-    <li>Only questions MK.ai can't answer by itself are sent to Google Gemini (with the last few messages of that chat, so it understands follow-ups). Everything else is answered by MK.ai alone.</li>
+    <li>Alpaca Pro, Live and Deep questions and attached files are sent to Google Gemini or the other AI services above (with the last few messages of that chat, so it understands follow-ups). Maths, conversions and its own knowledge base are answered on your device.</li>
   </ul>
   <h3>Your choices</h3>
   <p>You can delete any chat from the sidebar. To delete your account and everything linked to it, ask the MK.ai admin.</p>

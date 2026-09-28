@@ -29,10 +29,9 @@ import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
-import { renderAnswer, registerBlock } from "./format.js";
+import { renderAnswer, registerBlock, setFixHandler } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
-import { askGemini } from "./ai.js";
-import { providerById } from "./providers.js";
+import { askAlpaca } from "./ai.js";
 import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
@@ -49,6 +48,11 @@ const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
 registerBlock("mkai-office", mountOffice);
 registerBlock("mkai-voice", mountVoiceover);
+// "🛠 Fix with Alpaca" in an app preview: send the code and the error back to Alpaca
+setFixHandler((code, error) => {
+  questionInput.value = `Fix this app. When it runs it shows this error:\n${error}\n\nGive me the complete corrected file.\n\n\`\`\`html\n${code}\n\`\`\``;
+  composer.requestSubmit();
+});
 registerBlock("mkai-quiz", (container, text) =>
   mountQuiz(container, text, (label) => {
     questionInput.value = `quiz me on ${label}`;
@@ -1084,8 +1088,22 @@ function scrollToBottom() {
 }
 
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
-// "gemini:gemini-3.6-flash" → "Gemini", "groq:llama-3.3-70b" → "Groq"
-const teacherName = (key = "") => providerById(key.split(":")[0])?.name.replace(/^Google /, "") || "Gemini";
+// --- Alpaca's router ---
+const ALPACA_LABEL = { pro: "✦ Alpaca Pro", live: "✦ Alpaca Live · searched the web", deep: "✦ Alpaca Deep", follow: "✦ Alpaca Pro" };
+// Asking for writing, reasoning, advice or code (not a plain "what is X")
+const PRO_ASK =
+  /^(please |pls |can you |could you |kindly )?(write|compose|draft|create|generate|explain|why|how (do|does|did|can|could|would|should|to|is|are|was|were|will|much|many|long)|compare|contrast|what(?:'s| is| are) the (difference|best|pros|advantages|disadvantages|benefits|reasons?|causes?|effects?|impact)|differentiate|plan|suggest|recommend|give me|help me|translate|rewrite|rephrase|improve|correct|fix|debug|solve|analy[sz]e|review|evaluate|describe|elaborate|discuss|list|outline|prepare|teach me|guide me|should i|is it (good|bad|safe|better|worth)|which is better|what should|what would|what if|brainstorm|tips|ideas)\b/i;
+// Asking for something to be written or made, not answered
+const WRITE_ASK = /^(please |pls |can you |could you |kindly )?(write|compose|draft|create|generate|translate|rewrite|rephrase|improve|correct|fix|debug|review|brainstorm|prepare)\b|```|\b(code|program|essay|letter|email|story|poem|speech|paragraph|article)\b/i;
+function alpacaRoute(question, { contextual = false, deep = false } = {}) {
+  const q = question.trim();
+  if (!worthLearning(q) && !contextual) return null;
+  if (deep) return "deep";
+  if (isTimeSensitive(q)) return "live";
+  if (contextual) return "follow";
+  if (PRO_ASK.test(q) || q.split(/\s+/).length > 14 || /```|\b(code|program|function|error|bug|essay|letter|email|story|poem|speech|paragraph|article)\b/i.test(q)) return "pro";
+  return null;
+}
 
 const DONT_KNOW = [
   "I don't know that one yet 🤔 I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
@@ -1101,13 +1119,31 @@ const DONT_KNOW = [
 // 6. "I don't know yet": the question goes on its learning list for the Training room
 // Outside AI is never used here; it only helps the admin in the Training room.
 // think(step) notes what MK.ai is doing, for Deep think's "Thought for …" list.
-async function answer(question, onText, attachment = null, think = () => {}) {
+async function answer(question, onText, attachment = null, think = () => {}, opts = {}) {
   const nothingSaved = Promise.resolve(null);
   // The question asked before this one in the chat (answered or not).
   const asked = (currentChat()?.messages || []).filter((m) => m.role === "user").map((m) => m.text);
   const lastAsked = asked.length > 1 ? asked[asked.length - 2] : "";
   const contextual = dependsOnContext(question, lastAsked ? [lastAsked] : []);
 
+  // A photo, PDF or text file: Alpaca reads it (photos and PDFs need the big models).
+  if (attachment && navigator.onLine) {
+    think(`Alpaca is reading ${attachment.name}`);
+    const seen = await askAlpaca(question, history.slice(-6), { good: [], bad: [], docs: [] }, onText, { creator: isCreator(), attachment, deep: opts.deep }).catch((err) => (console.warn("Alpaca:", err), null));
+    if (seen?.answer) {
+      logActivity(question, "file");
+      return { answer: seen.answer, credit: `✦ Alpaca read ${attachment.name}`, saved: nothingSaved, source: "alpaca" };
+    }
+  }
+  if (attachment && attachment.kind !== "text") {
+    return {
+      answer: navigator.onLine
+        ? "I couldn't read that file right now 😕 The big models are busy. Try again in a minute, or copy the text in and ask me about it."
+        : "Reading photos and PDFs needs the internet. 📴 Connect and try again.",
+      saved: nothingSaved,
+      source: "file",
+    };
+  }
   // A text file sent with the question: MK.ai reads it itself.
   if (attachment) {
     think(`Reading the file ${attachment.name}`);
@@ -1121,6 +1157,26 @@ async function answer(question, onText, attachment = null, think = () => {}) {
       saved: nothingSaved,
       source: "file",
     };
+  }
+
+  async function tryAlpaca(route, knowledge = { good: [], bad: [], docs: [] }) {
+    think(route === "live" ? "Alpaca Live: searching the web for the latest" : route === "deep" ? "Alpaca Deep: thinking it through step by step" : "Alpaca Pro: writing a full answer");
+    const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep }).catch((err) => (console.warn("Alpaca:", err), null));
+    if (!pro?.answer) return null;
+    const keep = route === "pro" && !contextual && !pro.partial && !isTimeSensitive(question) && worthLearning(question) && question.length < 400;
+    logActivity(question, "alpaca");
+    return {
+      answer: pro.answer,
+      credit: ALPACA_LABEL[route],
+      searchSuggestions: pro.searchSuggestions,
+      saved: keep ? learn(question, pro.answer, "ai").catch(() => null) : nothingSaved,
+      source: "alpaca",
+    };
+  }
+  // Code pasted with a question ("fix this", "explain this code"): straight to Alpaca Pro
+  if (/```[\s\S]{20,}```/.test(question) && navigator.onLine) {
+    const pro = await tryAlpaca(opts.deep ? "deep" : "pro");
+    if (pro) return pro;
   }
 
   if (creator.claimsCreator(question)) {
@@ -1271,11 +1327,26 @@ async function answer(question, onText, attachment = null, think = () => {}) {
 
   // Apps and programs MK.ai builds from its tested templates (data/apps.json).
   think("Checking whether it's something I can build");
-  const built = await appAnswer(question);
+  const built = await appAnswer(question, onText);
   if (built) {
     think("Picked a tested app template");
     logActivity(question, "app");
     return { answer: built, saved: nothingSaved, source: "app" };
+  }
+
+  // Alpaca Pro and Live: writing, explaining, advice, code, follow-ups and
+  // anything about now go to the big models first; plain facts stay instant.
+  let route = alpacaRoute(question, { contextual, deep: opts.deep });
+  // A checked answer MK.ai already has ("how to take a screenshot") is instant and
+  // free; writing and code requests always go to Alpaca Pro.
+  if (route === "pro" && !WRITE_ASK.test(question.trim())) {
+    const strong = await knowledgeAnswer(searchFor).catch(() => null);
+    if (strong && strong.score >= 0.85) route = null;
+  }
+  if (route && navigator.onLine) {
+    const pro = await tryAlpaca(route, knowledge);
+    if (pro) return pro;
+    think("The big models are busy, so I'm answering from my own knowledge");
   }
 
   // The built-in knowledge base (checked answers that ship with MK.ai).
@@ -1343,15 +1414,15 @@ async function answer(question, onText, attachment = null, think = () => {}) {
   // Still unknown: MK.ai's teacher, Gemini, answers, and MK.ai keeps the answer in
   // its memory so next time it answers on its own.
   if (worthLearning(question)) {
-    think("Asking my teacher, Gemini");
-    const taught = await askGemini(question, history.slice(-6), knowledge, onText, { creator: isCreator() }).catch((err) => (console.warn("Gemini:", err), null));
+    think("Asking Alpaca Pro");
+    const taught = await askAlpaca(question, history.slice(-6), knowledge, onText, { creator: isCreator(), deep: opts.deep }).catch((err) => (console.warn("Gemini:", err), null));
     // News, prices and scores change, so those answers aren't kept
     const fresh = isTimeSensitive(question);
     if (taught?.answer) {
-      logActivity(question, "gemini");
+      logActivity(question, "alpaca");
       return {
         answer: taught.answer,
-        credit: `answered with help from ${teacherName(taught.by)}${fresh ? "" : " · saved to my memory"}`,
+        credit: fresh ? ALPACA_LABEL.live : `${ALPACA_LABEL.pro} · saved to my memory`,
         searchSuggestions: taught.searchSuggestions,
         saved: contextual || fresh || taught.partial ? nothingSaved : learn(question, taught.answer, "ai").catch(() => null),
         source: "gemini",
@@ -1414,7 +1485,7 @@ async function deepAnswer(question, onText, attachment, onStep) {
     return done({ answer: answers.join("\n\n"), saved: Promise.resolve(null), source: "parts" });
   }
 
-  let result = await answer(question, onText, attachment, think);
+  let result = await answer(question, onText, attachment, think, { deep: true });
 
   // Maths from its own brain: work it out a second way.
   if (result.source === "local") {
@@ -1728,7 +1799,7 @@ const attachChip = $("attachChip");
 let pendingAttachment = null;
 const lastAttachment = new Map(); // chat id → its most recent file, for follow-ups
 // MK.ai reads text and code files itself; photos and PDFs would need outside AI.
-attachInput.accept = attach.TEXT_ACCEPT;
+attachInput.accept = attach.ACCEPT;
 
 function clearAttachment() {
   pendingAttachment = null;
@@ -1742,9 +1813,6 @@ async function useFile(file) {
   attachChip.classList.remove("hidden");
   try {
     const read = await attach.readAttachment(file);
-    if (read.kind !== "text") {
-      throw Object.assign(new Error("I read text and code files by myself (.txt, .md, .csv, code…). I can't read photos or PDFs yet: copy the text in and ask me about it."), { friendly: true });
-    }
     pendingAttachment = read;
     $("attachName").textContent = pendingAttachment.name;
     if (pendingAttachment.previewUrl) {

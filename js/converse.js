@@ -264,7 +264,7 @@ const INTENTS = [
   [/^(i don'?t understand|i didn'?t understand|explain again|i don'?t get it|what do you mean)\b/, () =>
     "No problem! Tap **Simpler** under my answer for an easier version, or **More detail** for a step-by-step one. You can also ask me the same thing in different words."],
   [/^(are you smarter than|are you better than|is chat ?gpt better|are you like) (chat ?gpt|gemini|google|siri|alexa|claude)\b/, () =>
-    "Big assistants like ChatGPT and Gemini run on huge data centres and know much more than I do. I'm small, free, private and fast, and I run my own model, Alpaca, in your browser. I'm especially good at maths with steps, school subjects, coding help, and India and Tamil Nadu. And I learn more every day! 🦙"],
+    "I'm Alpaca 🦙, MK.ai's model. Simple things (maths, conversions, facts I know) I answer instantly right in your browser, and for harder questions I use big language models like Google Gemini, with web search for the latest news. I'm free, I'm especially good with school subjects, coding, and India and Tamil Nadu, and I learn from every answer I look up!"],
   [/^(can you learn|do you learn|how do you learn)\b/, () =>
     "Yes! 📚 When I don't know something, I research it on Wikipedia and remember the answer. People can teach me directly too, and every night I study popular and important topics by myself."],
   [/^(good morning)\b/, () => pick(["Good morning! ☀️ Ready to learn something new today?", "Good morning! ☀️ What's the plan for today?"])],

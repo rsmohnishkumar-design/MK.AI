@@ -1452,7 +1452,36 @@ export function cancelPhotos() {
 // Asks AI Horde for the photo (or the video's shots) and waits in its queue.
 // onProgress(text) gets "In the queue…" updates. Resolves with images, or null
 // (with photos.stopped = true when the person said "stop").
+// Alpaca Vision HD: Gemini's picture model, with the key saved in the vault
+async function geminiPhoto(spec, onProgress) {
+  if (spec.video && spec.kind !== "card") return null;
+  let tools;
+  try {
+    tools = [await import("./ai.js"), await import("./gemini-rest.js")];
+  } catch {
+    return null;
+  }
+  const [{ geminiModelsMatching }, { geminiImage }] = tools;
+  const { key, models } = await geminiModelsMatching(/image/i, ["gemini-2.5-flash-image"]);
+  if (!key) return null;
+  const [W, H] = sizeOf(spec);
+  const shape = W > H * 1.2 ? "a wide landscape (16:9)" : H > W * 1.2 ? "a tall portrait (9:16)" : "a square";
+  onProgress("Painting in HD…");
+  try {
+    const url = await geminiImage(key, models, `Create ${shape} image: ${spec.photoPrompt}. High quality, detailed, no text or watermarks unless asked. Family-friendly.`);
+    const img = await loadImage(url);
+    return img ? [img] : null;
+  } catch (err) {
+    console.warn("Gemini picture:", err);
+    return null;
+  }
+}
+
 async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
+  const gen0 = cancelGen;
+  const hd = await geminiPhoto(spec, onProgress);
+  if (gen0 !== cancelGen) return { stopped: true };
+  if (hd) return hd;
   const until = Date.now() + timeoutMs;
   const gen = cancelGen;
   let id = null;
