@@ -31,6 +31,8 @@ import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
 import { renderAnswer, registerBlock } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
+import { askGemini } from "./ai.js";
+import { providerById } from "./providers.js";
 import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
@@ -1082,6 +1084,9 @@ function scrollToBottom() {
 }
 
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
+// "gemini:gemini-3.6-flash" → "Gemini", "groq:llama-3.3-70b" → "Groq"
+const teacherName = (key = "") => providerById(key.split(":")[0])?.name.replace(/^Google /, "") || "Gemini";
+
 const DONT_KNOW = [
   "I don't know that one yet 🤔 I've added it to my learning list, so I'll learn it soon. If you know the answer, teach me below and I'll remember it right away.",
   "Hmm, that's new to me! 🧠 It's on my learning list now. If you know the answer, teach me below.",
@@ -1333,6 +1338,24 @@ async function answer(question, onText, attachment = null, think = () => {}) {
     if (more) {
       logActivity(question, "wiki");
       return { answer: more.answer, credit: `from ${more.source}`, saved: learn(question, more.answer, "wikipedia").catch(() => null), source: "wiki" };
+    }
+  }
+  // Still unknown: MK.ai's teacher, Gemini, answers, and MK.ai keeps the answer in
+  // its memory so next time it answers on its own.
+  if (worthLearning(question)) {
+    think("Asking my teacher, Gemini");
+    const taught = await askGemini(question, history.slice(-6), knowledge, onText, { creator: isCreator() }).catch((err) => (console.warn("Gemini:", err), null));
+    // News, prices and scores change, so those answers aren't kept
+    const fresh = isTimeSensitive(question);
+    if (taught?.answer) {
+      logActivity(question, "gemini");
+      return {
+        answer: taught.answer,
+        credit: `answered with help from ${teacherName(taught.by)}${fresh ? "" : " · saved to my memory"}`,
+        searchSuggestions: taught.searchSuggestions,
+        saved: contextual || fresh || taught.partial ? nothingSaved : learn(question, taught.answer, "ai").catch(() => null),
+        source: "gemini",
+      };
     }
   }
   logActivity(question, "unknown");

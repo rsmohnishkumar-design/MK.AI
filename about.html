@@ -81,7 +81,7 @@
   </ul>
 
   <h2 id="learning">How it learns</h2>
-  <p>When MK.ai can't answer something, the question goes on a learning list. Open MK.ai pages research it when they are idle, using its knowledge base, Wikipedia, Wiktionary, Tamil Wikipedia and Simple English Wikipedia, and every night it studies the whole list and the day's most-read topics. Anyone can also teach it an answer directly. Answers people vote down are dropped.</p>
+  <p>When MK.ai can't answer something from its own knowledge or open sources, its teacher, <b>Google Gemini</b>, answers, and MK.ai saves that answer to its memory so it knows it next time. If Gemini is busy, the question goes on a learning list. Open MK.ai pages research it when they are idle, using its knowledge base, Wikipedia, Wiktionary, Tamil Wikipedia and Simple English Wikipedia, and every night it studies the whole list and the day's most-read topics. Anyone can also teach it an answer directly. Answers people vote down are dropped.</p>
   <p class="note">MK.ai can make mistakes. Check important information, and don't rely on it for medical, legal or financial decisions.</p>
 
   <h2 id="access">Access</h2>
@@ -105,12 +105,13 @@
   <ul>
     <li><b>Google Firebase</b> hosts the site and stores the data above.</li>
     <li><b>Wikipedia and Wiktionary</b> receive the search words of questions MK.ai looks up.</li>
+    <li><b>Google Gemini</b> receives questions MK.ai couldn't answer by itself. The answer is saved to MK.ai's memory so next time MK.ai answers on its own.</li>
     <li><b>AI Horde</b> receives the description of a photo you ask Alpaca Vision for, and nothing else.</li>
   </ul>
   <h3>What we never do</h3>
   <ul>
     <li>We never sell your data or show ads.</li>
-    <li>We never send your chats to outside AI companies.</li>
+    <li>Only questions MK.ai can't answer by itself are sent to Google Gemini (with the last few messages of that chat, so it understands follow-ups). Everything else is answered by MK.ai alone.</li>
   </ul>
   <h3>Your choices</h3>
   <p>You can delete any chat from the sidebar. To delete your account and everything linked to it, ask the MK.ai admin.</p>

@@ -5,6 +5,14 @@
 
 export const PROVIDERS = [
   {
+    id: "gemini",
+    name: "Google Gemini",
+    signup: "aistudio.google.com/apikey → Create API key (free, no card)",
+    chatUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    modelsUrl: "https://generativelanguage.googleapis.com/v1beta/openai/models",
+    prefer: ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"],
+  },
+  {
     id: "groq",
     name: "Groq",
     signup: "console.groq.com → API Keys → Create API Key",
@@ -82,7 +90,7 @@ export async function listModels(provider, key) {
       const p = m.pricing;
       return m.id?.endsWith(":free") || (p && Number(p.prompt) === 0 && Number(p.completion) === 0);
     })
-    .map((m) => m.id)
+    .map((m) => m.id?.replace(/^models\//, "")) // Gemini lists "models/gemini-…"
     .filter(Boolean);
 }
 
@@ -93,7 +101,7 @@ export function chooseModels(provider, available) {
   const preferred = provider.prefer.filter((m) => set.has(m));
   if (preferred.length) return preferred;
   return available
-    .filter((id) => /llama|gpt|qwen|deepseek|gemma|mistral|phi/i.test(id) && !/guard|embed|whisper|tts|vision|audio|image/i.test(id))
+    .filter((id) => /llama|gpt|qwen|deepseek|gemma|mistral|phi|gemini/i.test(id) && !/guard|embed|whisper|tts|vision|audio|image|live|native/i.test(id))
     .slice(0, 4);
 }
 

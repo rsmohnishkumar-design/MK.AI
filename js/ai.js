@@ -312,7 +312,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
         text = t;
         onText(t);
       });
-      if (result.answer) return result;
+      if (result.answer) return { ...result, by: attempt.key };
       throw httpError(500, `${attempt.key}: empty answer`);
     } catch (err) {
       lastError = err;

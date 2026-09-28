@@ -1,4 +1,4 @@
-// MK.ai teaches itself, with no outside AI and no keys.
+// MK.ai teaches itself. Its teacher, Gemini, answers what the open sources can't.
 // - Questions it couldn't answer go on a shared learning list ("unknown").
 // - Whenever a signed-in MK.ai page sits idle, it researches one of them
 //   (its knowledge base, then Wikipedia) and saves what it finds to memory.
@@ -25,6 +25,7 @@ import { knowledgeAnswer } from "./kb.js";
 import { wikiAnswer, wikiFind } from "./wiki.js";
 import { coreQuery } from "./deepthink.js";
 import { learn, lookup } from "./brain.js";
+import { askGemini } from "./ai.js";
 
 const MAX_TRIES = 5; // after this the question waits for a person to teach it
 const IDLE_MS = 90000; // how long a page must be quiet before it researches
@@ -261,6 +262,13 @@ export function isNight(date = new Date()) {
   return m >= NIGHT.from && m < NIGHT.to;
 }
 
+// Gemini, MK.ai's teacher, for what the open sources don't have
+async function askTeacher(question) {
+  if (!navigator.onLine) return null;
+  const taught = await askGemini(question, [], { good: [], bad: [], docs: [] }).catch(() => null);
+  return taught?.answer && !taught.partial ? { answer: taught.answer, source: "Gemini" } : null;
+}
+
 // Researches up to `count` questions from the list. Returns how many it learned.
 export async function learnFromList(count, onLearned = () => {}) {
   const snap = await getDocs(query(collection(db, "unknown"), orderBy("createdAt"), limit(40)));
@@ -271,9 +279,9 @@ export async function learnFromList(count, onLearned = () => {}) {
     const { question, tries = 0 } = d.data();
     if (tries >= MAX_TRIES) continue;
     done++;
-    const found = await research(question);
+    const found = (await research(question)) || (await askTeacher(question));
     if (found) {
-      await learn(question, found.answer, "wikipedia");
+      await learn(question, found.answer, found.source === "Gemini" ? "ai" : "wikipedia");
       await deleteDoc(d.ref).catch(() => {});
       learned++;
       onLearned(question, found.source);
