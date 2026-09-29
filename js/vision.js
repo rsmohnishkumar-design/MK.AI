@@ -1711,11 +1711,15 @@ export function mountVision(container, specText) {
 }
 
 // The chat answer for a picture or video request.
-export function visionAnswer(question) {
+export function visionAnswer(question, { allowVideo = true } = {}) {
   if (isBlockedPicture(question)) return "I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
   const spec = planPicture(question);
+  // Videos are made only for the admin; everyone else gets a still picture
+  const videoBlocked = spec.video && !allowVideo;
+  if (videoBlocked) spec.video = false;
   const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
+    ...(videoBlocked ? ["Video creation is reserved for MK.ai's admin, so here's a picture instead.", ""] : []),
     `**Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
     "",
     "```alpaca-vision\n" + JSON.stringify(spec) + "\n```",
@@ -1723,7 +1727,7 @@ export function visionAnswer(question) {
   ];
   if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and turn them into a short film with camera moves. It plays right here; tap **⬇ Video** to save it, or **New version** for different shots.");
   else if (spec.photo && spec.kind === "card") lines.push("A real photo background with your wishes on top. Tap **⬇ Image** to save or share it, or **New version** for a different photo.");
-  else if (spec.photo) lines.push("A real AI photo (it takes a few seconds). Tap **⬇ Image** to save it, or **New version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting) or \"video\" to change it.");
+  else if (spec.photo) lines.push(`A real AI photo (it takes a few seconds). Tap **⬇ Image** to save it, or **New version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting)${allowVideo ? ' or "video"' : ""} to change it.`);
   else if (spec.video) lines.push("It plays right here. Tap **⬇ Video** to save it as a video file, **⬇ Image** for a still, or **New version** for a different take.");
   else lines.push("Tap **⬇ Image** to save it, or **New version** for a different take.");
   return lines.join("\n");

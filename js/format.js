@@ -134,7 +134,7 @@ function codeBlock(lang, code) {
   // Python and JavaScript run right here, with their output under the code
   const runnable = /^(python|py|python3)$/.test(lang) ? "python" : /^(javascript|js)$/.test(lang) && !/\b(document|window)\.|<\w+[\s>]|\brequire\(|^\s*import\s/m.test(code) ? "javascript" : null;
   let out = null;
-  if (runnable) {
+  if (runnable && !window.MKAI_NO_RUN) {
     const run = button("▶ Run", "code-copy code-run", async () => {
       if (!out) {
         out = document.createElement("div");

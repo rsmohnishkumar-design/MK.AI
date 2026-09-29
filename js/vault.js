@@ -186,6 +186,7 @@ if (configured && gatePassed()) {
     loadActivity();
     loadUsers();
     loadGroqKey();
+    loadControl();
     loadTraining();
     loadDocuments();
   });
@@ -361,7 +362,8 @@ refreshActivityBtn.addEventListener("click", loadActivity);
 
 // --- Registered users ---
 function tierLabel(user) {
-  if (user.tier === "unlimited") return '<span class="badge badge-vault">unlimited</span>';
+  if (user.tier !== "unlimited" && user.accessRequest?.status === "pending") return '<span class="badge badge-vault">asked for unlimited</span>';
+  if (user.tier === "unlimited") return `<span class="badge badge-vault">unlimited${user.autoUnlimited ? " · auto" : ""}</span>`;
   if (user.tier !== "trial") return '<span class="badge badge-error">blocked</span>';
   const msLeft = user.expiresAt ? user.expiresAt.toMillis() - Date.now() : -1;
   if (msLeft <= 0) return '<span class="badge badge-error">expired</span>';
@@ -382,10 +384,129 @@ async function setTier(id, fields) {
   }
 }
 
+// --- Control centre: the admin's controls for the whole of MK.ai (settings/control) ---
+const controlRef = () => doc(db, "settings", "control");
+const CONTROL_DEFAULTS = { mode: "auto", instructions: "", announcement: "", vision: true, office: true, voice: true, code: true, maintenance: false, autoPromote: true, windowTokens: 10000, weekTokens: 100000 };
+let control = { ...CONTROL_DEFAULTS };
+async function loadControl() {
+  try {
+    const snap = await getDoc(controlRef());
+    control = { ...CONTROL_DEFAULTS, ...(snap.exists() ? snap.data() : {}) };
+  } catch (err) {
+    showError(err);
+  }
+  $("ctlMode").value = control.mode;
+  $("ctlInstructions").value = control.instructions || "";
+  $("ctlAnnounce").value = control.announcement || "";
+  $("ctlVision").checked = control.vision !== false;
+  $("ctlOffice").checked = control.office !== false;
+  $("ctlVoice").checked = control.voice !== false;
+  $("ctlCode").checked = control.code !== false;
+  $("ctlMaintenance").checked = !!control.maintenance;
+  $("ctlAutoPromote").checked = control.autoPromote !== false;
+  $("ctlWindow").value = control.windowTokens;
+  $("ctlWeek").value = control.weekTokens;
+  if (control.autoPromote !== false) promoteAll(true);
+}
+$("controlForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const next = {
+    mode: $("ctlMode").value,
+    instructions: $("ctlInstructions").value.trim().slice(0, 2000),
+    announcement: $("ctlAnnounce").value.trim().slice(0, 300),
+    vision: $("ctlVision").checked,
+    office: $("ctlOffice").checked,
+    voice: $("ctlVoice").checked,
+    code: $("ctlCode").checked,
+    maintenance: $("ctlMaintenance").checked,
+    autoPromote: $("ctlAutoPromote").checked,
+    windowTokens: Math.max(1000, Number($("ctlWindow").value) || CONTROL_DEFAULTS.windowTokens),
+    weekTokens: Math.max(10000, Number($("ctlWeek").value) || CONTROL_DEFAULTS.weekTokens),
+    updatedAt: serverTimestamp(),
+  };
+  try {
+    await setDoc(controlRef(), next);
+    control = next;
+    $("controlStatus").textContent = "Saved. Everyone gets these on their next visit.";
+    if (next.autoPromote) promoteAll(true);
+  } catch (err) {
+    $("controlStatus").textContent = `Not saved: ${friendlyError(err)}`;
+  }
+});
+
+// Everything MK.ai has learned goes into the vault (answers people marked unhelpful stay out)
+async function promoteAll(quiet = false) {
+  try {
+    const snap = await getDocs(query(collection(db, "learned"), limit(400)));
+    const good = snap.docs.filter((d) => {
+      const e = d.data();
+      const { up, down } = votes(e);
+      return e.question && e.answer && !(down > 0 && down >= up);
+    });
+    for (let i = 0; i < good.length; i += 200) {
+      const batch = writeBatch(db);
+      for (const d of good.slice(i, i + 200)) {
+        const e = d.data();
+        batch.set(doc(collection(db, "vault")), { ...vaultFields(e.question, e.answer), createdAt: serverTimestamp() });
+        batch.delete(d.ref);
+      }
+      await batch.commit();
+    }
+    if (!quiet || good.length) $("controlStatus").textContent = good.length ? `Promoted ${good.length} learned answer${good.length === 1 ? "" : "s"} to the vault.` : "Nothing new to promote.";
+    if (good.length) loadEntries();
+  } catch (err) {
+    $("controlStatus").textContent = `Couldn't promote: ${friendlyError(err)}`;
+  }
+}
+$("promoteAllBtn")?.addEventListener("click", () => promoteAll(false));
+
+// "Test Alpaca": asks the big models a tiny question and shows which one answered
+$("testAlpacaBtn")?.addEventListener("click", async () => {
+  const out = $("testAlpacaOut");
+  out.textContent = "Asking Alpaca…";
+  const started = performance.now();
+  try {
+    const { askAlpaca } = await import("./ai.js");
+    const r = await askAlpaca("In one short sentence, say hello and name the capital of Tamil Nadu.", [], { good: [], bad: [], docs: [] });
+    const via = (r.by || "").replace(/^geminikey:/, "Gemini (your key): ").replace(/^gemini:/, "Gemini (Firebase): ");
+    out.textContent = `Working. Answered by ${via || "a big model"} in ${((performance.now() - started) / 1000).toFixed(1)} s: “${r.answer.slice(0, 160)}”`;
+  } catch (err) {
+    out.textContent = `Alpaca Pro isn't answering: ${err.message || err}. Check the keys in AI settings below (use Test on each), then try again.`;
+  }
+});
+
+// Unlimited access requests
+async function renderRequests(users) {
+  const list = $("requestsList");
+  const pending = users.filter((u) => u.accessRequest?.status === "pending" && u.tier !== "unlimited");
+  $("requestsCount").textContent = pending.length ? `(${pending.length})` : "";
+  list.innerHTML = "";
+  if (!pending.length) {
+    list.innerHTML = '<p class="col-hint">No requests right now.</p>';
+    return;
+  }
+  for (const u of pending) {
+    const row = document.createElement("div");
+    row.className = "request-row";
+    const used = u.usage?.weekTokens ? ` · ${Number(u.usage.weekTokens).toLocaleString()} tokens this week` : "";
+    row.innerHTML = `<span class="question">${escapeHtml(u.email)}</span><span class="col-hint">asked ${formatTime(u.accessRequest.at)} · weekly limit reached ${u.limitHits || 0}×${used}</span>`;
+    const yes = document.createElement("button");
+    yes.textContent = "Approve";
+    yes.onclick = () => setTier(u.id, { tier: "unlimited", expiresAt: null, accessRequest: { status: "approved", at: serverTimestamp() } });
+    const no = document.createElement("button");
+    no.textContent = "Not yet";
+    no.className = "secondary";
+    no.onclick = () => setTier(u.id, { accessRequest: { status: "rejected", at: serverTimestamp() } });
+    row.append(yes, no);
+    list.append(row);
+  }
+}
+
 async function loadUsers() {
   try {
     const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc")));
     usersCount.textContent = `(${snap.size})`;
+    renderRequests(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     usersBody.innerHTML = "";
     if (snap.empty) {
       usersBody.innerHTML = `<tr><td colspan="4" class="empty-col-note">No one has signed up yet.</td></tr>`;

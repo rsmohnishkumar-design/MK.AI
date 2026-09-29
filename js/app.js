@@ -19,9 +19,11 @@ import {
   onSnapshot,
   Timestamp,
   serverTimestamp,
+  getDocs,
+  writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
-import { lookup, learn, markUsed, vote, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
+import { lookup, learn, markUsed, vote, votes, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
 import { bestSentences, summarise, wantsSummary, sentencesOf } from "./reader.js";
 import { knowledgeAnswer, loadKnowledge, relatedEntries, spellFix } from "./kb.js";
 import * as deep from "./deepthink.js";
@@ -36,7 +38,7 @@ import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } 
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
-import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText } from "./limits.js";
+import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText, setLimits } from "./limits.js";
 import { officeKind, officeAnswer, mountOffice } from "./office.js";
 import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
 import { startMeaning } from "./meaning.js";
@@ -297,11 +299,13 @@ const creatorOff = () => {
 };
 const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
+// MK.ai's admin (the master account)
+const ADMIN_EMAIL = "rsmohnishkumar@gmail.com";
+const isAdmin = () => (auth.currentUser?.email || "").toLowerCase() === ADMIN_EMAIL;
 const unlimitedOnly = (what) =>
-  `${what === "Alpaca Vision" ? "Pictures and videos are" : "This is"} available to unlimited members.\n\n` +
-  "**Want unlimited access?** Keep chatting with MK.ai and help train it: when it says \"I don't know\", teach it the answer. " +
-  "The admin gives unlimited access to people who help.\n\n" +
-  "Already have an access code? Tap **Enter access code** under your email.";
+  `${what === "Alpaca Vision" ? "Pictures are" : "This is"} available to unlimited members.\n\n` +
+  "**Want unlimited access?** Tap **Ask for unlimited access** under your email, and the admin will review it. " +
+  "People who use MK.ai a lot get it automatically.";
 
 // The empty chat greets the person by name, a little differently each time
 function nameOf(email = "") {
@@ -428,9 +432,8 @@ function renderTier() {
   renderGreeting();
   // Alpaca Vision and the Code School only appear for unlimited members
   const unlimited = isUnlimited();
-  $("codeBtn").hidden = unlimited;
-  $("upgradeNote").hidden = unlimited;
-  $("modelSelect")?.classList.toggle("hidden", !unlimited);
+  $("codeBtn").hidden = true;
+  renderAccessRequest();
   $("learnLink")?.classList.toggle("hidden", !unlimited);
   $("emptyLearn")?.classList.toggle("hidden", !unlimited);
   if (!unlimited && activeModel === "vision") setModel("alpaca");
@@ -455,6 +458,7 @@ function renderTier() {
     tierBadge.className = `tier-badge ${hit ? "expired" : "trial"}`;
     if (hit) {
       lockChat(limitMessage(hit));
+      noteLimitHit(hit);
     } else if (questionInput.disabled && !answering) {
       questionInput.disabled = false;
       sendBtn.disabled = false;
@@ -464,6 +468,82 @@ function renderTier() {
 
   update();
   trialTimer = setInterval(update, 30000);
+}
+
+// --- Unlimited access: ask the admin, or get it automatically after reaching the
+// weekly limit on 5 different weeks ---
+const AUTO_UNLIMITED_AFTER = 5;
+function renderAccessRequest() {
+  const btn = $("askAccessBtn");
+  const note = $("upgradeNote");
+  if (!btn || !note) return;
+  if (!profile || isUnlimited() || profile.tier !== "trial") {
+    btn.hidden = true;
+    note.hidden = true;
+    return;
+  }
+  const req = profile.accessRequest?.status;
+  const hits = profile.limitHits || 0;
+  btn.hidden = req === "pending";
+  btn.textContent = req === "rejected" ? "Ask again for unlimited access" : "Ask for unlimited access";
+  note.hidden = false;
+  note.textContent =
+    req === "pending"
+      ? "Request sent. The admin will review it soon."
+      : req === "rejected"
+        ? "The admin said not yet. Keep using MK.ai: he may give it when you use it more."
+        : hits
+          ? `Weekly limit reached ${hits} of ${AUTO_UNLIMITED_AFTER} times. At ${AUTO_UNLIMITED_AFTER}, unlimited access turns on by itself.`
+          : `Heavy users get unlimited access automatically after reaching the weekly limit ${AUTO_UNLIMITED_AFTER} times.`;
+}
+$("askAccessBtn")?.addEventListener("click", async () => {
+  if (!auth.currentUser || !profile) return;
+  const ref = doc(db, "users", auth.currentUser.uid);
+  try {
+    await updateDoc(ref, { accessRequest: { status: "pending", at: serverTimestamp() } });
+    profile = { ...profile, accessRequest: { status: "pending", at: new Date() } };
+    saveSession(auth.currentUser.uid, profile);
+    renderAccessRequest();
+    toast("Request sent to the admin.");
+  } catch (err) {
+    console.warn("Access request:", err);
+    toast("Couldn't send the request. Try again later.");
+  }
+});
+// Called when the free limit is reached: counts weekly-limit weeks (at most one per 6 days)
+// and turns on unlimited access at the fifth.
+let countingHit = false;
+async function noteLimitHit(hit) {
+  if (hit?.which !== "week" || countingHit || !auth.currentUser || profile?.tier !== "trial") return;
+  const last = profile.limitHitAt?.toMillis?.() ?? (profile.limitHitAt ? new Date(profile.limitHitAt).getTime() : 0);
+  const ref = doc(db, "users", auth.currentUser.uid);
+  countingHit = true;
+  try {
+    if (!last || Date.now() - last > 6 * 86400000) {
+      const limitHits = (profile.limitHits || 0) + 1;
+      await updateDoc(ref, { limitHits, limitHitAt: serverTimestamp() });
+      profile = { ...profile, limitHits, limitHitAt: new Date() };
+    }
+    if ((profile.limitHits || 0) >= AUTO_UNLIMITED_AFTER) {
+      await updateDoc(ref, { tier: "unlimited", expiresAt: null, autoUnlimited: true });
+      profile = { ...profile, tier: "unlimited", expiresAt: null, autoUnlimited: true };
+      saveSession(auth.currentUser.uid, profile);
+      renderTier();
+      questionInput.disabled = false;
+      sendBtn.disabled = false;
+      setModel(activeModel);
+      const msg = createAiMessage();
+      msg.finish(`**Unlimited access is on.** You've reached the weekly limit ${AUTO_UNLIMITED_AFTER} times, so MK.ai upgraded you automatically. Thank you for using MK.ai so much!`);
+      scrollToBottom();
+      return;
+    }
+    saveSession(auth.currentUser.uid, profile);
+    renderAccessRequest();
+  } catch (err) {
+    console.warn("Couldn't count the weekly limit:", err);
+  } finally {
+    countingHit = false;
+  }
 }
 
 // Entering an access code after signing in
@@ -503,8 +583,9 @@ function showChat(user, notice) {
   loadChats(user.uid);
   questionInput.disabled = false;
   sendBtn.disabled = false;
-  setMode(answerMode);
+  setModel(activeModel);
   renderTier();
+  loadControl();
   if (notice) addErrorMessage(notice);
   questionInput.focus();
   forgetOfflineBrain();
@@ -870,11 +951,16 @@ function openMenu(anchor, items) {
       menuEl.append(Object.assign(document.createElement("hr"), { className: "pop-sep" }));
       continue;
     }
+    if (it.heading) {
+      menuEl.append(Object.assign(document.createElement("div"), { className: "pop-heading", textContent: it.heading }));
+      continue;
+    }
     const b = document.createElement("button");
     b.type = "button";
     b.setAttribute("role", "menuitem");
-    b.className = "pop-item" + (it.danger ? " danger" : "");
+    b.className = "pop-item" + (it.danger ? " danger" : "") + (it.checked ? " checked" : "");
     b.textContent = it.label;
+    if (it.sub) b.append(Object.assign(document.createElement("span"), { className: "pop-sub", textContent: it.sub }));
     b.addEventListener("click", (e) => {
       e.stopPropagation();
       closeMenu();
@@ -1262,11 +1348,9 @@ function setPersona(p) {
   try {
     localStorage.setItem(PERSONA_KEY, persona);
   } catch {}
-  const badge = $("personaBadge");
-  if (badge) {
-    badge.textContent = persona === "assistant" ? "" : `Alpaca ${PERSONAS[persona].label}`;
-    badge.classList.toggle("hidden", persona === "assistant");
-  }
+  // The chosen style shows on the model button ("Alpaca · Coder")
+  const name = document.querySelector("#modelBtn .model-name");
+  if (name) name.textContent = name.textContent.split(" · ")[0] + (persona !== "assistant" ? ` · ${PERSONAS[persona].label}` : "");
 }
 setPersona(persona);
 $("personaBadge")?.addEventListener("click", (e) => {
@@ -1287,6 +1371,57 @@ const PRO_ASK =
   /^(please |pls |can you |could you |kindly )?(write|compose|draft|create|generate|explain|why|how (do|does|did|can|could|would|should|to|is|are|was|were|will|much|many|long)|compare|contrast|what(?:'s| is| are) the (difference|best|pros|advantages|disadvantages|benefits|reasons?|causes?|effects?|impact)|differentiate|plan|suggest|recommend|give me|help me|translate|rewrite|rephrase|improve|correct|fix|debug|solve|analy[sz]e|review|evaluate|describe|elaborate|discuss|list|outline|prepare|teach me|guide me|should i|is it (good|bad|safe|better|worth)|which is better|what should|what would|what if|brainstorm|tips|ideas)\b/i;
 // Asking for something to be written or made, not answered
 const WRITE_ASK = /^(please |pls |can you |could you |kindly )?(write|compose|draft|create|generate|translate|rewrite|rephrase|improve|correct|fix|debug|review|brainstorm|prepare)\b|```|\b(code|program|essay|letter|email|story|poem|speech|paragraph|article)\b/i;
+// The admin's controls from the vault (settings/control), read at sign-in
+let control = {};
+async function loadControl() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "control"));
+    control = snap.exists() ? snap.data() : {};
+  } catch {
+    control = {};
+  }
+  setLimits(control);
+  window.MKAI_NO_RUN = control.code === false;
+  const bar = $("announceBar");
+  if (bar) {
+    bar.textContent = control.announcement || "";
+    bar.hidden = !control.announcement;
+  }
+  if (control.maintenance && !isAdmin()) lockChat("MK.ai is being updated by the admin. Please come back in a little while.");
+  renderTier();
+  if (isAdmin() && control.autoPromote !== false) setTimeout(promoteLearned, 4000);
+}
+// While the admin is signed in, everything MK.ai has learned moves into the vault
+// (answers people marked unhelpful stay out), a few hundred at a time.
+async function promoteLearned() {
+  try {
+    const snap = await getDocs(query(collection(db, "learned"), limit(200)));
+    const good = snap.docs.filter((d) => {
+      const e = d.data();
+      const { up, down } = votes(e);
+      return e.question && e.answer && !(down > 0 && down >= up);
+    });
+    if (!good.length) return;
+    const batch = writeBatch(db);
+    for (const d of good) {
+      const e = d.data();
+      batch.set(doc(collection(db, "vault")), { question: e.question, answer: e.answer, keywords: keywords(e.question).slice(0, 50), createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      batch.delete(d.ref);
+    }
+    await batch.commit();
+  } catch (err) {
+    console.warn("Auto-promote:", err);
+  }
+}
+
+// What MK.ai's own brain is exact at: maths, units, time and date, who it is
+const INSTANT_ASK = /^(what(?:'s| is)? (the )?(time|date|day)|what day is|who (made|created|built|developed|owns) you|who is your (creator|owner|developer)|what can you do|help|what are your features|what (ai |)(model|version) (are you|is this)|who are you|what is your name|convert\b|\d)|\b(to|in) (km|miles?|kg|pounds?|lbs?|celsius|fahrenheit|°?[cf]|metres?|meters?|feet|ft|inches|cm|mm|litres?|liters?|gallons?|rupees?|inr|usd|dollars?)\b|[\d)]\s*[-+*/×÷^%=]\s*[\d(]|\b(sqrt|square root|cube root|factorial|percent|% of|log|sin|cos|tan|derivative|differentiate|integrate|integral|solve|simplify|factori[sz]e|lcm|hcf|gcd|prime)\b/i;
+// "Alpaca" (automatic), "pro", "deep" or "vision" from the model menu; the admin can
+// also force every answer to "pro" or "instant" from the vault
+function routeMode() {
+  if (control.mode === "instant" || control.mode === "pro") return control.mode;
+  return activeModel === "pro" || activeModel === "deep" ? "pro" : "auto";
+}
 function alpacaRoute(question, { contextual = false, deep = false } = {}) {
   const q = question.trim();
   if (!worthLearning(q) && !contextual) return null;
@@ -1353,14 +1488,14 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   async function tryAlpaca(route, knowledge = { good: [], bad: [], docs: [] }) {
     think(ALPACA_STEP[route] || "Alpaca Pro: writing a full answer");
-    const system = route === "study" ? STUDY_NOTE : personaNote();
+    const system = [control.instructions ? `Instructions from MK.ai's admin (follow them): ${control.instructions}` : "", route === "study" ? STUDY_NOTE : personaNote()].filter(Boolean).join("\n\n");
     const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep, system }).catch((err) => (console.warn("Alpaca:", err), null));
     if (!pro?.answer) return null;
     const keep = route === "pro" && !contextual && !pro.partial && !isTimeSensitive(question) && worthLearning(question) && question.length < 400;
     logActivity(question, "alpaca");
     return {
       answer: pro.answer,
-      credit: ALPACA_LABEL[route],
+      credit: ALPACA_LABEL[route] + (isCreator() && pro.by ? ` · via ${pro.by.replace(/^geminikey:/, "Gemini key: ").replace(/^gemini:/, "Firebase Gemini: ")}` : ""),
       searchSuggestions: pro.searchSuggestions,
       saved: keep ? learn(question, pro.answer, "ai").catch(() => null) : nothingSaved,
       source: "alpaca",
@@ -1391,10 +1526,11 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // Pictures and videos: Alpaca Vision (chosen in the model menu, or "draw …")
   if (activeModel === "vision" || isVisionRequest(question)) {
     if (!isUnlimited()) return { answer: unlimitedOnly("Alpaca Vision"), saved: nothingSaved, source: "vision" };
+    if (control.vision === false && !isAdmin()) return { answer: "Alpaca Vision is switched off by the admin for now. Please try again later.", saved: nothingSaved, source: "vision" };
     think("Handing this to Alpaca Vision, my picture and video model");
     logActivity(question, "vision");
     if (activeModel === "vision" && /^(hi|hello|hey|help|what can you (draw|make|do)|how does this work)\b/i.test(question.trim()))
-      return { answer: VISION_HELP, saved: nothingSaved, source: "vision" };
+      return { answer: isAdmin() ? VISION_HELP : VISION_HELP.replace(" and short photo-videos", "").split("\n").filter((l) => !/\bvideo\b/i.test(l)).join("\n"), saved: nothingSaved, source: "vision" };
     // "stop", "cancel", "ok thanks"… aren't pictures
     if (activeModel === "vision" && /^(stop|cancel|abort|wait|no|nope|never ?mind|ok|okay|thanks|thank you|thankyou|bye|done|enough)\b[\s!.]*(it|that|this|please|pls|now|thanks|thank you)?[\s!.]*$/i.test(question.trim())) {
       const stopped = cancelPhotos();
@@ -1406,7 +1542,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
       return { answer, saved: nothingSaved, source: "vision" };
     }
     think("Planned the picture from the description and painted it");
-    return { answer: visionAnswer(question), saved: nothingSaved, source: "vision" };
+    return { answer: visionAnswer(question, { allowVideo: isAdmin() }), saved: nothingSaved, source: "vision" };
   }
 
   // Someone in distress gets care and helplines before anything else
@@ -1449,7 +1585,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // "Summarise: <pasted text>"
   const pasted = !attachment && question.match(/^(?:please\s+)?(?:summari[sz]e|sum up|give (?:me )?(?:a )?summary of|make (?:a )?summary of)(?:\s+(?:this|the following|it))?(?:\s*(?:text|paragraph|passage))?\s*[:\-]?\s+([\s\S]{200,})$/i);
   if (pasted) {
-    if (navigator.onLine) {
+    if (navigator.onLine && routeMode() !== "instant") {
       const pro = await tryAlpaca("pro");
       if (pro) return pro;
     }
@@ -1458,22 +1594,24 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
 
   // PowerPoint, Word and Excel files
-  if (!attachment && officeKind(question)) {
+  if (!attachment && officeKind(question) && (control.office !== false || isAdmin())) {
     think("Researching the topic and building the file");
     const office = await officeAnswer(question).catch((err) => (console.warn(err), null));
     if (office) return { answer: office, saved: nothingSaved, source: "local" };
   }
 
   // AI voiceover: a script (given or written by MK.ai) read aloud
-  if (!attachment && isVoiceoverRequest(question)) {
+  if (!attachment && isVoiceoverRequest(question) && (control.voice !== false || isAdmin())) {
     think("Writing the voiceover script");
     const voice = await voiceoverAnswer(question).catch((err) => (console.warn(err), null));
     if (voice) return { answer: voice, saved: nothingSaved, source: "local" };
   }
 
-  // Everyday conversation: feelings, small talk, stories, riddles, games…
-  // (the creator's personal greetings from the local brain come first)
-  const chat = !attachment && (!isCreator() || !localAnswer(question, { creator: true })) && converse(question);
+  // Quick small talk ("hi", "thanks", "good night") is answered instantly; anything
+  // longer (stories, advice, jokes, feelings) is Alpaca's.
+  const aiFirst = navigator.onLine && routeMode() !== "instant";
+  const quickChat = !aiFirst || question.trim().split(/\s+/).length <= 4;
+  const chat = quickChat && !attachment && (!isCreator() || !localAnswer(question, { creator: true })) && converse(question);
   if (chat) {
     think("Talking with you like a friend");
     return { answer: chat, saved: nothingSaved, source: "local" };
@@ -1518,7 +1656,11 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   if (memory && memory.collection === "vault") return fromMemory();
 
-  if (own) {
+  // Alpaca-first: MK.ai's own brain answers only what it is exact at (maths,
+  // conversions, time, who it is); an exact earlier Alpaca answer is reused.
+  const exactOwn = own && (INSTANT_ASK.test(question.trim()) || /\d/.test(question) || question.trim().split(/\s+/).length <= 3);
+  if (aiFirst && memory && memory.collection === "learned" && !memory.similarTo && ["ai", "taught"].includes(memory.source || "ai")) return fromMemory();
+  if (own && (!aiFirst || exactOwn)) {
     think("My own brain worked it out");
     logActivity(question, "local");
     return { answer: own, saved: nothingSaved, source: "local" };
@@ -1535,17 +1677,38 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   // Alpaca Pro and Live: writing, explaining, advice, code, follow-ups and
   // anything about now go to the big models first; plain facts stay instant.
-  let route = alpacaRoute(question, { contextual, deep: opts.deep });
-  // A checked answer MK.ai already has ("how to take a screenshot") is instant and
-  // free; writing and code requests always go to Alpaca Pro.
-  if (route === "pro" && !WRITE_ASK.test(question.trim())) {
-    const strong = await knowledgeAnswer(searchFor).catch(() => null);
-    if (strong && strong.score >= 0.85) route = null;
+  // A document the admin taught answers questions about itself directly
+  for (const passage of knowledge.docs || []) {
+    const found = passage.score >= 0.6 && bestSentences(searchFor, passage.text);
+    if (found) {
+      think(`Found it in the document “${passage.title}”`);
+      logActivity(question, "document");
+      return { answer: found, credit: `from "${passage.title}"`, saved: nothingSaved, source: "document" };
+    }
   }
-  if (route && navigator.onLine) {
+
+  let route = alpacaRoute(question, { contextual, deep: opts.deep });
+  // Alpaca answers everything else; what MK.ai already knows is given to it as facts
+  if (aiFirst && !route && (worthLearning(question) || contextual)) route = "pro";
+  if (!aiFirst) route = null;
+  if (route) {
+    const kb = await knowledgeAnswer(searchFor).catch(() => null);
+    if (kb && kb.score >= 0.6) knowledge = { ...knowledge, good: [{ question: kb.question, answer: kb.answer, curated: true }, ...(knowledge.good || [])] };
+    if (own) knowledge = { ...knowledge, good: [{ question, answer: own }, ...(knowledge.good || [])] };
     const pro = await tryAlpaca(route, knowledge);
     if (pro) return pro;
     think("The big models are busy, so I'm answering from my own knowledge");
+  }
+  // Big models unavailable: MK.ai's own friendly replies for everyday talk
+  const talk = !quickChat && !attachment && converse(question);
+  if (talk) {
+    think("Talking with you like a friend");
+    return { answer: talk, saved: nothingSaved, source: "local" };
+  }
+  if (own) {
+    think("My own brain worked it out");
+    logActivity(question, "local");
+    return { answer: own, saved: nothingSaved, source: "local" };
   }
 
   // The built-in knowledge base (checked answers that ship with MK.ai).
@@ -1612,7 +1775,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
   // Still unknown: MK.ai's teacher, Gemini, answers, and MK.ai keeps the answer in
   // its memory so next time it answers on its own.
-  if (worthLearning(question)) {
+  if (worthLearning(question) && routeMode() !== "instant") {
     think("Asking Alpaca Pro");
     const taught = await askAlpaca(question, history.slice(-6), knowledge, onText, { creator: isCreator(), deep: opts.deep, system: personaNote() }).catch((err) => (console.warn("Gemini:", err), null));
     // News, prices and scores change, so those answers aren't kept
@@ -1773,7 +1936,8 @@ function startLoading() {
 const MODEL_KEY = "mkai-model";
 let activeModel = "alpaca";
 try {
-  activeModel = localStorage.getItem(MODEL_KEY) === "vision" ? "vision" : "alpaca";
+  const saved = localStorage.getItem(MODEL_KEY);
+  activeModel = ["vision", "pro", "deep"].includes(saved) ? saved : localStorage.getItem("mkai-mode") === "deep" ? "deep" : "alpaca";
 } catch {}
 const VISION_HELP = [
   "**Alpaca Vision** turns your words into real photos and short photo-videos, plus greeting cards, logos, patterns and charts.",
@@ -1797,17 +1961,46 @@ const VISION_HELP = [
   "",
   "Styles: cinematic, black and white, vintage, neon, anime, oil painting, watercolour, pixel art. Sizes: portrait, square.",
 ].join("\n");
+// The model menu: which Alpaca answers, and in which style
+const MODELS = {
+  alpaca: { label: "Alpaca", about: "Fast, smart answers" },
+  pro: { label: "Alpaca Pro", about: "The big model for every answer" },
+  deep: { label: "Alpaca Pro (Deep thinking)", about: "Thinks step by step, checks its work" },
+  vision: { label: "Alpaca Vision", about: "Pictures and videos" },
+};
 function setModel(model) {
+  if (!MODELS[model]) model = "alpaca";
+  if (model === "vision" && profile && !isUnlimited()) model = "alpaca";
   activeModel = model;
+  answerMode = model === "deep" ? "deep" : "normal";
   try {
     localStorage.setItem(MODEL_KEY, model);
+    localStorage.setItem(MODE_KEY, answerMode);
   } catch {}
   const select = $("modelSelect");
-  if (select) select.value = model;
-  document.querySelector(".mode-switch")?.classList.toggle("hidden", model === "vision");
-  questionInput.placeholder = model === "vision" ? "Describe a picture…" : answerMode === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
+  if (select) select.value = model === "vision" ? "vision" : "alpaca";
+  const btn = $("modelBtn");
+  if (btn) {
+    const style = persona !== "assistant" && model !== "vision" ? ` · ${PERSONAS[persona].label}` : "";
+    btn.querySelector(".model-name").textContent = MODELS[model].label + style;
+  }
+  questionInput.placeholder = model === "vision" ? "Describe a picture…" : model === "deep" ? "Ask — I'll think it through…" : "Ask me anything…";
 }
 $("modelSelect")?.addEventListener("change", (e) => setModel(e.target.value));
+function modelMenu() {
+  const items = [{ heading: "Models" }];
+  for (const [k, m] of Object.entries(MODELS)) {
+    if (k === "vision" && !isUnlimited()) continue;
+    items.push({ label: m.label, sub: k === "vision" && !isAdmin() ? "Pictures" : m.about, checked: k === activeModel, run: () => setModel(k) });
+  }
+  items.push("-", { heading: "Style" });
+  for (const [k, p] of Object.entries(PERSONAS)) items.push({ label: p.label.replace(" (default)", ""), checked: k === persona, run: () => (setPersona(k), setModel(activeModel)) });
+  return items;
+}
+$("modelBtn")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openMenu(e.currentTarget, modelMenu());
+});
 
 // The Code School is for unlimited members
 document.addEventListener("click", (e) => {
@@ -1826,16 +2019,14 @@ try {
   answerMode = localStorage.getItem(MODE_KEY) === "deep" ? "deep" : "normal";
 } catch {}
 function setMode(mode) {
-  answerMode = mode;
-  try {
-    localStorage.setItem(MODE_KEY, mode);
-  } catch {}
+  // Normal / Deep think now live in the model menu: Deep = Alpaca Pro (Deep thinking)
+  if (mode === "deep") setModel("deep");
+  else if (activeModel === "deep") setModel("alpaca");
   document.querySelectorAll(".mode-btn").forEach((b) => {
     const on = b.dataset.mode === mode;
     b.classList.toggle("active", on);
     b.setAttribute("aria-checked", String(on));
   });
-  setModel(activeModel);
 }
 document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 

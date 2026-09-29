@@ -11,6 +11,12 @@ export const LIMITS = {
   weekMs: 7 * 86400000,
 };
 
+// The admin can change the free limits from the vault
+export function setLimits({ windowTokens, weekTokens } = {}) {
+  if (Number(windowTokens) >= 1000) LIMITS.windowTokens = Number(windowTokens);
+  if (Number(weekTokens) >= 10000) LIMITS.weekTokens = Number(weekTokens);
+}
+
 export const tokensFor = (question = "", answer = "") => Math.max(1, Math.ceil((question.length + answer.length) / 4));
 
 // Usage with any finished window or week cleared.

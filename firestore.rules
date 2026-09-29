@@ -77,6 +77,28 @@ service cloud.firestore {
         && incoming().usage.keys().hasOnly(['windowStart', 'windowTokens', 'weekStart', 'weekTokens'])
       ) || (
         signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['accessRequest'])
+        && incoming().accessRequest.keys().hasOnly(['status', 'at'])
+        && incoming().accessRequest.status == 'pending'
+        && incoming().accessRequest.at == request.time
+        && resource.data.tier == 'trial'
+        && (!('accessRequest' in resource.data) || resource.data.accessRequest.status != 'pending')
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['limitHits', 'limitHitAt'])
+        && incoming().limitHits == resource.data.get('limitHits', 0) + 1
+        && incoming().limitHitAt == request.time
+        && (!('limitHitAt' in resource.data) || request.time > resource.data.limitHitAt + duration.value(6, 'd'))
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['tier', 'expiresAt', 'autoUnlimited'])
+        && resource.data.tier == 'trial'
+        && resource.data.get('limitHits', 0) >= 5
+        && incoming().tier == 'unlimited'
+        && incoming().expiresAt == null
+        && incoming().autoUnlimited == true
+      ) || (
+        signedIn() && request.auth.uid == uid
         && changed().hasOnly(['creator', 'creatorCode'])
         && incoming().creator == true
         && incoming().creatorCode == creatorCode()

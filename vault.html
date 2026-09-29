@@ -17,7 +17,7 @@
     <section id="gateScreen" class="login-screen hidden">
       <a href="./" class="back-link login-back">&larr; back to chat</a>
       <form class="login-card" id="gateForm">
-        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#2f6bff"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#ffffff" letter-spacing="-3">MK</text></svg></div>
+        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#7c3aed"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#ffffff" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
         <input id="gatePass" type="password" inputmode="numeric" autocomplete="off" placeholder="vault password" aria-label="Vault password" />
         <button type="submit">Unlock</button>
@@ -28,7 +28,7 @@
     <section id="loginScreen" class="login-screen">
       <a href="./" class="back-link login-back">&larr; back to chat</a>
       <div class="login-card">
-        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#2f6bff"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#ffffff" letter-spacing="-3">MK</text></svg></div>
+        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#7c3aed"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#ffffff" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
         <p class="login-copy">This room isn't linked anywhere. Log in with the admin account.</p>
         <form id="loginForm">
@@ -50,6 +50,49 @@
         </div>
         <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
+
+      <section class="activity-section control-centre" id="controlCentre">
+        <div class="activity-heading">
+          <h2>Control centre</h2>
+          <button type="button" id="testAlpacaBtn" class="refresh-btn">Test Alpaca</button>
+        </div>
+        <p class="col-hint">You control how Alpaca behaves for everyone. Changes apply the next time people open or refresh MK.ai.</p>
+        <p class="col-hint" id="testAlpacaOut" aria-live="polite"></p>
+        <form id="controlForm" class="control-form">
+          <label>How Alpaca answers
+            <select id="ctlMode">
+              <option value="auto">Smart (Alpaca Pro for almost everything; maths and quick replies instant)</option>
+              <option value="pro">Always Alpaca Pro (the big model for every answer)</option>
+              <option value="instant">Instant only (MK.ai's own knowledge, no big model)</option>
+            </select>
+          </label>
+          <label>Your instructions to Alpaca <span class="col-hint">(it follows these in every answer)</span>
+            <textarea id="ctlInstructions" rows="3" maxlength="2000" placeholder="e.g. Always answer in simple English. Mention MK.ai's Code School when someone asks about coding."></textarea>
+          </label>
+          <label>Announcement shown to everyone <span class="col-hint">(leave empty for none)</span>
+            <input id="ctlAnnounce" maxlength="300" placeholder="e.g. New: run Python code right in the chat!" />
+          </label>
+          <div class="control-grid">
+            <label class="check"><input type="checkbox" id="ctlVision" /> Alpaca Vision on</label>
+            <label class="check"><input type="checkbox" id="ctlOffice" /> PowerPoint, Word and Excel files on</label>
+            <label class="check"><input type="checkbox" id="ctlVoice" /> Voiceovers on</label>
+            <label class="check"><input type="checkbox" id="ctlCode" /> Run code in the chat on</label>
+            <label class="check"><input type="checkbox" id="ctlMaintenance" /> Maintenance mode (only you can chat)</label>
+            <label class="check"><input type="checkbox" id="ctlAutoPromote" /> Automatically promote everything MK.ai learns to the vault</label>
+          </div>
+          <div class="control-grid">
+            <label>Free tokens per 5 hours <input type="number" id="ctlWindow" min="1000" step="1000" /></label>
+            <label>Free tokens per week <input type="number" id="ctlWeek" min="10000" step="10000" /></label>
+          </div>
+          <div class="control-actions">
+            <button type="submit">Save controls</button>
+            <button type="button" id="promoteAllBtn" class="secondary">Promote all learned answers now</button>
+            <span id="controlStatus" class="col-hint" aria-live="polite"></span>
+          </div>
+        </form>
+        <h3 class="control-sub">Unlimited access requests <span class="count" id="requestsCount"></span></h3>
+        <div id="requestsList" class="requests-list"><p class="col-hint">No requests right now.</p></div>
+      </section>
 
       <section class="activity-section training" id="training">
         <div class="activity-heading">
