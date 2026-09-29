@@ -300,7 +300,7 @@ const creatorOff = () => {
 const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
 // MK.ai's admin (the master account)
-const ADMIN_EMAIL = "rsmohnishkumar@gmail.com";
+const ADMIN_EMAIL = "mkaiadmin@gmail.com";
 const isAdmin = () => (auth.currentUser?.email || "").toLowerCase() === ADMIN_EMAIL;
 const unlimitedOnly = (what) =>
   `${what === "Alpaca Vision" ? "Pictures are" : "This is"} available to unlimited members.\n\n` +
