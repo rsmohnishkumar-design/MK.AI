@@ -58,7 +58,7 @@
 
 #loginForm button, #gateForm button {
   background: var(--brass);
-  color: #ffffff;
+  color: #001a20;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -193,7 +193,7 @@
 
 .add-form button {
   background: var(--brass);
-  color: #ffffff;
+  color: #001a20;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -426,7 +426,7 @@
 
 .groq-form button {
   background: var(--brass);
-  color: #ffffff;
+  color: #001a20;
   border: none;
   border-radius: 3px;
   padding: 10px 16px;
@@ -491,7 +491,7 @@
 .train-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
 .train-actions button, .file-btn {
   background: var(--brass);
-  color: #ffffff;
+  color: #001a20;
   border: 1px solid var(--brass);
   border-radius: 4px;
   padding: 8px 14px;
@@ -555,7 +555,7 @@
 .control-form label.check { display: flex; align-items: center; gap: 8px; }
 .control-form label.check input { width: 18px; height: 18px; accent-color: var(--brass); }
 .control-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.control-actions button, .request-row button { background: var(--grand, var(--brass)); color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font: 600 13px var(--font-body); cursor: pointer; }
+.control-actions button, .request-row button { background: var(--grand, var(--brass)); color: #001a20; border: 0; border-radius: 8px; padding: 9px 14px; font: 600 13px var(--font-body); cursor: pointer; }
 .control-actions button.secondary, .request-row button.secondary { background: transparent; color: var(--paper); border: 1px solid var(--panel-border); }
 .control-sub { margin: 18px 0 8px; font-size: 15px; }
 .requests-list { display: grid; gap: 8px; }
