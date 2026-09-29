@@ -1477,11 +1477,30 @@ async function geminiPhoto(spec, onProgress) {
   }
 }
 
+// Pollinations: a free, keyless image AI that answers in seconds (only the
+// description is sent). A video gets a few shots of the same scene.
+async function fastPhotos(spec, onProgress) {
+  const [W, H] = hordeSize(spec);
+  const shots = spec.video && spec.kind !== "card" ? (spec.duration >= 10 ? 5 : 4) : 1;
+  const prompt = `${spec.photoPrompt}${shots > 1 ? ", cinematic film still" : ""}, high quality, detailed`;
+  onProgress("Painting…");
+  const one = (i) =>
+    Promise.race([
+      loadImage(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${W}&height=${H}&seed=${(spec.seed + i * 7919) % 1000000}&nologo=true&safe=true`),
+      new Promise((resolve) => setTimeout(() => resolve(null), 60000)),
+    ]);
+  const imgs = (await Promise.all(Array.from({ length: shots }, (_, i) => one(i)))).filter(Boolean);
+  return imgs.length ? imgs : null;
+}
+
 async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
   const gen0 = cancelGen;
   const hd = await geminiPhoto(spec, onProgress);
   if (gen0 !== cancelGen) return { stopped: true };
   if (hd) return hd;
+  const fast = await fastPhotos(spec, onProgress).catch(() => null);
+  if (gen0 !== cancelGen) return { stopped: true };
+  if (fast) return fast;
   const until = Date.now() + timeoutMs;
   const gen = cancelGen;
   let id = null;

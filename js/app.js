@@ -1524,7 +1524,9 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
 
   // Pictures and videos: Alpaca Vision (chosen in the model menu, or "draw …")
-  if (activeModel === "vision" || isVisionRequest(question)) {
+  // In Alpaca Vision, a question ("who is Gemini?") is answered, not drawn
+  const asksQuestion = /^(who|what|why|how|when|where|which|whose|is|are|was|were|do|does|did|can|could|should|would|will|explain|define|tell me|help)\b/i.test(question.trim()) || /\?\s*$/.test(question);
+  if ((activeModel === "vision" && !(asksQuestion && !isVisionRequest(question))) || isVisionRequest(question)) {
     if (!isUnlimited()) return { answer: unlimitedOnly("Alpaca Vision"), saved: nothingSaved, source: "vision" };
     if (control.vision === false && !isAdmin()) return { answer: "Alpaca Vision is switched off by the admin for now. Please try again later.", saved: nothingSaved, source: "vision" };
     think("Handing this to Alpaca Vision, my picture and video model");
