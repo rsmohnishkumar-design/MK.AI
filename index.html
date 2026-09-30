@@ -60,7 +60,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=82" />
+<link rel="stylesheet" href="style.css?v=84" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -233,7 +233,7 @@
   <dialog class="vault-gate" id="vaultGate" aria-labelledby="vaultGateTitle">
     <form method="dialog" id="vaultGateForm">
       <p class="vault-gate-title" id="vaultGateTitle">Vault</p>
-      <input type="password" id="vaultGatePass" inputmode="numeric" autocomplete="off" placeholder="Password" aria-label="Vault password" />
+      <input type="password" id="vaultGatePass" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Vault password" aria-label="Vault password" />
       <p class="vault-gate-error" id="vaultGateError" aria-live="polite"></p>
       <div class="vault-gate-actions">
         <button type="button" id="vaultGateCancel" class="secondary">Cancel</button>
@@ -301,6 +301,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=82"></script>
+  <script type="module" src="js/app.js?v=84"></script>
 </body>
 </html>

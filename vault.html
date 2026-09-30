@@ -19,7 +19,7 @@
       <form class="login-card" id="gateForm">
         <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
-        <input id="gatePass" type="password" inputmode="numeric" autocomplete="off" placeholder="vault password" aria-label="Vault password" />
+        <input id="gatePass" type="password" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="vault password" aria-label="Vault password" />
         <button type="submit">Unlock</button>
         <p class="login-error" id="gateError" aria-live="polite"></p>
       </form>
@@ -30,14 +30,15 @@
       <div class="login-card">
         <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
-        <p class="login-copy">This room isn't linked anywhere. Log in with the admin account.</p>
-        <form id="loginForm">
+        <p class="login-copy" id="loginCopy">Open MK.ai, sign in with your account, then tap the MK logo 5 times and enter the vault password.</p>
+        <a href="./" class="vault-open-chat">Open MK.ai</a>
+        <form id="loginForm" hidden>
           <input id="emailInput" type="email" placeholder="admin email" autocomplete="username" required />
           <input id="passwordInput" type="password" placeholder="password" autocomplete="current-password" required />
           <button type="submit">Unlock</button>
         </form>
         <button id="resendBtn" type="button" class="refresh-btn hidden">resend verification email</button>
-        <button id="forgotBtn" type="button" class="link-btn">Forgot password?</button>
+        <button id="forgotBtn" type="button" class="link-btn" hidden>Forgot password?</button>
         <p id="loginError" class="login-error"></p>
       </div>
     </section>

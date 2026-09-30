@@ -15,6 +15,8 @@ service cloud.firestore {
     function unlimitedCode() { return 'change-this-code'; }
     // The creator's secret code: saying "I created you" in the chat asks for it.
     function creatorCode() { return 'change-this-creator-code'; }
+    // The vault password: checked here, never stored in the website's code
+    function vaultCode() { return 'change-this-vault-password'; }
     // ====================================================
 
     // Trial length: 3 hours (180 minutes) plus 5 minutes for clock differences.
@@ -101,7 +103,7 @@ service cloud.firestore {
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['creator', 'creatorCode'])
         && incoming().creator == true
-        && incoming().creatorCode == creatorCode()
+        && (incoming().creatorCode == creatorCode() || incoming().creatorCode == vaultCode())
       );
 
       allow delete: if isAdmin();

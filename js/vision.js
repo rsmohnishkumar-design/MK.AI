@@ -1555,6 +1555,145 @@ async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
   }
 }
 
+// --- A little game while a photo is being made: catch the falling stars ---------------------
+// Move the basket with a finger, the mouse or the arrow keys. Returns { stop }.
+export function waitGame(canvas, spec) {
+  const [W, H] = sizeOf(spec);
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const s = Math.min(W, H) / 400; // scale
+  const basket = { x: W / 2, w: 90 * s, h: 16 * s };
+  let items = [];
+  let score = 0;
+  let best = 0;
+  let missed = 0;
+  let raf = 0;
+  let last = performance.now();
+  let spawn = 0;
+  let running = true;
+  try {
+    best = Number(localStorage.getItem("mkai-star-best")) || 0;
+  } catch {}
+  const moveTo = (clientX) => {
+    const r = canvas.getBoundingClientRect();
+    basket.x = Math.max(basket.w / 2, Math.min(W - basket.w / 2, ((clientX - r.left) / r.width) * W));
+  };
+  const onPointer = (e) => moveTo(e.clientX);
+  const onTouch = (e) => {
+    if (e.touches[0]) moveTo(e.touches[0].clientX);
+    e.preventDefault();
+  };
+  const keys = {};
+  const onKey = (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") keys[e.key] = e.type === "keydown";
+  };
+  canvas.addEventListener("pointermove", onPointer);
+  canvas.addEventListener("pointerdown", onPointer);
+  canvas.addEventListener("touchmove", onTouch, { passive: false });
+  addEventListener("keydown", onKey);
+  addEventListener("keyup", onKey);
+  canvas.style.touchAction = "none";
+
+  const star = (x, y, r, color) => {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      const rr = i % 2 ? r * 0.45 : r;
+      ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
+  const tick = (now) => {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (keys.ArrowLeft) basket.x = Math.max(basket.w / 2, basket.x - 420 * s * dt);
+    if (keys.ArrowRight) basket.x = Math.min(W - basket.w / 2, basket.x + 420 * s * dt);
+    spawn -= dt;
+    if (spawn <= 0) {
+      const bomb = Math.random() < 0.18;
+      items.push({ x: 20 * s + Math.random() * (W - 40 * s), y: -20 * s, v: (120 + Math.random() * 120 + score * 3) * s, r: (bomb ? 12 : 14) * s, bomb });
+      spawn = Math.max(0.35, 0.9 - score * 0.01);
+    }
+    const by = H - 40 * s;
+    items = items.filter((it) => {
+      it.y += it.v * dt;
+      if (it.y > by - it.r && it.y < by + basket.h && Math.abs(it.x - basket.x) < basket.w / 2 + it.r * 0.6) {
+        if (it.bomb) {
+          score = Math.max(0, score - 5);
+        } else {
+          score++;
+          if (score > best) {
+            best = score;
+            try {
+              localStorage.setItem("mkai-star-best", String(best));
+            } catch {}
+          }
+        }
+        return false;
+      }
+      if (it.y > H + 20 * s) {
+        if (!it.bomb) missed++;
+        return false;
+      }
+      return true;
+    });
+    // draw
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#020617");
+    g.addColorStop(1, "#083344");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    for (const it of items) {
+      if (it.bomb) {
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, it.r, 0, 7);
+        ctx.fillStyle = "#475569";
+        ctx.fill();
+        ctx.fillStyle = "#f87171";
+        ctx.fillRect(it.x - 2 * s, it.y - it.r - 6 * s, 4 * s, 6 * s);
+      } else star(it.x, it.y, it.r, "#22d3ee");
+    }
+    ctx.fillStyle = "#22d3ee";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(basket.x - basket.w / 2, by, basket.w, basket.h, 6 * s);
+    else ctx.rect(basket.x - basket.w / 2, by, basket.w, basket.h);
+    ctx.fill();
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = `600 ${16 * s}px Inter, system-ui, sans-serif`;
+    ctx.fillText(`Stars: ${score}   Best: ${best}`, 14 * s, 26 * s);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = `${12 * s}px Inter, system-ui, sans-serif`;
+    ctx.fillText("Move the basket to catch stars, dodge the bombs", 14 * s, 46 * s);
+    // a gentle "working" bar along the bottom
+    const p = (now / 1600) % 1;
+    ctx.fillStyle = "rgba(34,211,238,0.25)";
+    ctx.fillRect(0, H - 4 * s, W, 4 * s);
+    ctx.fillStyle = "#22d3ee";
+    ctx.fillRect(p * W - W * 0.2, H - 4 * s, W * 0.2, 4 * s);
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  return {
+    get score() {
+      return score;
+    },
+    stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointermove", onPointer);
+      canvas.removeEventListener("pointerdown", onPointer);
+      canvas.removeEventListener("touchmove", onTouch);
+      removeEventListener("keydown", onKey);
+      removeEventListener("keyup", onKey);
+      canvas.style.touchAction = "";
+    },
+  };
+}
+
 // --- In the chat -------------------------------------------------------------------------------
 
 function btn(label, onClick) {
@@ -1637,7 +1776,8 @@ export function mountVision(container, specText) {
   let raf = 0;
   let started = 0;
   let loadToken = 0;
-  const frame = (c, t) => (photos ? paintPhotoFrame(c, spec, photos, t) : paint(c, spec, t));
+  let game = null; // the waiting game, while a photo is being made
+  const frame = (c, t) => (game && c === canvas ? null : photos ? paintPhotoFrame(c, spec, photos, t) : paint(c, spec, t));
   const loop = () => {
     const t = ((performance.now() - started) / 1000) % spec.duration;
     frame(canvas, t);
@@ -1666,11 +1806,12 @@ export function mountVision(container, specText) {
       frame(canvas, 0);
       return;
     }
-    // Meanwhile: Alpaca's own drawing, with the real photo's queue status
-    let waitText = "Asking for a real photo…";
+    // Meanwhile: a little game to play, with the photo's progress
+    let waitText = "Starting…";
+    game?.stop();
+    game = waitGame(canvas, spec);
     const showWaiting = () => {
-      paint(canvas, spec, 0);
-      label.textContent = `Real ${spec.video ? "video" : "photo"}: ${waitText} (drawing shown meanwhile)`;
+      label.textContent = `Creating your ${spec.video ? "video" : "photo"}: ${waitText} · Catch the stars while you wait!`;
     };
     showWaiting();
     const got = await loadPhotos(spec, (text) => {
@@ -1678,6 +1819,8 @@ export function mountVision(container, specText) {
       if (token === loadToken) showWaiting();
     });
     if (token !== loadToken) return;
+    game?.stop();
+    game = null;
     const stopped = got && got.stopped;
     photos = Array.isArray(got) && got.length ? got : null;
     if (!photos) label.dataset.fallback = "1";

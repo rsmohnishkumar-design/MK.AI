@@ -29,6 +29,7 @@ import { research, worthLearning, startAutoLearner, learnTrending, learnCurricul
 import { pdfText, makeQA } from "./docreader.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
+import { unlockVault, vaultUnlocked } from "./vaultkey.js";
 
 const $ = (id) => document.getElementById(id);
 const loginScreen = $("loginScreen");
@@ -132,54 +133,43 @@ function renderLearnReport(learned) {
   ];
   $("learnReport").innerHTML = parts.join("<br>");
 }
-// The vault password (tap the MK logo 5 times in the chat, or enter it here)
-const VAULT_HASH = "783c287f76b51ce9f543bba6e998126ca97bd3a26eae04eeab73d9d3dee7b43b";
-const gatePassed = () => {
-  try {
-    return sessionStorage.getItem("mkai-vault-pass") === VAULT_HASH;
-  } catch {
-    return false;
-  }
-};
-async function vaultHash(text) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`mkai-vault:${text}`));
-  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-if (!gatePassed()) {
+// The vault password: any signed-in account plus the vault password (checked by the
+// database, see vaultkey.js). No admin email needed.
+const showGate = (message = "") => {
+  vaultScreen.classList.add("hidden");
   loginScreen.classList.add("hidden");
   $("gateScreen").classList.remove("hidden");
+  $("gateError").textContent = message;
+  $("gatePass").value = "";
   $("gatePass").focus();
-}
+};
 $("gateForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if ((await vaultHash($("gatePass").value.trim())) !== VAULT_HASH) {
-    $("gateError").textContent = "Wrong password.";
-    return;
-  }
+  const pass = $("gatePass").value.trim();
+  if (!pass) return;
+  $("gateError").textContent = "Checking…";
   try {
-    sessionStorage.setItem("mkai-vault-pass", VAULT_HASH);
-  } catch {}
-  location.reload();
+    await unlockVault(pass);
+    location.reload();
+  } catch (err) {
+    $("gateError").textContent = err.code === "wrong" ? "Wrong password." : err.code === "signin" ? "Sign in to MK.ai first." : friendlyError(err);
+  }
 });
 
-if (configured && gatePassed()) {
+if (configured) {
   onAuthStateChanged(auth, async (user) => {
     resendBtn.classList.add("hidden");
     if (!user) {
+      // Sign in happens in the chat; the vault only asks for its password
+      $("gateScreen").classList.add("hidden");
       vaultScreen.classList.add("hidden");
       loginScreen.classList.remove("hidden");
       return;
     }
-    // The security rules decide who the admin is (by email).
-    if (!(await isAdmin())) {
-      loginError.textContent =
-        `${user.email} isn't an admin yet. To make it one (once only): go back to the chat, type "I created you" and enter your creator code. ` +
-        `After that, 5 taps on the logo and the vault password open the vault straight away. Or log in below with the admin email.`;
-      // Stay signed in to the chat: logging in below switches accounts anyway.
-      vaultScreen.classList.add("hidden");
-      loginScreen.classList.remove("hidden");
-      return;
-    }
+    if (!vaultUnlocked()) return showGate();
+    // The security rules decide who the admin is: the admin email, or the creator
+    // (any account that entered the vault password)
+    if (!(await isAdmin())) return showGate("Enter the vault password to open the vault on this account.");
     loginScreen.classList.add("hidden");
     vaultScreen.classList.remove("hidden");
     loadEntries();

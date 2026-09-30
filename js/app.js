@@ -34,6 +34,7 @@ import * as creator from "./creator.js";
 import { renderAnswer, registerBlock, setFixHandler } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
 import { askAlpaca, YOUTUBE, WEB_LINK } from "./ai.js";
+import { unlockVault } from "./vaultkey.js";
 import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } from "./learning.js";
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
@@ -301,7 +302,7 @@ const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
 // MK.ai's admin (the master account)
 const ADMIN_EMAIL = "mkaiadmin@gmail.com";
-const isAdmin = () => (auth.currentUser?.email || "").toLowerCase() === ADMIN_EMAIL;
+const isAdmin = () => (auth.currentUser?.email || "").toLowerCase() === ADMIN_EMAIL || profile?.creator === true;
 const unlimitedOnly = (what) =>
   `${what === "Alpaca Vision" ? "Pictures are" : "This is"} available to unlimited members.\n\n` +
   "**Want unlimited access?** Tap **Ask for unlimited access** under your email, and the admin will review it. " +
@@ -1525,7 +1526,8 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   // Pictures and videos: Alpaca Vision (chosen in the model menu, or "draw …")
   // In Alpaca Vision, a question ("who is Gemini?") is answered, not drawn
-  const asksQuestion = /^(who|what|why|how|when|where|which|whose|is|are|was|were|do|does|did|can|could|should|would|will|explain|define|tell me|help)\b/i.test(question.trim()) || /\?\s*$/.test(question);
+  const visionHelp = /^(hi|hello|hey|help|what can you (draw|make|do)|how does this work)\b/i.test(question.trim());
+  const asksQuestion = !visionHelp && (/^(who|what|why|how|when|where|which|whose|is|are|was|were|do|does|did|can|could|should|would|will|explain|define|tell me)\b/i.test(question.trim()) || /\?\s*$/.test(question));
   if ((activeModel === "vision" && !(asksQuestion && !isVisionRequest(question))) || isVisionRequest(question)) {
     if (!isUnlimited()) return { answer: unlimitedOnly("Alpaca Vision"), saved: nothingSaved, source: "vision" };
     if (control.vision === false && !isAdmin()) return { answer: "Alpaca Vision is switched off by the admin for now. Please try again later.", saved: nothingSaved, source: "vision" };
@@ -2151,12 +2153,7 @@ composer.addEventListener("submit", async (e) => {
 });
 
 // --- Hidden vault entrance: tap the MK logo 5 times, then enter the vault password ---
-// (A quick lock for this device; the vault itself still only opens for admin accounts.)
-const VAULT_HASH = "783c287f76b51ce9f543bba6e998126ca97bd3a26eae04eeab73d9d3dee7b43b";
-async function vaultHash(text) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`mkai-vault:${text}`));
-  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+// (The database checks the password; it isn't in the website's code.)
 let clickCount = 0;
 let clickTimer = null;
 secretMark.addEventListener("click", () => {
@@ -2174,13 +2171,14 @@ secretMark.addEventListener("click", () => {
 $("vaultGateCancel").addEventListener("click", () => $("vaultGate").close());
 $("vaultGateForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if ((await vaultHash($("vaultGatePass").value.trim())) === VAULT_HASH) {
-    try {
-      sessionStorage.setItem("mkai-vault-pass", VAULT_HASH);
-    } catch {}
+  const pass = $("vaultGatePass").value.trim();
+  if (!pass) return;
+  $("vaultGateError").textContent = "Checking…";
+  try {
+    await unlockVault(pass);
     window.location.href = "vault.html";
-  } else {
-    $("vaultGateError").textContent = "Wrong password.";
+  } catch (err) {
+    $("vaultGateError").textContent = err.code === "wrong" ? "Wrong password." : err.code === "signin" ? "Sign in first." : "Couldn't check the password. Try again.";
     $("vaultGatePass").select();
   }
 });
