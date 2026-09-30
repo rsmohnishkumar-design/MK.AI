@@ -547,7 +547,7 @@
 .learn-report b { color: var(--brass); }
 
 /* Control centre */
-.control-centre { border: 1px solid var(--brass-dim); }
+.control-centre { border: 0; padding-left: 0; padding-right: 0; }
 .control-form { display: grid; gap: 12px; margin-top: 8px; }
 .control-form label { display: grid; gap: 6px; font-size: 14px; color: var(--paper); }
 .control-form select, .control-form textarea, .control-form input[type="number"], .control-form input:not([type]) { background: var(--ink); color: var(--paper); border: 1px solid var(--panel-border); border-radius: 8px; padding: 9px 10px; font: 14px var(--font-body); width: 100%; box-sizing: border-box; }
