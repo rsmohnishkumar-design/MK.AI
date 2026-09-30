@@ -73,6 +73,11 @@ const ERROR_REPORTER =
   "addEventListener('error',function(e){s((e.message||'Error')+(e.lineno?' (line '+e.lineno+')':''))});" +
   "addEventListener('unhandledrejection',function(e){s('Unhandled: '+(e.reason&&e.reason.message||e.reason))})})();<\/script>\n";
 let fixHandler = null;
+let codeActionHandler = null;
+// app.js: the "✦ Alpaca" menu on code blocks
+export function setCodeActionHandler(fn) {
+  codeActionHandler = fn;
+}
 // app.js: what happens when someone taps "Fix with Alpaca"
 export function setFixHandler(fn) {
   fixHandler = fn;
@@ -159,6 +164,22 @@ function codeBlock(lang, code) {
       }
     });
     actions.append(run);
+  }
+  // Coding tools: the full editor, and Alpaca's actions (explain, improve, convert…)
+  if (code.split("\n").length > 1 && !/^(mkai-|alpaca-)/.test(lang)) {
+    actions.append(
+      button("Edit", "code-copy code-edit", async () => {
+        const { openEditor } = await import("./editor.js");
+        openEditor(code, lang);
+      })
+    );
+    if (codeActionHandler) {
+      const ai = button("✦ Alpaca", "code-copy code-ai", (e) => {
+        e.stopPropagation();
+        codeActionHandler(code, lang, ai);
+      });
+      actions.append(ai);
+    }
   }
   if (EXT[lang] && code.split("\n").length > 3) actions.append(button("⬇ Download", "code-copy", () => download(lang, code)));
   const copy = button("Copy", "code-copy", async () => {

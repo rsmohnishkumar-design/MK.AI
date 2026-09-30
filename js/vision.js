@@ -1484,10 +1484,21 @@ async function fastPhotos(spec, onProgress) {
   const shots = spec.video && spec.kind !== "card" ? (spec.duration >= 10 ? 5 : 4) : 1;
   const prompt = `${spec.photoPrompt}${shots > 1 ? ", cinematic film still" : ""}, high quality, detailed`;
   onProgress("Painting…");
+  const url = (i) => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${W}&height=${H}&seed=${(spec.seed + i * 7919) % 1000000}&nologo=true&safe=true&referrer=mkai-c042b.web.app`;
+  // First with cross-origin access (so it can be saved from the canvas); if the
+  // service doesn't allow that, load it plainly so it still shows.
+  const plain = (src) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.referrerPolicy = "origin";
+      img.onload = () => resolve(img.naturalWidth ? Object.assign(img, { plainSrc: src }) : null);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
   const one = (i) =>
     Promise.race([
-      loadImage(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${W}&height=${H}&seed=${(spec.seed + i * 7919) % 1000000}&nologo=true&safe=true`),
-      new Promise((resolve) => setTimeout(() => resolve(null), 60000)),
+      loadImage(url(i)).then((img) => img || plain(url(i))),
+      new Promise((resolve) => setTimeout(() => resolve(null), 90000)),
     ]);
   const imgs = (await Promise.all(Array.from({ length: shots }, (_, i) => one(i)))).filter(Boolean);
   return imgs.length ? imgs : null;
@@ -1853,7 +1864,13 @@ export function mountVision(container, specText) {
   }
   actions.append(
     btn("⬇ Image", () => {
-      canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
+      try {
+        canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
+      } catch {
+        // A photo the service didn't allow copying: open it to save from there
+        const src = photos?.find((p) => p.plainSrc)?.plainSrc;
+        if (src) window.open(src, "_blank", "noopener");
+      }
     }),
     btn("New version", () => {
       spec = { ...spec, seed: (spec.seed + 7919) >>> 0 };

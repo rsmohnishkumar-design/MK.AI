@@ -24,7 +24,7 @@ const NO_SEARCH_PROMPT = `${BASE_PROMPT}
 If the question needs very recent information you may not have, give your best answer and briefly say it may be out of date.`;
 
 // Give up on one attempt after this long and try the next.
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 15000;
 
 // Greetings and small talk don't need a web search, which only adds seconds.
 const SMALL_TALK =

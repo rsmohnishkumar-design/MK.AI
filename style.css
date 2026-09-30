@@ -1497,3 +1497,41 @@ a.voice-btn { text-decoration: none; display: inline-block; }
 .pop-item.checked::after { content: "✓"; position: absolute; right: 14px; color: var(--accent); }
 .pop-menu .pop-item { position: relative; padding-right: 32px; }
 .mode-switch[hidden], .model-select[hidden] { display: none !important; }
+
+/* Alpaca Code Studio */
+.studio { position: fixed; inset: 0; z-index: 1100; display: flex; flex-direction: column; background: var(--ink); color: var(--paper); }
+.studio-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); background: var(--ink-soft); }
+.studio-title { font: 700 15px var(--font-body); margin-right: auto; background: var(--grand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.studio-lang { background: var(--ink); color: var(--paper); border: 1px solid var(--panel-border); border-radius: 8px; padding: 6px 8px; font: 13px var(--font-body); }
+.studio-btn { background: transparent; color: var(--paper); border: 1px solid var(--panel-border); border-radius: 8px; padding: 7px 12px; font: 600 13px var(--font-body); cursor: pointer; }
+.studio-btn:hover { border-color: var(--brass); }
+.studio-btn:disabled { opacity: 0.5; cursor: default; }
+.studio-btn.primary { background: var(--grand); color: #001a20; border-color: transparent; }
+.studio-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.studio-edit { position: relative; display: flex; min-height: 0; border-right: 1px solid var(--panel-border); }
+.studio-gutter { margin: 0; padding: 12px 8px; min-width: 44px; text-align: right; color: #52525b; background: #050505; font: 13px/1.55 var(--font-code); overflow: hidden; user-select: none; }
+.studio-code { flex: 1; min-width: 0; resize: none; border: 0; outline: none; padding: 12px 14px; background: #050505; color: #e4e4e7; font: 13px/1.55 var(--font-code); white-space: pre; overflow: auto; tab-size: 2; }
+.studio-out { display: flex; flex-direction: column; min-height: 0; background: var(--ink-soft); }
+.studio-out-head { padding: 8px 14px; font: 600 11px var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--paper-dim); border-bottom: 1px solid var(--panel-border); }
+.studio-out-body { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+.studio-out-text { margin: 0; white-space: pre-wrap; font: 13px/1.5 var(--font-code); color: #d4d4d8; }
+.studio-frame { width: 100%; height: 100%; min-height: 360px; border: 0; background: #fff; border-radius: 8px; }
+.studio-hint { margin: 0; color: var(--paper-dim); font-size: 14px; }
+.studio-explain { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+.studio-ask { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--panel-border); background: var(--ink-soft); }
+.studio-ask-input { flex: 1; min-width: 200px; background: var(--ink); color: var(--paper); border: 1px solid var(--panel-border); border-radius: 10px; padding: 10px 12px; font: 14px var(--font-body); }
+.studio-ask-input:focus { outline: none; border-color: var(--brass); }
+.studio-status { width: 100%; font-size: 12px; color: var(--paper-dim); }
+.studio-status:empty { display: none; }
+@media (max-width: 760px) {
+  .studio-main { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .studio-edit { border-right: 0; border-bottom: 1px solid var(--panel-border); }
+  .studio-title { width: 100%; }
+}
+
+/* Edit a sent message; Retry an answer */
+.edit-q-btn { display: block; margin: 4px 0 0 auto; background: transparent; border: 0; color: var(--paper-dim); font: 12px var(--font-body); cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+.msg-user:hover .edit-q-btn, .edit-q-btn:focus-visible { opacity: 1; }
+@media (hover: none) { .edit-q-btn { opacity: 0.8; } }
+.edit-q-btn:hover { color: var(--brass); }
+.code-ai { color: var(--brass); }

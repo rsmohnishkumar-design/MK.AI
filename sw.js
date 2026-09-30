@@ -1,7 +1,7 @@
 // MK.ai service worker: makes the app installable and lets it open offline.
 // Bump CACHE when shipping changes that must reach installed apps right away.
 // Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
-const CACHE = "mkai-v86";
+const CACHE = "mkai-v87";
 const SHELL = [
   "./",
   "style.css?v=37",
@@ -45,6 +45,7 @@ const SHELL = [
   "js/gemini-rest.js",
   "js/coderun.js",
   "js/vaultkey.js",
+  "js/editor.js",
   "data/kb/index.json",
   "data/apps.json",
   "learn.html",

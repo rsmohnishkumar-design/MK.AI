@@ -31,7 +31,7 @@ import { appAnswer } from "./apps.js";
 import { localAnswer } from "./local.js";
 import { wikiAnswer, wikiFind, looksLikeKnowledgeQuestion } from "./wiki.js";
 import * as creator from "./creator.js";
-import { renderAnswer, registerBlock, setFixHandler } from "./format.js";
+import { renderAnswer, registerBlock, setFixHandler, setCodeActionHandler } from "./format.js";
 import { isVisionRequest, visionAnswer, mountVision, cancelPhotos } from "./vision.js";
 import { askAlpaca, YOUTUBE, WEB_LINK } from "./ai.js";
 import { unlockVault } from "./vaultkey.js";
@@ -55,6 +55,26 @@ registerBlock("mkai-voice", mountVoiceover);
 setFixHandler((code, error, lang = "html") => {
   questionInput.value = `Fix this ${lang === "html" ? "app" : `${lang === "python" ? "Python" : "JavaScript"} program`}. When it runs it shows this error:\n${error}\n\nGive me the complete corrected code.\n\n\`\`\`${lang}\n${code}\n\`\`\``;
   composer.requestSubmit();
+});
+// "✦ Alpaca" on a code block: explain, improve, debug, test or convert it
+setCodeActionHandler((code, lang, anchor) => {
+  const ask = (instruction) => {
+    questionInput.value = `${instruction}\n\n\`\`\`${lang || ""}\n${code}\n\`\`\``;
+    composer.requestSubmit();
+  };
+  const other = ["Python", "JavaScript", "Java", "C++", "C#", "Kotlin"].filter((l) => l.toLowerCase().replace("++", "pp") !== (lang || "").toLowerCase().replace("++", "pp"));
+  openMenu(anchor, [
+    { heading: "Alpaca on this code" },
+    { label: "Explain it line by line", run: () => ask("Explain this code step by step, in simple words, for a learner.") },
+    { label: "Find and fix bugs", run: () => ask("Find any bugs or problems in this code, explain them, and give the complete fixed code.") },
+    { label: "Improve it", run: () => ask("Improve this code: make it cleaner, faster and more robust, keep the same behaviour, and give the complete improved code with a short list of what changed.") },
+    { label: "Add comments", run: () => ask("Add clear, helpful comments to this code and give the complete commented code.") },
+    { label: "Write tests", run: () => ask("Write thorough tests for this code (normal cases, edge cases, errors) and explain how to run them.") },
+    { label: "Time and space complexity", run: () => ask("What is the time and space complexity of this code? Explain simply and suggest how to make it more efficient.") },
+    "-",
+    { heading: "Convert to" },
+    ...other.slice(0, 4).map((l) => ({ label: l, run: () => ask(`Convert this code to ${l}. Give the complete, working ${l} code and note any differences.`) })),
+  ]);
 });
 registerBlock("mkai-quiz", (container, text) =>
   mountQuiz(container, text, (label) => {
@@ -1110,6 +1130,16 @@ questionInput.addEventListener("keydown", (e) => {
 function addUserMessage(text, attachment = null) {
   const node = tUser.content.cloneNode(true);
   node.querySelector(".msg-body").textContent = text;
+  // Edit: put the message back in the box to change and send again
+  if (!/^•+$/.test(text)) {
+    const edit = Object.assign(document.createElement("button"), { type: "button", className: "edit-q-btn", textContent: "Edit", title: "Edit and send again" });
+    edit.addEventListener("click", () => {
+      questionInput.value = text.replace(/^📎[^\n]*\n/, "");
+      fitQuestion();
+      questionInput.focus();
+    });
+    node.querySelector(".msg-body").after(edit);
+  }
   if (attachment?.previewUrl) {
     const img = Object.assign(document.createElement("img"), { className: "msg-attach", src: attachment.previewUrl, alt: attachment.name });
     node.querySelector(".msg-body").before(img);
@@ -1134,12 +1164,43 @@ function createAiMessage() {
   voteButtons.forEach((b) => b.classList.add("hidden"));
   thread.appendChild(node);
 
+  // Streaming: text is revealed smoothly and steadily as it arrives (it never
+  // restarts), with a cursor while more is coming.
+  const stream = { target: "", shown: 0, raf: 0, done: false };
+  const reveal = () => {
+    stream.raf = 0;
+    const left = stream.target.length - stream.shown;
+    if (left > 0) {
+      stream.shown += Math.max(2, Math.ceil(left / 10));
+      stream.shown = Math.min(stream.shown, stream.target.length);
+    }
+    const complete = stream.done && stream.shown >= stream.target.length;
+    renderAnswer(body, complete ? stream.target : stream.target.slice(0, stream.shown) + " ▍");
+    if (!complete && (stream.shown < stream.target.length || !stream.done)) {
+      if (stream.shown < stream.target.length) stream.raf = requestAnimationFrame(reveal);
+    }
+    if (complete) stream.onDone?.();
+  };
   return {
     setText(text) {
-      renderAnswer(body, text);
+      stream.target = text;
+      if (document.hidden) {
+        stream.shown = text.length;
+        renderAnswer(body, text + " ▍");
+        return;
+      }
+      if (!stream.raf) stream.raf = requestAnimationFrame(reveal);
     },
     finish(answer, searchSuggestions) {
-      typeOut(body, answer);
+      if (stream.target) {
+        // Already streaming: carry on to the end without starting over
+        cancelAnimationFrame(stream.raf);
+        stream.target = answer;
+        stream.shown = Math.min(stream.shown, answer.length);
+        stream.done = true;
+        if (document.hidden) stream.shown = answer.length;
+        stream.raf = requestAnimationFrame(reveal);
+      } else typeOut(body, answer);
       if (searchSuggestions) {
         // Shadow DOM keeps Google's own styling from clashing with the page.
         const host = el.querySelector(".search-suggestions");
@@ -1160,6 +1221,17 @@ function createAiMessage() {
         } catch {}
       });
       actions.classList.remove("hidden");
+    },
+    // "Retry": ask Alpaca again for a fresh, better answer
+    enableRetry(question) {
+      const btn = actions.querySelector(".retry-btn");
+      if (!btn || !question) return;
+      btn.classList.remove("hidden");
+      btn.addEventListener("click", () => {
+        retryOnce = true;
+        questionInput.value = question;
+        composer.requestSubmit();
+      });
     },
     // "More detail" (Deep think) and "Simpler" for explanations
     setRefine(question) {
@@ -1323,6 +1395,18 @@ const ALPACA_STEP = {
   link: "Alpaca is reading the page",
   study: "Alpaca is making your study pack",
 };
+// What the person told MK.ai about themselves, so Alpaca can tailor its answers
+function personalNote() {
+  const me = aboutMe(auth.currentUser?.uid) || {};
+  const bits = [];
+  if (me.name) bits.push(`their name is ${me.name}`);
+  if (me.class || me.grade) bits.push(`they are in ${me.class || me.grade}`);
+  if (me.city || me.place) bits.push(`they live in ${me.city || me.place}`);
+  const likes = [].concat(me.likes || []).filter(Boolean);
+  if (likes.length) bits.push(`they like ${likes.slice(0, 5).join(", ")}`);
+  return bits.length ? `About the person you're talking to (use this naturally when it helps; don't repeat it back): ${bits.join("; ")}.` : "";
+}
+
 // Alpaca personalities: how Pro answers are written (chosen in the ⋯ menu)
 const PERSONAS = {
   assistant: { label: "Assistant (default)", note: "" },
@@ -1489,7 +1573,14 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   async function tryAlpaca(route, knowledge = { good: [], bad: [], docs: [] }) {
     think(ALPACA_STEP[route] || "Alpaca Pro: writing a full answer");
-    const system = [control.instructions ? `Instructions from MK.ai's admin (follow them): ${control.instructions}` : "", route === "study" ? STUDY_NOTE : personaNote()].filter(Boolean).join("\n\n");
+    const system = [
+      control.instructions ? `Instructions from MK.ai's admin (follow them): ${control.instructions}` : "",
+      route === "study" ? STUDY_NOTE : personaNote(),
+      personalNote(),
+      opts.retry ? "The user asked again because they want a better answer than before: give a fresh, more complete and more accurate answer." : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
     const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep, system }).catch((err) => (console.warn("Alpaca:", err), null));
     if (!pro?.answer) return null;
     const keep = route === "pro" && !contextual && !pro.partial && !isTimeSensitive(question) && worthLearning(question) && question.length < 400;
@@ -1658,12 +1749,12 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     };
   };
 
-  if (memory && memory.collection === "vault") return fromMemory();
+  if (memory && memory.collection === "vault" && !opts.retry) return fromMemory();
 
   // Alpaca-first: MK.ai's own brain answers only what it is exact at (maths,
   // conversions, time, who it is); an exact earlier Alpaca answer is reused.
   const exactOwn = own && (INSTANT_ASK.test(question.trim()) || /\d/.test(question) || question.trim().split(/\s+/).length <= 3);
-  if (aiFirst && memory && memory.collection === "learned" && !memory.similarTo && ["ai", "taught"].includes(memory.source || "ai")) return fromMemory();
+  if (aiFirst && !opts.retry && memory && memory.collection === "learned" && !memory.similarTo && ["ai", "taught"].includes(memory.source || "ai")) return fromMemory();
   if (own && (!aiFirst || exactOwn)) {
     think("My own brain worked it out");
     logActivity(question, "local");
@@ -1692,6 +1783,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   }
 
   let route = alpacaRoute(question, { contextual, deep: opts.deep });
+  if (opts.retry && navigator.onLine && !route) route = "pro";
   // Alpaca answers everything else; what MK.ai already knows is given to it as facts
   if (aiFirst && !route && (worthLearning(question) || contextual)) route = "pro";
   if (!aiFirst) route = null;
@@ -2035,10 +2127,13 @@ function setMode(mode) {
 document.querySelectorAll(".mode-btn").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
 
 let deepOnce = false; // "more detail" asks one question with Deep think
+let retryOnce = false; // "Retry" asks Alpaca again for a fresh answer
 composer.addEventListener("submit", async (e) => {
   e.preventDefault();
   const deepNow = answerMode === "deep" || deepOnce;
   deepOnce = false;
+  const retryNow = retryOnce;
+  retryOnce = false;
   if (questionInput.value.trim() || pendingAttachment) countQuestion();
   const attachment = pendingAttachment;
   let question = questionInput.value.trim().slice(0, 4000);
@@ -2085,7 +2180,7 @@ composer.addEventListener("submit", async (e) => {
   const loading = startLoading();
   scrollToBottom();
   let bubble = null;
-  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {}, setFollowUps() {}, setRefine() {} };
+  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {}, setFollowUps() {}, setRefine() {}, enableRetry() {} };
   const showBubble = () => {
     if (!stillHere()) return offscreen;
     if (!bubble) {
@@ -2108,7 +2203,9 @@ composer.addEventListener("submit", async (e) => {
                 showBubble().setText(text);
                 scrollToBottom();
               },
-              fileForAnswer
+              fileForAnswer,
+              undefined,
+              { retry: retryNow }
             );
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
@@ -2124,6 +2221,7 @@ composer.addEventListener("submit", async (e) => {
       if (more.length) msg.setFollowUps(more);
     }
     if (["knowledge", "wiki"].includes(result.source) && !deepNow && result.answer.length > 120 && !result.answer.includes("```")) msg.setRefine(question);
+    if (!isCode && !cancelled && !result.teachable && ["alpaca", "knowledge", "wiki", "memory", "vault", "local", "app"].includes(result.source) && navigator.onLine) msg.enableRetry(question);
     if (result.teachable) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
     const saved = record(chatId, {
