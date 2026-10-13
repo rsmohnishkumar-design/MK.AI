@@ -176,7 +176,7 @@ const LEARN =
   "👉 [Open Code School](learn.html)\n\nYou can also ask me things like \"what is a variable?\" or \"explain loops\" anytime.";
 
 function normalize(text) {
-  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{N}\s'+#-]/gu, " ").replace(/\s+/g, " ").trim();
+  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{M}\p{N}\s'+#-]/gu, " ").replace(/\s+/g, " ").trim();
 }
 
 const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

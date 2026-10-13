@@ -109,9 +109,12 @@ export function chooseModels(provider, available) {
 // Resolves { text, complete }: complete is false when the answer stopped early.
 // timeoutMs limits the wait for the answer to start, and any pause after that,
 // so long answers (like code) can take as long as they need.
-export async function streamChat(provider, key, model, messages, onText, timeoutMs) {
+export async function streamChat(provider, key, model, messages, onText, timeoutMs, stop = null) {
   const controller = new AbortController();
   let timer = setTimeout(() => controller.abort(), timeoutMs);
+  // The chat's Stop button cancels the request
+  if (stop?.aborted) controller.abort();
+  stop?.addEventListener?.("abort", () => controller.abort(), { once: true });
   const stillAlive = () => {
     clearTimeout(timer);
     timer = setTimeout(() => controller.abort(), timeoutMs);

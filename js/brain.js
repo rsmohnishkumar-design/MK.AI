@@ -111,12 +111,21 @@ async function documentPassages(question) {
     const snap = await getDocs(
       query(collection(db, "knowledge"), where("keywords", "array-contains-any", words), limit(20))
     );
-    return snap.docs
-      .map((d) => {
-        const passage = d.data();
-        const have = new Set(passage.keywords || []);
-        return { title: passage.title, text: passage.text, score: words.filter((w) => have.has(w)).length / words.length };
-      })
+    const found = snap.docs.map((d) => {
+      const passage = d.data();
+      const have = new Set(passage.keywords || []);
+      return { title: passage.title, text: passage.text, score: words.filter((w) => have.has(w)).length / words.length };
+    });
+    // Hybrid search: key words, plus meaning (embeddings) for passages that
+    // say the same thing in other words
+    try {
+      const vecs = found.length ? await embed([question, ...found.map((p) => `${p.title}. ${p.text}`.slice(0, 600))]) : null;
+      if (vecs) found.forEach((p, i) => (p.meaning = closeness(vecs[0], vecs[i + 1])));
+    } catch (err) {
+      console.warn("Meaning search failed:", err);
+    }
+    return found
+      .map((p) => ({ title: p.title, text: p.text, score: Math.max(p.score, p.meaning >= 0.6 ? Math.min(0.9, p.meaning) : 0) }))
       .filter((p) => p.score >= 0.5)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3);

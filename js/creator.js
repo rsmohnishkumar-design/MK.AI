@@ -23,7 +23,7 @@ import { knowledgeSize } from "./kb.js";
 const QUESTION_START = /^(who|whom|whose|did|do|does|what|can|could|how|why|when|where|which|is|are|was|were)\b/;
 
 function normalize(text) {
-  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{N}\s']/gu, " ").replace(/\s+/g, " ").trim();
+  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{M}\p{N}\s']/gu, " ").replace(/\s+/g, " ").trim();
 }
 
 // "I created you", "I'm your creator", "it's me, Mohnishkumar"…
@@ -166,6 +166,7 @@ export async function detailsReport({ user, profile, chats }) {
     "⚡ Training helpers",
     `- Big models behind Alpaca: ${services === "none saved yet" ? "Gemini (through Firebase)" : `${services}, Gemini (through Firebase)`}`,
     `- Neural memory (meaning matching): ${meaningReady() ? "on" : "starting / word matching for now"}`,
+    "- Language pipeline: tokenizer → NLP (language, intent, key words) → embeddings (meaning search) → Alpaca (LLM)",
     "",
     "👤 Your account",
     `- Email: ${user.email}`,

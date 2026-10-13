@@ -42,9 +42,11 @@ export async function geminiGenerate(key, model, body, timeoutMs = 60000) {
 }
 
 // Streams an answer. Resolves { text, complete, suggestions }.
-export async function geminiStream(key, model, body, onText, timeoutMs = 20000) {
+export async function geminiStream(key, model, body, onText, timeoutMs = 20000, stop = null) {
   const controller = new AbortController();
   let timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (stop?.aborted) controller.abort();
+  stop?.addEventListener?.("abort", () => controller.abort(), { once: true });
   const alive = () => {
     clearTimeout(timer);
     timer = setTimeout(() => controller.abort(), timeoutMs);

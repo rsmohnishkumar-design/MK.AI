@@ -124,6 +124,37 @@ export function runPreview(code) {
   document.addEventListener("keydown", onKey);
 }
 
+// Syntax colouring (highlight.js, hosted with MK.ai), loaded the first time code appears
+let hljsReady = null;
+function loadHighlighter() {
+  if (window.hljs) return Promise.resolve(window.hljs);
+  if (!hljsReady) {
+    hljsReady = new Promise((resolve) => {
+      const css = Object.assign(document.createElement("link"), { rel: "stylesheet", href: new URL("../lib/hljs/github-dark.min.css", import.meta.url).href });
+      document.head.append(css);
+      const s = Object.assign(document.createElement("script"), { src: new URL("../lib/hljs/highlight.min.js", import.meta.url).href });
+      s.onload = () => resolve(window.hljs || null);
+      s.onerror = () => resolve(null);
+      document.head.append(s);
+    });
+  }
+  return hljsReady;
+}
+const HL_ALIAS = { js: "javascript", py: "python", "c++": "cpp", sh: "bash", html: "xml", shell: "bash", ts: "typescript" };
+function colourCode(el, lang) {
+  if (el.textContent.length > 60000) return;
+  loadHighlighter().then((hljs) => {
+    if (!hljs || !el.isConnected) return;
+    const name = HL_ALIAS[lang] || lang;
+    try {
+      const out = name && hljs.getLanguage(name) ? hljs.highlight(el.textContent, { language: name, ignoreIllegals: true }) : hljs.highlightAuto(el.textContent);
+      el.innerHTML = out.value;
+      el.classList.add("hljs");
+    } catch {}
+  });
+}
+let streaming = false; // no colouring while an answer is still arriving
+
 function codeBlock(lang, code) {
   const box = document.createElement("div");
   box.className = "code-block";
@@ -196,6 +227,93 @@ function codeBlock(lang, code) {
   el.textContent = code;
   pre.append(el);
   box.append(head, pre);
+  if (!streaming && lang !== "text" && lang !== "txt") colourCode(el, lang);
+  // An SVG picture is shown as a picture under its code
+  if (!streaming && (lang === "svg" || (lang === "xml" && /^\s*<svg\b/i.test(code))) && /<\/svg>\s*$/i.test(code)) {
+    const img = document.createElement("img");
+    img.className = "svg-preview";
+    img.alt = "SVG preview";
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(code)}`; // as an image, scripts inside never run
+    box.append(img);
+  }
+  return box;
+}
+
+// Diagrams: Alpaca writes flowcharts, mind maps, timelines and sequence
+// diagrams in Mermaid, and they are drawn here (the library loads the first time).
+let mermaidReady = null;
+function loadMermaid() {
+  if (window.mermaid) return Promise.resolve(window.mermaid);
+  if (!mermaidReady) {
+    mermaidReady = new Promise((resolve) => {
+      const s = Object.assign(document.createElement("script"), { src: new URL("../lib/mermaid/mermaid.min.js", import.meta.url).href });
+      s.onload = () => {
+        const m = window.mermaid;
+        m?.initialize({ startOnLoad: false, securityLevel: "strict", theme: "dark", themeVariables: { primaryColor: "#0b3440", primaryBorderColor: "#22d3ee", lineColor: "#22d3ee", fontFamily: "inherit" } });
+        resolve(m || null);
+      };
+      s.onerror = () => {
+        mermaidReady = null;
+        resolve(null);
+      };
+      document.head.append(s);
+    });
+  }
+  return mermaidReady;
+}
+let diagramCount = 0;
+function diagramBlock(code) {
+  const box = document.createElement("div");
+  box.className = "code-block diagram-block";
+  const head = document.createElement("div");
+  head.className = "code-head";
+  const label = Object.assign(document.createElement("span"), { textContent: "diagram" });
+  const actions = Object.assign(document.createElement("span"), { className: "code-actions" });
+  const view = Object.assign(document.createElement("div"), { className: "diagram-view", textContent: "Drawing the diagram…" });
+  const pre = document.createElement("pre");
+  pre.append(Object.assign(document.createElement("code"), { textContent: code }));
+  pre.hidden = true;
+  let svgText = "";
+  const toggle = button("Code", "code-copy", () => {
+    pre.hidden = !pre.hidden;
+    toggle.textContent = pre.hidden ? "Code" : "Hide code";
+  });
+  const save = button("⬇ SVG", "code-copy", () => {
+    if (!svgText) return;
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([svgText], { type: "image/svg+xml" })), download: "diagram.svg" });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  });
+  save.disabled = true;
+  const copy = button("Copy", "code-copy", async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      copy.textContent = "Copied";
+      setTimeout(() => (copy.textContent = "Copy"), 1500);
+    } catch {}
+  });
+  actions.append(toggle, save, copy);
+  head.append(label, actions);
+  box.append(head, view, pre);
+  loadMermaid().then(async (m) => {
+    if (!m) {
+      view.textContent = "The diagram couldn't be drawn (no internet?). Here is its code:";
+      pre.hidden = false;
+      return;
+    }
+    try {
+      const { svg } = await m.render(`mkai-diagram-${++diagramCount}`, code);
+      svgText = svg;
+      view.innerHTML = svg; // made by Mermaid in strict mode (no scripts or HTML labels)
+      save.disabled = false;
+    } catch (err) {
+      view.textContent = "This diagram has a mistake in it, so here is its code:";
+      pre.hidden = false;
+      document.querySelectorAll(`#dmkai-diagram-${diagramCount}, #mkai-diagram-${diagramCount}`).forEach((e) => e.remove());
+    }
+  });
   return box;
 }
 
@@ -264,16 +382,99 @@ export function calm(text) {
 
 export function renderAnswer(container, text) {
   text = calm(text);
+  streaming = text.endsWith(" ▍");
   container.replaceChildren();
   let last = 0;
+  const files = [];
   for (const m of text.matchAll(FENCE)) {
     // The box has its own spacing, so blank lines around it are dropped.
-    if (m.index > last) inline(container, readableMath(text.slice(last, m.index)).replace(/\s+$/, ""));
+    const before = text.slice(last, m.index);
+    if (m.index > last) inline(container, readableMath(before).replace(/\s+$/, ""));
     const lang = m[1].toLowerCase();
-    if (BLOCKS.has(lang)) BLOCKS.get(lang)(container, m[2].replace(/\n$/, ""));
-    else container.append(codeBlock(lang, m[2].replace(/\n$/, "")));
+    const code = m[2].replace(/\n$/, "");
+    if (BLOCKS.has(lang)) BLOCKS.get(lang)(container, code);
+    else if (lang === "mermaid" && !streaming) container.append(diagramBlock(code));
+    else {
+      container.append(codeBlock(lang, code));
+      // A file name just before the block ("**index.html**", "`src/app.py`:") or after the language
+      const named = m[0].match(/^```[\w+#.-]*[ \t]+([\w.\-\/]+\.[A-Za-z0-9]{1,8})/)?.[1] || before.trim().split("\n").pop()?.match(/([\w\-\/]+\.[A-Za-z0-9]{1,8})[`*:\s)]*$/)?.[1];
+      if (named) files.push({ name: named.replace(/^\/+/, ""), code });
+    }
     last = m.index + m[0].length;
     while (text[last] === "\n") last++;
   }
   if (last < text.length) inline(container, readableMath(text.slice(last)));
+  // Several named files: offer the whole project as one .zip
+  if (!streaming && files.length >= 2 && new Set(files.map((f) => f.name)).size === files.length) {
+    const bar = document.createElement("div");
+    bar.className = "project-bar";
+    const label = Object.assign(document.createElement("span"), { textContent: `Project: ${files.length} files (${files.map((f) => f.name).join(", ")})` });
+    bar.append(label, button("⬇ Download project (.zip)", "code-copy project-zip", () => downloadZip(files)));
+    container.append(bar);
+  }
+}
+
+// A small .zip writer (files stored as they are, no compression)
+const CRC = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (const b of bytes) c = CRC[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+export function makeZip(files) {
+  const enc = new TextEncoder();
+  const parts = [];
+  const central = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const data = enc.encode(f.code.endsWith("\n") ? f.code : f.code + "\n");
+    const crc = crc32(data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true); // UTF-8 names
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, name.length, true);
+    parts.push(local, name, data);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true);
+    cen.setUint16(4, 20, true);
+    cen.setUint16(6, 20, true);
+    cen.setUint16(8, 0x0800, true);
+    cen.setUint32(16, crc, true);
+    cen.setUint32(20, data.length, true);
+    cen.setUint32(24, data.length, true);
+    cen.setUint16(28, name.length, true);
+    cen.setUint32(42, offset, true);
+    central.push(cen, name);
+    offset += 30 + name.length + data.length;
+  }
+  const size = central.reduce((n, p) => n + (p.byteLength ?? p.length), 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, size, true);
+  end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end], { type: "application/zip" });
+}
+function downloadZip(files) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(makeZip(files));
+  a.download = "mkai-project.zip";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }

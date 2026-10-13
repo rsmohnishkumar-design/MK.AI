@@ -17,6 +17,8 @@ Answer the user's question directly and clearly, like a knowledgeable friend. Us
 Give only the answer: never mention your sources, search results, websites or citations, and never write reference numbers like [1].
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings or tables.
 When you write code, give the complete program with correct indentation inside a fenced code block that names the language (for example \`\`\`python), then explain it briefly in plain text.
+For a flowchart, process, mind map, timeline, sequence, class or ER diagram, or whenever a diagram would explain better, draw it as valid Mermaid code in a \`\`\`mermaid block (it is shown as a picture); keep labels short and put labels with brackets or symbols in double quotes.
+For an icon, logo or simple drawing made of shapes, you may write a complete SVG in an \`\`\`svg block (it is shown as a picture).
 Reply in the same language the user writes in.`;
 const SEARCH_PROMPT = `${BASE_PROMPT}
 Search the web whenever the question needs current or specific facts.`;
@@ -234,7 +236,7 @@ function keyedGemini(key, model, search) {
       const { text, complete, suggestions } = await geminiStream(key, model, body, (t) => {
         const shown = clean(t);
         if (shown) onText(shown);
-      }, TIMEOUT_MS);
+      }, TIMEOUT_MS, ctx.stop);
       return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestions }, complete);
     },
   };
@@ -273,7 +275,7 @@ async function plan(question) {
       const { text, complete } = await streamChat(provider, keys[provider.id], model, ctx.messages(search), (t) => {
         const shown = clean(t);
         if (shown) onText(shown);
-      }, TIMEOUT_MS);
+      }, TIMEOUT_MS, ctx.stop);
       return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: null }, complete);
     },
   });
@@ -323,7 +325,7 @@ export const WEB_LINK = /https?:\/\/[^\s)]+\.[^\s)]+/i;
 // onText(textSoFar) is called as the answer streams in.
 // attachment: a photo or PDF (sent to Gemini, which can see them) or a text
 // file (added to the question, so any service can answer).
-export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false, attachment = null, deep = false, system = "" } = {}) {
+export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false, attachment = null, deep = false, system = "", signal = null } = {}) {
   const asked = attachment?.kind === "text" ? withFileText(attachment, question) : question;
   const note = [system, deep ? DEEP_NOTE : "", creator ? CREATOR_NOTE : "", knowledgeNote(knowledge)].filter(Boolean).join("\n\n");
   const userText = note ? `${note}\n\nQuestion: ${asked}` : asked;
@@ -332,7 +334,12 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   const video = !media.length && question.match(YOUTUBE)?.[0];
   if (video) media.push({ fileData: { fileUri: video, mimeType: "video/mp4" } });
   const link = !media.length && !attachment && WEB_LINK.test(question);
+  // The chat's Stop button: this answer's own signal, so a stopped answer
+  // can never cancel (or be confused with) the next one.
+  const stop = signal || globalThis.mkaiStop || null;
+  if (stop?.aborted) throw httpError(499, "stopped");
   const ctx = {
+    stop,
     contents: [
       ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
       { role: "user", parts: [{ text: userText }, ...media] },
@@ -348,6 +355,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   const attempts = media.length ? await visionPlan() : link ? await visionPlan("url") : await plan(question);
   if (media.length && !navigator.onLine) lastError = httpError(503, "reading photos and files needs the internet");
   for (const attempt of attempts) {
+    if (stop?.aborted) throw httpError(499, "stopped");
     let text = "";
     try {
       const result = await attempt.run(ctx, (t) => {
@@ -357,6 +365,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
       if (result.answer) return { ...result, by: attempt.key };
       throw httpError(500, `${attempt.key}: empty answer`);
     } catch (err) {
+      if (stop?.aborted) throw httpError(499, "stopped");
       lastError = err;
       console.warn(`${attempt.key} failed:`, err);
       coolDown(attempt, err);

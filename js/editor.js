@@ -182,6 +182,7 @@ export function openEditor(code, lang = "text") {
       const next = !explainOnly && codeIn(r.answer);
       if (next && !r.partial) {
         setCode(next);
+        if (l === "html") runBtn.click(); // show the updated app straight away
         const note = r.answer.slice(r.answer.lastIndexOf("```") + 3).trim();
         status.textContent = note ? `Done: ${note.slice(0, 160)}` : "Done. Press ▶ Run to try it, or Undo.";
         input.value = "";

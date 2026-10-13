@@ -5,6 +5,7 @@
 // and data/kb/index.json lists the packs.
 
 import { keywords, sameWord } from "./words.js";
+import { embed, closeness } from "./meaning.js";
 
 const BASE = new URL("../data/kb/", import.meta.url);
 
@@ -85,7 +86,38 @@ export async function knowledgeAnswer(question) {
     console.warn("Couldn't load the knowledge base:", err);
     return null;
   }
-  return bestEntry(question);
+  return bestEntry(question) || (await meaningEntry(question));
+}
+
+// Search by meaning (embeddings): when the words differ ("how tall is
+// Everest" / "height of Mount Everest"), the entries sharing the most words
+// are compared by their meaning vectors. Only once the neural model is ready.
+const MEANING_MATCH = 0.86;
+export async function meaningEntry(question, min = MEANING_MATCH) {
+  const words = keywords(prep(question));
+  if (!words.length || !entries.length) return null;
+  const numbers = numbersIn(prep(question));
+  const shared = new Map();
+  for (const w of words) for (const i of byWord.get(w) || []) shared.set(i, (shared.get(i) || 0) + 1);
+  const top = [...shared]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 40)
+    .map(([i]) => entries[i])
+    .filter((e) => e.phrasings.some((p) => p.numbers === numbers));
+  if (!top.length) return null;
+  let vecs = null;
+  try {
+    vecs = await embed([question, ...top.map((e) => e.q)]);
+  } catch (err) {
+    console.warn("Meaning search failed:", err);
+  }
+  if (!vecs) return null;
+  let best = null;
+  top.forEach((e, i) => {
+    const c = closeness(vecs[0], vecs[i + 1]);
+    if (!best || c > best.score) best = { entry: e, score: c };
+  });
+  return best && best.score >= min ? { question: best.entry.q, answer: best.entry.a, topic: best.entry.topic, score: best.score, byMeaning: true } : null;
 }
 
 // Other entries about the same thing, for Deep think's "Related" list.

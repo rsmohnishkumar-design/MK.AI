@@ -43,6 +43,8 @@ import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText, set
 import { officeKind, officeAnswer, mountOffice } from "./office.js";
 import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
 import { startMeaning } from "./meaning.js";
+import { analyze, nlpNote } from "./nlp.js";
+import { recentWithin } from "./tokenizer.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
@@ -1077,6 +1079,7 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
         setTimeout(() => openMenu(btn, Object.entries(PERSONAS).map(([k, v]) => ({ label: `${k === persona ? "✓ " : ""}${v.label}`, run: () => setPersona(k) }))), 0);
       },
     },
+    { label: "Keyboard shortcuts", run: showShortcuts },
     { label: "About MK.ai", run: () => (location.href = "about.html") },
   );
   if (id && store.chats.some((c) => c.id === id)) items.push("-", { label: "Delete chat", danger: true, run: () => deleteChat(id) });
@@ -1121,9 +1124,134 @@ function fitQuestion() {
 }
 questionInput.addEventListener("input", fitQuestion);
 questionInput.addEventListener("keydown", (e) => {
+  if (slashMenu && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(e.key)) return slashKey(e);
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
     composer.requestSubmit();
+  }
+});
+
+// --- Quick commands: type "/" in the box for a list of shortcuts ---
+const SLASH = [
+  { cmd: "code", hint: "Write a program", text: "Write complete, working code for: " },
+  { cmd: "debug", hint: "Find and fix a bug", text: "Find and fix the bug in this code, then explain the fix:\n" },
+  { cmd: "explain", hint: "Explain simply", text: "Explain simply, with an example: " },
+  { cmd: "diagram", hint: "A flowchart or mind map", text: "Make a flowchart diagram of " },
+  { cmd: "summarise", hint: "Short summary", text: "Summarise: " },
+  { cmd: "translate", hint: "Into Tamil (or any language)", text: "Translate into Tamil: " },
+  { cmd: "quiz", hint: "5 questions to test yourself", text: "Make a 5-question quiz with answers on " },
+  { cmd: "notes", hint: "Study notes", text: "Make short study notes with key points on " },
+  { cmd: "essay", hint: "An essay", text: "Write an essay on " },
+  { cmd: "email", hint: "A polite email or letter", text: "Write a polite, professional email about " },
+  { cmd: "image", hint: "Make a picture", text: "Draw a picture of " },
+  { cmd: "deep", hint: "Deep thinking for the next question", run: () => { deepOnce = true; toast("Deep thinking is on for your next question."); } },
+  { cmd: "new", hint: "Start a new chat", run: () => newChat() },
+];
+let slashMenu = null;
+let slashItems = [];
+let slashIndex = 0;
+function closeSlash() {
+  slashMenu?.remove();
+  slashMenu = null;
+}
+function useSlash(item) {
+  closeSlash();
+  questionInput.value = item.run ? "" : item.text;
+  if (item.run) item.run();
+  fitQuestion();
+  questionInput.focus();
+  questionInput.setSelectionRange(questionInput.value.length, questionInput.value.length);
+}
+function showSlash() {
+  const m = questionInput.value.match(/^\/(\w*)$/);
+  if (!m) return closeSlash();
+  slashItems = SLASH.filter((c) => c.cmd.startsWith(m[1].toLowerCase()));
+  if (!slashItems.length) return closeSlash();
+  if (!slashMenu) {
+    slashMenu = document.createElement("div");
+    slashMenu.className = "slash-menu";
+    slashMenu.setAttribute("role", "listbox");
+    composer.append(slashMenu);
+  }
+  slashIndex = Math.min(slashIndex, slashItems.length - 1);
+  slashMenu.replaceChildren(
+    ...slashItems.map((c, i) => {
+      const b = Object.assign(document.createElement("button"), { type: "button", className: "slash-item" + (i === slashIndex ? " active" : "") });
+      b.setAttribute("role", "option");
+      b.append(Object.assign(document.createElement("span"), { className: "slash-cmd", textContent: `/${c.cmd}` }), Object.assign(document.createElement("span"), { className: "slash-hint", textContent: c.hint }));
+      b.addEventListener("mousedown", (e) => e.preventDefault());
+      b.addEventListener("click", () => useSlash(c));
+      return b;
+    })
+  );
+}
+function slashKey(e) {
+  e.preventDefault();
+  if (e.key === "Escape") return closeSlash();
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    slashIndex = (slashIndex + (e.key === "ArrowDown" ? 1 : -1) + slashItems.length) % slashItems.length;
+    return showSlash();
+  }
+  useSlash(slashItems[slashIndex]);
+}
+questionInput.addEventListener("input", () => {
+  slashIndex = questionInput.value.length <= 1 ? 0 : slashIndex;
+  showSlash();
+});
+questionInput.addEventListener("blur", () => setTimeout(closeSlash, 150));
+
+// --- Keyboard shortcuts ---
+const SHORTCUTS = [
+  ["/", "Focus the question box (then / again for commands)"],
+  ["Ctrl + K", "Search chats"],
+  ["Ctrl + Shift + O", "New chat"],
+  ["Ctrl + Shift + C", "Copy the last answer"],
+  ["Esc", "Stop the answer"],
+  ["Shift + Enter", "New line"],
+];
+function showShortcuts() {
+  const d = document.createElement("dialog");
+  d.className = "shortcuts-dialog";
+  d.append(Object.assign(document.createElement("p"), { className: "shortcuts-title", textContent: "Keyboard shortcuts" }));
+  for (const [k, what] of SHORTCUTS) {
+    const row = Object.assign(document.createElement("div"), { className: "shortcut-row" });
+    row.append(Object.assign(document.createElement("kbd"), { textContent: k }), Object.assign(document.createElement("span"), { textContent: what }));
+    d.append(row);
+  }
+  const ok = Object.assign(document.createElement("button"), { type: "button", textContent: "Close" });
+  ok.addEventListener("click", () => d.close());
+  d.append(ok);
+  d.addEventListener("close", () => d.remove());
+  document.body.append(d);
+  d.showModal();
+}
+document.addEventListener("keydown", (e) => {
+  if ($("chatScreen").classList.contains("hidden") || document.querySelector(".studio, dialog[open]")) return;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  const mod = e.ctrlKey || e.metaKey;
+  if (e.key === "Escape" && stopCurrent && !slashMenu && !menuEl) {
+    e.preventDefault();
+    return stopCurrent();
+  }
+  if (mod && !e.shiftKey && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    if (window.innerWidth < 900) $("sidebarOpen")?.click();
+    return $("chatSearch").focus();
+  }
+  if (mod && e.shiftKey && e.key.toLowerCase() === "o") {
+    e.preventDefault();
+    return newChat();
+  }
+  if (mod && e.shiftKey && e.key.toLowerCase() === "c" && !window.getSelection()?.toString()) {
+    const last = currentChat()?.messages.filter((m) => m.role === "bot").pop()?.text;
+    if (!last) return;
+    e.preventDefault();
+    navigator.clipboard?.writeText(last).then(() => toast("Last answer copied."), () => {});
+    return;
+  }
+  if (e.key === "/" && !typing && !mod) {
+    e.preventDefault();
+    questionInput.focus();
   }
 });
 
@@ -1395,6 +1523,15 @@ const ALPACA_STEP = {
   link: "Alpaca is reading the page",
   study: "Alpaca is making your study pack",
 };
+// Coding questions get Alpaca's senior-engineer standard automatically
+const CODE_ASK = /```|\b(code|coding|program|programming|function|class|method|bug|debug|error|exception|compile|algorithm|api|sql|regex|html|css|javascript|typescript|python|java|c\+\+|c#|kotlin|swift|flutter|react|node|django|flask|firebase|git|leetcode|data structure|array|linked list|recursion|loop)\b/i;
+const CODER_NOTE = `This is a coding request. Answer like a world-class senior engineer:
+- Understand exactly what's needed first; if something is ambiguous, pick the sensible default and say so in one line.
+- Give complete, correct, runnable code (never placeholders or "…"), with the right language on each fenced block, clear names and brief comments where they help.
+- For a multi-file project, put each file in its own fenced block with its file name in bold on the line just before it (for example **index.html**).
+- Handle edge cases and errors; prefer simple, modern, secure, efficient solutions; mention time/space complexity for algorithms.
+- After the code: how to run it, a quick example of input and output, and (for bugs) what was wrong and why the fix works.`;
+
 // What the person told MK.ai about themselves, so Alpaca can tailor its answers
 function personalNote() {
   const me = aboutMe(auth.currentUser?.uid) || {};
@@ -1537,11 +1674,15 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   const asked = (currentChat()?.messages || []).filter((m) => m.role === "user").map((m) => m.text);
   const lastAsked = asked.length > 1 ? asked[asked.length - 2] : "";
   const contextual = dependsOnContext(question, lastAsked ? [lastAsked] : []);
+  // NLP first: language, kind of message, key words and token count
+  const nlp = analyze(question);
+  const langNote = nlpNote(nlp);
+  think(`Read your message: ${nlp.intent === "statement" ? "a message" : `a ${nlp.intent}`} in ${nlp.language}, ${nlp.tokens} token${nlp.tokens === 1 ? "" : "s"}`);
 
   // A photo, PDF or text file: Alpaca reads it (photos and PDFs need the big models).
   if (attachment && navigator.onLine) {
     think(`Alpaca is reading ${attachment.name}`);
-    const seen = await askAlpaca(question, history.slice(-6), { good: [], bad: [], docs: [] }, onText, { creator: isCreator(), attachment, deep: opts.deep }).catch((err) => (console.warn("Alpaca:", err), null));
+    const seen = await askAlpaca(question, recentWithin(history, 6, 3000), { good: [], bad: [], docs: [] }, onText, { creator: isCreator(), attachment, deep: opts.deep, system: langNote, signal: opts.signal }).catch((err) => (console.warn("Alpaca:", err), null));
     if (seen?.answer) {
       logActivity(question, "file");
       return { answer: seen.answer, credit: `✦ Alpaca read ${attachment.name}`, saved: nothingSaved, source: "alpaca" };
@@ -1576,12 +1717,14 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     const system = [
       control.instructions ? `Instructions from MK.ai's admin (follow them): ${control.instructions}` : "",
       route === "study" ? STUDY_NOTE : personaNote(),
+      CODE_ASK.test(question) && persona !== "coder" ? CODER_NOTE : "",
       personalNote(),
+      langNote,
       opts.retry ? "The user asked again because they want a better answer than before: give a fresh, more complete and more accurate answer." : "",
     ]
       .filter(Boolean)
       .join("\n\n");
-    const pro = await askAlpaca(question, history.slice(-8), knowledge, onText, { creator: isCreator(), deep: opts.deep, system }).catch((err) => (console.warn("Alpaca:", err), null));
+    const pro = await askAlpaca(question, recentWithin(history, 8, 3000), knowledge, onText, { creator: isCreator(), deep: opts.deep, system, signal: opts.signal }).catch((err) => (console.warn("Alpaca:", err), null));
     if (!pro?.answer) return null;
     const keep = route === "pro" && !contextual && !pro.partial && !isTimeSensitive(question) && worthLearning(question) && question.length < 400;
     logActivity(question, "alpaca");
@@ -1873,7 +2016,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // its memory so next time it answers on its own.
   if (worthLearning(question) && routeMode() !== "instant") {
     think("Asking Alpaca Pro");
-    const taught = await askAlpaca(question, history.slice(-6), knowledge, onText, { creator: isCreator(), deep: opts.deep, system: personaNote() }).catch((err) => (console.warn("Gemini:", err), null));
+    const taught = await askAlpaca(question, recentWithin(history, 6, 3000), knowledge, onText, { creator: isCreator(), deep: opts.deep, system: [personaNote(), langNote].filter(Boolean).join("\n\n"), signal: opts.signal }).catch((err) => (console.warn("Gemini:", err), null));
     // News, prices and scores change, so those answers aren't kept
     const fresh = isTimeSensitive(question);
     if (taught?.answer) {
@@ -2130,6 +2273,7 @@ let deepOnce = false; // "more detail" asks one question with Deep think
 let retryOnce = false; // "Retry" asks Alpaca again for a fresh answer
 composer.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (answering) return; // one answer at a time (the button is Stop meanwhile)
   const deepNow = answerMode === "deep" || deepOnce;
   deepOnce = false;
   const retryNow = retryOnce;
@@ -2190,23 +2334,43 @@ composer.addEventListener("submit", async (e) => {
     return bubble;
   };
 
+  // Stop: the send button becomes ■ while answering; pressing it ends the answer
+  // there (keeping what was already written) and cancels the request.
+  let partial = "";
+  const stopCtrl = new AbortController();
+  globalThis.mkaiStop = stopCtrl.signal;
+  const stopped = new Promise((resolve) => {
+    stopCurrent = () => {
+      stopCtrl.abort();
+      cancelPhotos();
+      resolve({ answer: partial ? `${partial}\n\n(Stopped.)` : "Stopped. Ask again whenever you're ready.", saved: Promise.resolve(null), source: "stopped" });
+    };
+  });
+  setStopMode(true);
+
   try {
-    const result = isCode
-      ? await checkCreatorCode(question)
-      : cancelled
-        ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
-        : deepNow
-          ? await deepAnswer(question, () => {}, fileForAnswer, (step) => loading.step(step))
-          : await answer(
-              question,
-              (text) => {
-                showBubble().setText(text);
-                scrollToBottom();
-              },
-              fileForAnswer,
-              undefined,
-              { retry: retryNow }
-            );
+    const result = await Promise.race([
+      (async () =>
+        isCode
+          ? await checkCreatorCode(question)
+          : cancelled
+            ? { answer: creator.replies.cancelled(), saved: Promise.resolve(null) }
+            : deepNow
+              ? await deepAnswer(question, () => {}, fileForAnswer, (step) => loading.step(step))
+              : await answer(
+                  question,
+                  (text) => {
+                    if (stopCtrl.signal.aborted) return;
+                    partial = text;
+                    showBubble().setText(text);
+                    scrollToBottom();
+                  },
+                  fileForAnswer,
+                  undefined,
+                  { retry: retryNow, signal: stopCtrl.signal }
+                ))(),
+      stopped,
+    ]);
     const msg = showBubble();
     msg.finish(result.answer, result.searchSuggestions);
     spendTokens(question, result.answer);
@@ -2243,11 +2407,31 @@ composer.addEventListener("submit", async (e) => {
     loading.remove();
     if (stillHere()) addErrorMessage("Something went wrong while answering. Please try again.");
   } finally {
+    stopCurrent = null;
+    if (globalThis.mkaiStop === stopCtrl.signal) globalThis.mkaiStop = null;
+    setStopMode(false);
     answering = false;
     sendBtn.disabled = !hasAccess();
     questionInput.focus();
     scrollToBottom();
   }
+});
+
+// --- Stop button ---
+let stopCurrent = null;
+const SEND_ICON = sendBtn.innerHTML;
+const STOP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none"/></svg>';
+function setStopMode(on) {
+  sendBtn.classList.toggle("stop-mode", on);
+  sendBtn.innerHTML = on ? STOP_ICON : SEND_ICON;
+  sendBtn.title = on ? "Stop" : "Send";
+  sendBtn.setAttribute("aria-label", on ? "Stop answering" : "Send");
+  if (on) sendBtn.disabled = false;
+}
+sendBtn.addEventListener("click", (e) => {
+  if (!stopCurrent) return;
+  e.preventDefault();
+  stopCurrent();
 });
 
 // --- Hidden vault entrance: tap the MK logo 5 times, then enter the vault password ---

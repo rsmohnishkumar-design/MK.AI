@@ -1,8 +1,10 @@
-// Free plan limits, counted in tokens like other AI assistants (1 token ≈ 4
-// characters of the question plus the answer):
+// Free plan limits, counted in tokens like other AI assistants: the question
+// plus the answer, split into tokens by MK.ai's tokenizer (js/tokenizer.js):
 // - 10,000 tokens per 5-hour window, which starts with the first message;
 // - 100,000 tokens per week, which starts with the first use.
 // Usage is kept in the account's profile, so it follows the person across devices.
+
+import { countTokens } from "./tokenizer.js";
 
 export const LIMITS = {
   windowTokens: 10000,
@@ -17,7 +19,7 @@ export function setLimits({ windowTokens, weekTokens } = {}) {
   if (Number(weekTokens) >= 10000) LIMITS.weekTokens = Number(weekTokens);
 }
 
-export const tokensFor = (question = "", answer = "") => Math.max(1, Math.ceil((question.length + answer.length) / 4));
+export const tokensFor = (question = "", answer = "") => Math.max(1, countTokens(question) + countTokens(answer));
 
 // Usage with any finished window or week cleared.
 export function currentUsage(usage = {}, now = Date.now()) {

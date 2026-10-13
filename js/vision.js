@@ -71,6 +71,8 @@ function rng(seed) {
 export function isVisionRequest(question) {
   const q = question.toLowerCase();
   if (/\b(app|application|website|web site|program|game|software|code)\b/.test(q)) return false;
+  // Flowcharts, mind maps and other diagrams are drawn by Alpaca as diagrams
+  if (/\b(flow ?charts?|flow diagram|mind ?maps?|diagram|timeline|sequence diagram|er diagram|uml|org(anisation|anization)? chart|tree diagram|venn)\b/.test(q) && !/\b(image|picture|photo|painting|wallpaper)\b/.test(q)) return false;
   if (/^(what|who|why|how|when|where|explain|define)\b/.test(q) && !/\b(draw|make|create)\b/.test(q)) return false;
   return (
     /^(draw|paint|sketch|illustrate|animate)\b/.test(q) ||
@@ -200,13 +202,20 @@ const STYLE_WORDS = {
   sepia: "vintage film photograph, sepia tones, 1970s",
   soft: "soft watercolor painting, delicate brush strokes",
 };
+const PERSON_WORDS = /\b(person|people|man|men|woman|women|girl|girls|boy|boys|lady|guy|child|children|kid|kids|baby|family|friends?|mother|father|mom|dad|teacher|student|doctor|nurse|police|soldier|farmer|player|cricketer|dancer|singer|actor|actress|king|queen|prince|princess|crowd|portrait|face|selfie|me|myself|him|her|he|she|human|couple|bride|groom|chef|worker|athlete|astronaut|warrior|hero)\b/;
+const THING_WORDS = /\b(car|cars|bike|truck|bus|house|home|city|town|village|mountains?|beach|sea|ocean|forest|trees?|flowers?|rose|garden|sunset|sunrise|sky|clouds?|river|lake|waterfall|landscape|scenery|nature|cat|cats|dog|dogs|puppy|kitten|animals?|birds?|lion|tiger|elephant|horse|fish|dragon|dinosaur|food|cake|pizza|burger|fruit|space|planet|earth|moon|stars?|galaxy|building|temple|church|mosque|castle|palace|robot|train|plane|aeroplane|airplane|rocket|ship|boat|computer|laptop|phone|desert|snow|rain|storm|road|bridge|room|kitchen|school|classroom|library|office|stadium|park|field|farm|island|volcano|cave|shop|market|street|tower|monument|wallpaper|logo|alpaca|butterfly|peacock|parrot|owl|eagle|shark|whale|dolphin|bear|panda|monkey|cow|goat)\b/;
 function finishPhoto(spec, raw) {
   if (!spec.photo) return spec;
   const q = raw.toLowerCase();
   const subject = subjectOfPicture(raw) || "a beautiful landscape";
   const artsy = /\b(cartoon|anime|pixar|3d render|illustration|painting|oil painting|comic|sketch|drawing style|watercolou?r|pixel art|digital art|clay)\b/.test(q);
   const extra = STYLE_WORDS[spec.style] || "";
-  const quality = artsy || extra ? "highly detailed, beautiful composition, vibrant colors" : "photorealistic, professional photography, natural lighting, 50mm lens, shallow depth of field, highly detailed, sharp focus, 8k";
+  // Portrait-style words ("50mm lens, shallow depth of field") made the free
+  // photo AI add a random woman to pictures of things and places, so people
+  // are only drawn when the request is about someone.
+  const person = PERSON_WORDS.test(q) || /\b[A-Z][a-z]+\s+[A-Z][a-z]+/.test(subject);
+  const noPeople = !person && THING_WORDS.test(q) ? ", no people, no person, no woman, no man" : "";
+  const quality = (artsy || extra ? "highly detailed, beautiful composition, vibrant colors" : "photorealistic, professional photography, natural lighting, highly detailed, sharp focus, 8k") + noPeople;
   if (spec.kind === "card") {
     const theme = { birthday: "birthday party with balloons, cake and candles", diwali: "Diwali festival with glowing oil lamps (diyas), rangoli and fireworks", pongal: "Pongal harvest festival in Tamil Nadu, clay pot overflowing with rice, sugarcane, kolam, sunrise", christmas: "Christmas tree with lights, gifts and snow", newyear: "New Year fireworks over a city at night", eid: "Eid crescent moon, lanterns and mosque at dusk", holi: "Holi festival colourful powder in the air", valentine: "roses and hearts with soft bokeh", wedding: "wedding flowers and rings with soft golden light", thanks: "bouquet of flowers with warm light", congrats: "golden trophy and confetti celebration", getwell: "fresh flowers by a sunny window", independence: "Indian flag waving against blue sky", teachers: "books, apple and chalkboard in a classroom", mothers: "pink flowers and a gift", fathers: "gift box, tie and coffee on a wooden table" }[spec.theme] || "festive celebration decorations";
     spec.photoPrompt = `${theme}, festive background, bokeh lights, beautiful, no text, no letters, no words, ${quality}`;

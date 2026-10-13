@@ -83,6 +83,17 @@
     <li><b>Talks like a friend:</b> feelings and advice (with helplines if someone is in distress), small talk, stories, riddles, fun facts, quotes, poems, games and everyday choices.</li>
     <li><b>Remembers you:</b> tell it your name, class or what you like, and it greets you by name and tailors Alpaca's answers to you. This is saved on your device only.</li>
     <li><b>Coding studio:</b> tap <b>Edit</b> on any code to open it full screen, run it, and ask Alpaca to change it in plain words (with Undo). <b>✦ Alpaca</b> on code explains it, finds bugs, improves it, adds comments, writes tests or converts it to another language.</li>
+    <li><b>Diagrams:</b> ask for a flowchart, mind map, timeline or sequence diagram ("draw a flowchart of the water cycle") and Alpaca draws it in the chat, ready to download as an SVG picture. SVG code is shown as a picture too.</li>
+    <li><b>Quick commands and shortcuts:</b> type <b>/</b> in the box for /code, /debug, /explain, /diagram, /quiz, /notes, /translate, /deep and more. On a keyboard: <b>/</b> to type, <b>Ctrl+K</b> to search chats, <b>Ctrl+Shift+O</b> for a new chat, <b>Ctrl+Shift+C</b> to copy the last answer and <b>Esc</b> or the ■ button to stop an answer.</li>
+  </ul>
+
+  <h2 id="thinking">How it understands you</h2>
+  <p>Every message goes through four steps, the same building blocks used by large AI systems:</p>
+  <ul>
+    <li><b>Tokenization:</b> your message is split into tokens, small pieces of words, numbers and symbols, in English, Tamil, Hindi and other languages. Tokens measure your usage and decide how much of the conversation Alpaca can read at once.</li>
+    <li><b>Natural language processing (NLP):</b> MK.ai works out the language you wrote in (including Tanglish and Hinglish), what kind of message it is (a question, maths, code, a picture request…), the key words, and things like numbers, dates and links.</li>
+    <li><b>Embeddings:</b> a small neural model on your device turns sentences into "meaning vectors", so MK.ai finds answers that mean the same thing even in different words, in its memory, its built-in knowledge and taught documents.</li>
+    <li><b>Large language model (LLM):</b> Alpaca, built on models such as Google Gemini, writes the answer using everything above: what MK.ai already knows, the language to reply in, and the conversation so far.</li>
   </ul>
 
   <h2 id="learning">How it learns</h2>
