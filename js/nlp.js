@@ -98,3 +98,33 @@ export function nlpNote(info) {
   if (info.entities.urls.length > 1) notes.push("The message has several links; cover each one.");
   return notes.join("\n");
 }
+
+// What to ask next: three suggestions picked from what the message was about.
+// The topic is the question without its question words ("what is
+// photosynthesis?" → "photosynthesis").
+export function topicOf(text = "") {
+  // "how does a rocket work in space" → "a rocket"
+  const how = text.match(/^\s*how (?:does|do|did|is|are|can) (.+?) (?:work|works|happen|form|grow|move|fly|function)\b/i);
+  if (how) return how[1].replace(/^(the|a|an) /i, "").trim();
+  let t = text
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/[?!.]+\s*$/, "")
+    .replace(/^\s*(please\s+)?(can you\s+|could you\s+)?(tell me|explain( to me)?|describe|define|what('s| is| are| was| were)|who('s| is| was| were)|how (do|does|did|is|are|can)|why (do|does|did|is|are)|when (did|was|is)|where (is|are|was))\s+(about\s+)?(the |a |an )?/i, "")
+    .trim();
+  if (t.split(/\s+/).length > 6) t = t.split(/\s+(?:and|with|in|for|which|that|because)\s+/i)[0];
+  if (t.split(/\s+/).length > 6) t = t.split(/\s+/).slice(0, 5).join(" ");
+  if (!t) t = keywords(text).slice(0, 3).join(" ");
+  return t.length > 60 ? t.slice(0, 60).replace(/\s\S*$/, "") : t;
+}
+
+export function nextSteps(question = "", answer = "") {
+  const info = analyze(question);
+  if (info.language !== "English" || answer.length < 80) return [];
+  if (/```/.test(answer) || info.intent === "code") return ["Explain this code step by step", "Add error handling and comments to this code", "Write tests for this code"];
+  if (info.intent === "maths") return ["Show another way to solve it", "Give me a practice question like this", "Explain the formula used in this"];
+  if (info.intent === "request" || info.intent === "transform") return ["Make it shorter", "Make it more formal", "Translate it into Tamil"];
+  if (!["question", "statement"].includes(info.intent)) return [];
+  const topic = topicOf(question);
+  if (!topic || topic.length < 3) return [];
+  return [`Give a real-life example of ${topic}`, `Make a 5-question quiz on ${topic}`, `Make short notes on ${topic}`];
+}

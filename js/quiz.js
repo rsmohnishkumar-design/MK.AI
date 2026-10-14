@@ -27,8 +27,13 @@ async function items(kind) {
 
 const shuffle = (list) => list.map((x) => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
 
+const BUILT_IN = /capital|countr|geograph|world|element|chemi|symbol|science|periodic|full ?form|abbreviat|acronym|\bdays?\b|dates?|celebrat|general knowledge|\bgk\b/i;
 export function wantsQuiz(question) {
-  return /^(quiz me|give me a quiz|start a quiz|take a quiz|test me|test my knowledge|ask me a quiz|quiz|gk quiz|general knowledge quiz)\b/i.test(question.trim());
+  const q = question.trim();
+  if (!/^(quiz me|give me a quiz|start a quiz|take a quiz|test me|test my knowledge|ask me a quiz|quiz|gk quiz|general knowledge quiz)\b/i.test(q)) return false;
+  // "quiz me on photosynthesis": a topic the built-in quizzes don't cover goes to Alpaca
+  const topic = q.match(/\b(?:on|about|in)\s+(.+)$/i)?.[1];
+  return !topic || BUILT_IN.test(topic);
 }
 
 function kindFor(question) {

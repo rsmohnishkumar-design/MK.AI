@@ -1626,3 +1626,119 @@ a.voice-btn { text-decoration: none; display: inline-block; }
   padding: 12px;
   background: repeating-conic-gradient(#1a1a1a 0% 25%, #111 0% 50%) 50% / 16px 16px;
 }
+
+/* ---- Answer buttons wrap on small screens; Save ---- */
+.answer-actions { flex-wrap: wrap; }
+.answer-actions .save-btn.on { opacity: 1; border-color: var(--brass); color: var(--brass); }
+
+/* ---- Light theme (Settings › Theme) ---- */
+:root[data-theme="light"] {
+  --ink: #f6f8fa;
+  --ink-soft: #ffffff;
+  --panel: #ffffff;
+  --panel-border: #d6dde3;
+  --paper: #14181c;
+  --paper-dim: #5a6670;
+  --brass: #0e7490;
+  --brass-dim: #a5f3fc;
+  --accent: #0891b2;
+  --grand: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  --error: #dc2626;
+  color-scheme: light;
+}
+:root[data-theme="light"] .pop-menu,
+:root[data-theme="light"] .usage-panel { box-shadow: 0 10px 30px rgba(20, 24, 28, 0.14); }
+:root[data-theme="light"] .toast { background: #14181c; color: #f6f8fa; }
+
+/* ---- Text size (Settings › Text size) ---- */
+:root[data-textsize="small"] .reading-room { zoom: 0.9; }
+:root[data-textsize="large"] .reading-room { zoom: 1.15; }
+:root[data-textsize="large"] #question { font-size: 17px; }
+
+/* ---- Settings and Saved answers dialogs ---- */
+.settings-dialog,
+.saved-dialog {
+  background: var(--panel);
+  color: var(--paper);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  width: min(520px, calc(100vw - 32px));
+}
+.settings-dialog::backdrop,
+.saved-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.set-title { margin: 0 0 14px; font-weight: 600; font-size: 17px; }
+.set-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.set-label { font-size: 13px; color: var(--paper-dim); }
+.set-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.set-choice {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--ink-soft);
+  color: var(--paper);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.set-choice[aria-checked="true"] { border-color: var(--brass); color: var(--brass); font-weight: 600; }
+.set-note { font-size: 13px; color: var(--paper-dim); margin: 0 0 16px; }
+.set-close,
+.saved-close {
+  background: var(--grand);
+  color: #001a20;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.saved-dialog { width: min(680px, calc(100vw - 32px)); max-height: min(80vh, 760px); display: flex; flex-direction: column; }
+.saved-dialog:not([open]) { display: none; }
+.saved-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.saved-head .set-title { margin: 0; }
+.saved-search {
+  margin: 12px 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--ink-soft);
+  color: var(--paper);
+  font: inherit;
+}
+.saved-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 80px; }
+.saved-empty { color: var(--paper-dim); font-size: 14px; }
+.saved-item { border: 1px solid var(--panel-border); border-radius: 10px; padding: 12px 14px; background: var(--ink-soft); }
+.saved-q { margin: 0; font-weight: 600; }
+.saved-when { font-size: 12px; color: var(--paper-dim); }
+.saved-a { margin-top: 8px; font-size: 14px; }
+.saved-a.clamped { max-height: 7.5em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.saved-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.saved-btn {
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--panel-border);
+  background: none;
+  color: var(--paper);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.saved-btn:hover { border-color: var(--brass); }
+.saved-btn.danger { color: var(--error); }
+
+/* ---- Print / save as PDF ---- */
+#printView { display: none; }
+@media print {
+  body.print-mode { background: #fff !important; color: #111 !important; }
+  body.print-mode > *:not(#printView) { display: none !important; }
+  body.print-mode #printView { display: block; font: 12pt/1.5 Georgia, "Times New Roman", serif; color: #111; }
+  #printView h1 { font: 700 20pt Inter, Arial, sans-serif; margin: 0 0 4pt; }
+  #printView .print-meta { color: #555; font-size: 10pt; margin: 0 0 16pt; }
+  #printView section { break-inside: avoid-page; margin: 0 0 12pt; }
+  #printView .print-who { font: 700 10pt Inter, Arial, sans-serif; color: #0e7490; margin: 0 0 2pt; text-transform: uppercase; letter-spacing: 0.06em; }
+  #printView .print-q > div { font-weight: 600; }
+  #printView .code-actions, #printView button { display: none !important; }
+  #printView pre { white-space: pre-wrap; background: #f4f4f5 !important; color: #111 !important; padding: 8pt; border-radius: 4pt; }
+}
+:root[data-theme="light"] .sidebar { background: #eef2f5; }
