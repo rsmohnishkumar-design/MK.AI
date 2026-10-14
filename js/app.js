@@ -43,11 +43,22 @@ import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText, set
 import { officeKind, officeAnswer, mountOffice } from "./office.js";
 import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
 import { startMeaning } from "./meaning.js";
-import { analyze, nlpNote } from "./nlp.js";
+import { analyze, nlpNote, nextSteps } from "./nlp.js";
+import { applySettings, openSettings, pref } from "./settings.js";
+import { toggleSaved, isSaved, openSaved } from "./saved.js";
 import { recentWithin } from "./tokenizer.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
+
+applySettings();
+// The hint under the box follows the Enter setting
+function updateDeskHint() {
+  const hint = document.querySelector(".desk-hint");
+  if (hint) hint.textContent = pref("enterSends") ? "Enter to send · Shift + Enter for a new line" : "Ctrl + Enter to send · Enter for a new line";
+}
+updateDeskHint();
+document.addEventListener("mkai-settings", updateDeskHint);
 
 const $ = (id) => document.getElementById(id);
 registerBlock("alpaca-vision", mountVision);
@@ -856,6 +867,7 @@ function renderThread() {
       if (item.thoughts) msg.setThoughts(item.thoughts, item.thoughtMs);
       if (item.credit) msg.setCredit(item.credit);
       if (item.entryId) msg.enableVotes(item.entryId);
+      if (!item.teachable && !/^•+$/.test(lastQuestion || "")) msg.enableSave(lastQuestion);
       if (lastQuestion && !item.teachable) remember(lastQuestion, item.text);
       lastQuestion = null;
     }
@@ -1056,9 +1068,44 @@ function chatMenu(id) {
     { label: chat?.pinned ? "Unpin" : "Pin", run: () => togglePin(id) },
     { label: "Share", run: () => shareChat(id) },
     { label: "Download", run: () => downloadChat(id) },
+    { label: "Print or save as PDF", run: () => printChat(id) },
     "-",
     { label: "Delete", danger: true, run: () => deleteChat(id) },
   ];
+}
+// Print / save as PDF: a clean copy of the whole chat, without the app around it
+function printChat(id) {
+  const chat = store.chats.find((c) => c.id === id);
+  if (!chat) return;
+  document.getElementById("printView")?.remove();
+  const view = document.createElement("article");
+  view.id = "printView";
+  const h = document.createElement("h1");
+  h.textContent = chat.title;
+  const meta = document.createElement("p");
+  meta.className = "print-meta";
+  meta.textContent = `MK.ai chat · ${new Date(chat.updatedAt || Date.now()).toLocaleString()}`;
+  view.append(h, meta);
+  for (const m of chat.messages) {
+    const block = document.createElement("section");
+    block.className = m.role === "user" ? "print-q" : "print-a";
+    const who = document.createElement("p");
+    who.className = "print-who";
+    who.textContent = m.role === "user" ? "You" : "MK.ai";
+    const body = document.createElement("div");
+    if (m.role === "user") body.textContent = m.text;
+    else renderAnswer(body, m.text || "");
+    block.append(who, body);
+    view.append(block);
+  }
+  document.body.append(view);
+  document.body.classList.add("print-mode");
+  const done = () => {
+    document.body.classList.remove("print-mode");
+    view.remove();
+  };
+  window.addEventListener("afterprint", done, { once: true });
+  setTimeout(() => window.print(), 50);
 }
 function toast(text) {
   const t = Object.assign(document.createElement("div"), { className: "toast", textContent: text });
@@ -1079,6 +1126,8 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
         setTimeout(() => openMenu(btn, Object.entries(PERSONAS).map(([k, v]) => ({ label: `${k === persona ? "✓ " : ""}${v.label}`, run: () => setPersona(k) }))), 0);
       },
     },
+    { label: "Saved answers", run: () => openSaved({ onAsk: (q) => ((questionInput.value = q), composer.requestSubmit()) }) },
+    { label: "Settings", run: openSettings },
     { label: "Keyboard shortcuts", run: showShortcuts },
     { label: "About MK.ai", run: () => (location.href = "about.html") },
   );
@@ -1125,7 +1174,8 @@ function fitQuestion() {
 questionInput.addEventListener("input", fitQuestion);
 questionInput.addEventListener("keydown", (e) => {
   if (slashMenu && ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(e.key)) return slashKey(e);
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+  // Enter sends (or adds a line, if chosen in Settings; then Ctrl+Enter sends)
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing && (pref("enterSends") || e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     composer.requestSubmit();
   }
@@ -1295,6 +1345,7 @@ function createAiMessage() {
   // Streaming: text is revealed smoothly and steadily as it arrives (it never
   // restarts), with a cursor while more is coming.
   const stream = { target: "", shown: 0, raf: 0, done: false };
+  let answerText = "";
   const reveal = () => {
     stream.raf = 0;
     const left = stream.target.length - stream.shown;
@@ -1320,6 +1371,7 @@ function createAiMessage() {
       if (!stream.raf) stream.raf = requestAnimationFrame(reveal);
     },
     finish(answer, searchSuggestions) {
+      answerText = answer;
       if (stream.target) {
         // Already streaming: carry on to the end without starting over
         cancelAnimationFrame(stream.raf);
@@ -1349,6 +1401,23 @@ function createAiMessage() {
         } catch {}
       });
       actions.classList.remove("hidden");
+    },
+    // "Save": keep this answer in Saved answers
+    enableSave(question) {
+      const btn = actions.querySelector(".save-btn");
+      if (!btn || !answerText) return;
+      const show = (on) => {
+        btn.textContent = on ? "Saved" : "Save";
+        btn.classList.toggle("on", on);
+        btn.setAttribute("aria-pressed", String(on));
+      };
+      show(isSaved(question, answerText));
+      btn.classList.remove("hidden");
+      btn.addEventListener("click", () => {
+        const on = toggleSaved(question, answerText);
+        show(on);
+        toast(on ? "Saved. Find it in ⋯ › Saved answers." : "Removed from saved answers.");
+      });
     },
     // "Retry": ask Alpaca again for a fresh, better answer
     enableRetry(question) {
@@ -1384,11 +1453,11 @@ function createAiMessage() {
       actions.append(box);
     },
     // "You might also ask": related questions MK.ai knows the answers to
-    setFollowUps(questions) {
+    setFollowUps(questions, title = "You might also ask:") {
       const box = document.createElement("div");
       box.className = "follow-ups";
       const label = document.createElement("span");
-      label.textContent = "You might also ask:";
+      label.textContent = title;
       box.append(label);
       for (const q of questions) {
         const b = document.createElement("button");
@@ -2324,7 +2393,7 @@ composer.addEventListener("submit", async (e) => {
   const loading = startLoading();
   scrollToBottom();
   let bubble = null;
-  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {}, setFollowUps() {}, setRefine() {}, enableRetry() {} };
+  const offscreen = { setText() {}, finish() {}, setThoughts() {}, setCredit() {}, enableTeaching() {}, enableVotes() {}, setFollowUps() {}, setRefine() {}, enableRetry() {}, enableSave() {} };
   const showBubble = () => {
     if (!stillHere()) return offscreen;
     if (!bubble) {
@@ -2383,7 +2452,12 @@ composer.addEventListener("submit", async (e) => {
         .map((r) => r.question)
         .filter((q) => q.toLowerCase().replace(/[?.!]+$/, "") !== asked);
       if (more.length) msg.setFollowUps(more);
+    } else if (!deepNow && !isCode && !cancelled && ["alpaca", "wiki", "memory", "vault"].includes(result.source) && stillHere()) {
+      // Smart next steps, chosen from what was asked (NLP)
+      const steps = nextSteps(question, result.answer);
+      if (steps.length) msg.setFollowUps(steps, "Next:");
     }
+    if (!isCode && !cancelled && result.source !== "stopped" && !result.teachable) msg.enableSave(question);
     if (["knowledge", "wiki"].includes(result.source) && !deepNow && result.answer.length > 120 && !result.answer.includes("```")) msg.setRefine(question);
     if (!isCode && !cancelled && !result.teachable && ["alpaca", "knowledge", "wiki", "memory", "vault", "local", "app"].includes(result.source) && navigator.onLine) msg.enableRetry(question);
     if (result.teachable) msg.enableTeaching(question);
