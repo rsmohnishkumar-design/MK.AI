@@ -4,8 +4,15 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>MK.ai</title>
-<meta name="description" content="Ask anything — an AI assistant that learns from every conversation." />
-<meta name="theme-color" content="#14181c" />
+<meta name="description" content="MK.ai: a free AI assistant for maths, science, coding and general knowledge, powered by its own model, Alpaca." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MK.ai" />
+<meta property="og:title" content="MK.ai: free AI assistant" />
+<meta property="og:description" content="Maths with steps, science, coding, general knowledge and Tamil culture, from MK.ai's own model, Alpaca. Free, with no ads." />
+<meta property="og:url" content="https://mkai-c042b.web.app/" />
+<meta property="og:image" content="https://mkai-c042b.web.app/icons/icon-512.png" />
+<meta name="twitter:card" content="summary" />
+<meta name="theme-color" content="#000000" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -20,7 +27,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <!-- Fetch every part of the app at once instead of one after another -->
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js" />
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js" />
@@ -53,14 +60,14 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=48" />
+<link rel="stylesheet" href="style.css?v=92" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
 
     <section id="authScreen" class="auth-screen">
       <div class="auth-card">
-        <svg class="logo logo-auth" width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+        <svg class="logo logo-auth" width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg>
         <h1>MK.ai</h1>
         <p class="auth-copy" id="authCopy">Sign in to start asking.</p>
 
@@ -72,10 +79,10 @@
         <form id="authForm">
           <input id="authEmail" type="email" placeholder="email" autocomplete="username" required />
           <input id="authPassword" type="password" placeholder="password" autocomplete="current-password" required />
-          <input id="authCode" type="text" placeholder="access code (optional)" autocomplete="off" />
+          <input id="authCode" type="text" placeholder="access code" autocomplete="off" hidden />
           <button type="submit" id="authSubmit">Log in</button>
         </form>
-        <p class="auth-hint">Have an access code for unlimited use? Enter it above — otherwise every new account gets a 3-hour trial.</p>
+        <p class="auth-hint">Free plan: 10,000 tokens every 5 hours, 100,000 a week. <button type="button" id="showCodeBtn" class="link-btn">Have an access code?</button></p>
         <p id="authError" class="auth-error"></p>
         <button type="button" id="forgotBtn" class="link-btn">Forgot password?</button>
       </div>
@@ -85,7 +92,7 @@
       <aside class="sidebar" id="sidebar" aria-label="Chats">
         <div class="sidebar-top">
           <div class="brand">
-            <svg class="logo logo-brand" id="secretMark" width="34" height="34" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+            <svg class="logo logo-brand" id="secretMark" width="34" height="34" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg>
             <span class="brand-name">MK.ai</span>
           </div>
           <button type="button" class="icon-btn" id="sidebarClose" title="Close sidebar" aria-label="Close sidebar">
@@ -98,7 +105,7 @@
           New chat
         </button>
 
-        <a class="new-chat-btn learn-btn" id="learnLink" href="learn.html">
+        <a class="new-chat-btn learn-btn hidden" id="learnLink" href="learn.html">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="m9 8-2 2 2 2M13 8l2 2-2 2"/></svg>
           Learn to code
         </a>
@@ -116,11 +123,18 @@
             <div class="account-text">
               <span class="account-email" id="accountEmail"></span>
               <span id="tierBadge" class="tier-badge"></span>
+              <span class="side-meter" id="sideMeter" hidden><span></span></span>
+              <button type="button" id="codeBtn" class="link-btn code-link" hidden aria-hidden="true" tabindex="-1">Enter access code</button>
+              <button type="button" id="askAccessBtn" class="ask-access-btn" hidden>Ask for unlimited access</button>
+              <span id="upgradeNote" class="upgrade-note" hidden></span>
+              <span id="learnStatus" class="learn-status" aria-live="polite"></span>
             </div>
           </div>
           <div class="account-actions">
             <button type="button" id="installBtn" class="side-btn hidden" title="Install MK.ai as an app">install app</button>
-            <button type="button" id="signOutBtn" class="side-btn" title="Sign out">sign out</button>
+            <button type="button" id="creatorExitBtn" class="side-btn" title="Use MK.ai as a normal member" hidden>Exit creator</button>
+            <a href="about.html" class="side-btn about-link" title="About MK.ai, privacy and terms">About</a>
+            <button type="button" id="signOutBtn" class="side-btn" title="Sign out">Sign out</button>
           </div>
         </div>
       </aside>
@@ -132,28 +146,54 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
           </button>
           <div class="topbar-title" id="chatTitle">New chat</div>
+          <div class="usage" id="usage" hidden>
+            <button type="button" class="usage-btn" id="usageBtn" aria-expanded="false" aria-controls="usagePanel" title="Free plan usage">
+              <span class="usage-ring" id="usageRing" aria-hidden="true"></span><span id="usageShort">3h 0m</span>
+            </button>
+            <div class="usage-panel" id="usagePanel" role="dialog" aria-label="Free plan usage" hidden>
+              <p class="usage-head" id="usageHead">Free plan usage</p>
+              <div class="usage-trial">
+                <div class="usage-row"><span>5-hour limit</span><span id="usageWinText"></span></div>
+                <div class="usage-bar"><span id="usageWinBar"></span></div>
+                <div class="usage-row"><span>Weekly limit</span><span id="usageWeekText"></span></div>
+                <div class="usage-bar"><span id="usageWeekBar"></span></div>
+              </div>
+              <div class="usage-row"><span>Questions asked</span><span id="usageCount">0</span></div>
+              <div class="usage-row muted"><span>Alpaca Vision · Code School</span><span id="usageExtras">Unlimited plan</span></div>
+              <div class="usage-trial">
+                <p class="usage-note">Want unlimited access? Chat with MK.ai and help train it: the admin gives unlimited access to people who help.</p>
+                <button type="button" class="usage-code" id="usageCodeBtn">Enter access code</button>
+              </div>
+            </div>
+          </div>
           <button type="button" class="icon-btn" id="newChatTop" title="New chat" aria-label="New chat">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           </button>
+          <button type="button" class="icon-btn icon-dots" id="chatMoreTop" title="More" aria-label="More options">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+          </button>
         </header>
 
+        <div id="announceBar" class="announce-bar" role="status" hidden></div>
         <main class="reading-room" id="thread" aria-live="polite">
           <div class="empty-state" id="emptyState">
-            <svg class="logo logo-empty" width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><circle cx="50" cy="50" r="46" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.55"/><text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="36" fill="#c9a227" letter-spacing="-1">MK</text></svg>
+            <svg class="logo logo-empty" width="76" height="76" viewBox="0 0 100 100" role="img" aria-label="MK.ai"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg>
             <h2 class="empty-title" id="emptyTitle">How can I help you today?</h2>
-            <p>Say hi, ask a question, try some maths — or teach me something new.</p>
-            <p class="empty-learn">New to coding? <a href="learn.html">Open the Code School →</a></p>
+            <p id="emptySub">Ask me anything.</p>
+            <div class="suggest" id="emptySuggest" aria-label="Suggestions"></div>
+            <p class="empty-learn hidden" id="emptyLearn">New to coding? <a href="learn.html">Open the Code School →</a></p>
           </div>
         </main>
 
         <form class="desk" id="composer">
+          <div id="voiceChatBar" class="voice-chat-bar hidden"><span class="vc-dot"></span><span>Voice chat is on. Speak when the mic lights up; MK.ai answers aloud.</span><button type="button" id="voiceChatEnd">End</button></div>
           <div class="attach-chip hidden" id="attachChip">
             <img id="attachThumb" class="hidden" alt="" />
             <span class="attach-name" id="attachName"></span>
             <button type="button" id="attachRemove" title="Remove" aria-label="Remove attachment">×</button>
           </div>
           <div class="desk-box">
-            <button type="button" id="attachBtn" class="mic-btn" title="Add a text or code file" aria-label="Add a text or code file">
+            <button type="button" id="attachBtn" class="mic-btn" title="Add a photo, PDF or file" aria-label="Add a photo, PDF or file">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 11-8.6 8.6a5 5 0 0 1-7-7l8.5-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.3-2.4l7.9-7.9"/></svg>
             </button>
             <input type="file" id="attachInput" class="hidden" />
@@ -172,20 +212,35 @@
             </button>
           </div>
           <div class="desk-foot">
-            <select id="modelSelect" class="model-select" aria-label="Model">
-              <option value="alpaca">🦙 Alpaca</option>
-              <option value="vision">🎨 Alpaca Vision</option>
+            <button type="button" id="modelBtn" class="model-btn" aria-haspopup="menu" title="Choose the model and style"><span class="model-name">Alpaca</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <select id="modelSelect" class="model-select hidden" aria-label="Model" hidden>
+              <option value="alpaca">Alpaca</option>
+              <option value="vision">Alpaca Vision</option>
             </select>
-            <div class="mode-switch" role="radiogroup" aria-label="How MK.ai answers">
-              <button type="button" class="mode-btn active" data-mode="normal" role="radio" aria-checked="true" title="Fast answers">⚡ Normal</button>
-              <button type="button" class="mode-btn" data-mode="deep" role="radio" aria-checked="false" title="Slower, more careful: checks its work, adds related facts and shows its steps">🧠 Deep think</button>
+            <div class="mode-switch hidden" role="radiogroup" aria-label="How MK.ai answers" hidden>
+              <button type="button" class="mode-btn active" data-mode="normal" role="radio" aria-checked="true" title="Fast answers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Normal</button>
+              <button type="button" class="mode-btn" data-mode="deep" role="radio" aria-checked="false" title="Slower, more careful: checks its work, adds related facts and shows its steps"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Deep think</button>
             </div>
+            <button type="button" id="personaBadge" class="persona-badge hidden" title="Change Alpaca's personality"></button>
             <p class="desk-hint">Enter to send · Shift + Enter for a new line</p>
           </div>
+          <p class="disclaimer">MK.ai can make mistakes. Check important information. · <a href="about.html#privacy">Privacy</a> · <a href="about.html#terms">Terms</a></p>
         </form>
       </div>
     </div>
   </div>
+
+  <dialog class="vault-gate" id="vaultGate" aria-labelledby="vaultGateTitle">
+    <form method="dialog" id="vaultGateForm">
+      <p class="vault-gate-title" id="vaultGateTitle">Vault</p>
+      <input type="password" id="vaultGatePass" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Vault password" aria-label="Vault password" />
+      <p class="vault-gate-error" id="vaultGateError" aria-live="polite"></p>
+      <div class="vault-gate-actions">
+        <button type="button" id="vaultGateCancel" class="secondary">Cancel</button>
+        <button type="submit" id="vaultGateOk">Open</button>
+      </div>
+    </form>
+  </dialog>
 
   <template id="msg-user">
     <div class="msg msg-user">
@@ -209,10 +264,11 @@
           </form>
           <div class="search-suggestions hidden"></div>
           <div class="answer-actions">
-            <button type="button" class="vote-btn" data-vote="up" title="Helpful" aria-label="Helpful">👍</button>
-            <button type="button" class="vote-btn" data-vote="down" title="Not helpful" aria-label="Not helpful">👎</button>
-            <button type="button" class="copy-btn">copy</button>
-            <button type="button" class="speak-btn hidden" title="Read this answer aloud">listen</button>
+            <button type="button" class="vote-btn" data-vote="up" title="Helpful" aria-label="Helpful"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4-7a2 2 0 0 1 3 2l-1 5h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 21H7"/></svg></button>
+            <button type="button" class="vote-btn" data-vote="down" title="Not helpful" aria-label="Not helpful"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zm0 0-4 7a2 2 0 0 1-3-2l1-5H5a2 2 0 0 1-2-2.3l1.3-7A2 2 0 0 1 6.3 3H17"/></svg></button>
+            <button type="button" class="copy-btn">Copy</button>
+            <button type="button" class="speak-btn hidden" title="Read this answer aloud">Listen</button>
+            <button type="button" class="retry-btn hidden" title="Ask Alpaca for a fresh, better answer">Retry</button>
           </div>
         </div>
       </div>
@@ -246,6 +302,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=48"></script>
+  <script type="module" src="js/app.js?v=92"></script>
 </body>
 </html>

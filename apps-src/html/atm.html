@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATM Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0f172a; font-family: system-ui, sans-serif; color: #e2e8f0; padding: 16px; }
+  .atm { width: min(420px, 100%); background: #1e293b; border-radius: 18px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+  .bank { text-align: center; font-weight: 700; letter-spacing: .1em; color: #fbbf24; margin-bottom: 10px; }
+  .screen { background: #022c22; color: #a7f3d0; border-radius: 10px; padding: 16px; min-height: 190px; font-family: "Courier New", monospace; }
+  .screen h2 { margin: 0 0 10px; font-size: 18px; color: #6ee7b7; }
+  .screen p { margin: 6px 0; }
+  .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  button { padding: 12px; border: 0; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; background: #334155; color: #e2e8f0; }
+  button:hover { background: #475569; }
+  button.ok { background: #16a34a; }
+  button.cancel { background: #dc2626; }
+  input { width: 100%; padding: 10px; font-size: 18px; border-radius: 8px; border: 1px solid #065f46; background: #064e3b; color: #ecfdf5; margin: 8px 0; text-align: center; letter-spacing: .2em; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+  .note { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="atm">
+  <div class="bank">MK BANK · ATM</div>
+  <div class="screen" id="screen"></div>
+  <div class="keys" id="keys"></div>
+  <p class="note">Demo card PIN: 1234 · Starting balance ₹25,000 · 3 wrong PINs block the card</p>
+</div>
+<script>
+  // A simple ATM: PIN check, balance, withdraw, deposit, mini statement, change PIN.
+  const state = { pin: "1234", balance: 25000, tries: 0, blocked: false, history: [], withdrawnToday: 0 };
+  const LIMIT = 20000;
+  const screen = document.getElementById("screen");
+  const keys = document.getElementById("keys");
+  const rupees = (n) => "₹" + n.toLocaleString("en-IN");
+  const log = (type, amt) => state.history.unshift({ type, amt, bal: state.balance, time: new Date().toLocaleTimeString() });
+
+  function show(html, buttons = []) {
+    screen.innerHTML = html;
+    keys.innerHTML = "";
+    buttons.forEach(([label, fn, cls]) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      if (cls) b.className = cls;
+      b.onclick = fn;
+      keys.append(b);
+    });
+    keys.style.gridTemplateColumns = buttons.length > 3 ? "1fr 1fr" : `repeat(${Math.max(buttons.length, 1)}, 1fr)`;
+  }
+  function askNumber(title, hint, onOk, masked) {
+    show(`<h2>${title}</h2><p>${hint}</p><input id="num" inputmode="numeric" type="${masked ? "password" : "text"}" autocomplete="off">`, [
+      ["Cancel", menu, "cancel"],
+      ["OK", () => onOk(document.getElementById("num").value.trim()), "ok"],
+    ]);
+    const input = document.getElementById("num");
+    input.focus();
+    input.addEventListener("keydown", (e) => e.key === "Enter" && onOk(input.value.trim()));
+  }
+  function start() {
+    if (state.blocked) return show("<h2>Card blocked</h2><p>Too many wrong PINs. Please contact your bank.</p>", [["Restart demo", () => { state.blocked = false; state.tries = 0; start(); }]]);
+    askNumber("Welcome", "Insert card ✓ Enter your 4-digit PIN:", (pin) => {
+      if (pin === state.pin) { state.tries = 0; return menu(); }
+      state.tries++;
+      if (state.tries >= 3) { state.blocked = true; return start(); }
+      show(`<h2>Wrong PIN</h2><p>${3 - state.tries} tries left.</p>`, [["Try again", start]]);
+    }, true);
+  }
+  function menu() {
+    show("<h2>Main menu</h2><p>Choose a service.</p>", [
+      ["Balance", () => show(`<h2>Balance</h2><p>Available: ${rupees(state.balance)}</p>`, [["Back", menu]])],
+      ["Withdraw", withdraw],
+      ["Deposit", deposit],
+      ["Mini statement", statement],
+      ["Change PIN", changePin],
+      ["Exit", () => show("<h2>Thank you!</h2><p>Please take your card.</p>", [["Insert card", start]])],
+    ]);
+  }
+  function withdraw() {
+    askNumber("Withdraw", `Amount in multiples of ₹100 (daily limit ${rupees(LIMIT)}):`, (v) => {
+      const amt = Number(v);
+      if (!amt || amt % 100) return show("<h2>Invalid amount</h2><p>Use multiples of ₹100.</p>", [["Back", withdraw]]);
+      if (amt > state.balance) return show("<h2>Insufficient balance</h2>", [["Back", menu]]);
+      if (state.withdrawnToday + amt > LIMIT) return show("<h2>Daily limit reached</h2>", [["Back", menu]]);
+      state.balance -= amt; state.withdrawnToday += amt; log("Withdraw", -amt);
+      let left = amt; const parts = [];
+      for (const n of [500, 200, 100]) { const c = Math.floor(left / n); if (c) parts.push(`${c} × ₹${n}`); left -= c * n; }
+      show(`<h2>Please collect your cash</h2><p>${rupees(amt)} (${parts.join(", ")})</p><p>Balance: ${rupees(state.balance)}</p>`, [["Menu", menu]]);
+    });
+  }
+  function deposit() {
+    askNumber("Deposit", "Amount to deposit:", (v) => {
+      const amt = Number(v);
+      if (!amt || amt < 100 || amt % 100) return show("<h2>Invalid amount</h2>", [["Back", deposit]]);
+      state.balance += amt; log("Deposit", amt);
+      show(`<h2>Deposited</h2><p>${rupees(amt)} added.</p><p>Balance: ${rupees(state.balance)}</p>`, [["Menu", menu]]);
+    });
+  }
+  function statement() {
+    const rows = state.history.slice(0, 5).map((h) => `<p>${h.time} ${h.type.padEnd(8)} ${h.amt > 0 ? "+" : ""}${h.amt}</p>`).join("") || "<p>No transactions yet.</p>";
+    show(`<h2>Mini statement</h2>${rows}<p>Balance: ${rupees(state.balance)}</p>`, [["Back", menu]]);
+  }
+  function changePin() {
+    askNumber("Change PIN", "Enter a new 4-digit PIN:", (pin) => {
+      if (!/^\d{4}$/.test(pin)) return show("<h2>PIN must be 4 digits</h2>", [["Back", changePin]]);
+      state.pin = pin;
+      show("<h2>PIN changed</h2><p>Use your new PIN next time.</p>", [["Menu", menu]]);
+    }, true);
+  }
+  start();
+</script>
+</body>
+</html>

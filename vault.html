@@ -6,26 +6,39 @@
 <title>MK.ai — Vault</title>
 <meta name="robots" content="noindex, nofollow" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-<link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="vault.css" />
+<link rel="stylesheet" href="style.css?v=92" />
+<link rel="stylesheet" href="vault.css?v=92" />
 </head>
 <body>
   <div class="vault-app">
 
-    <section id="loginScreen" class="login-screen">
-      <div class="login-card">
-        <div class="header-mark">🔒</div>
+    <section id="gateScreen" class="login-screen hidden">
+      <a href="./" class="back-link login-back">&larr; back to chat</a>
+      <form class="login-card" id="gateForm">
+        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
-        <p class="login-copy">This room isn't linked anywhere. Log in with the admin account.</p>
-        <form id="loginForm">
+        <input id="gatePass" type="password" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="vault password" aria-label="Vault password" />
+        <button type="submit">Unlock</button>
+        <p class="login-error" id="gateError" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="loginScreen" class="login-screen">
+      <a href="./" class="back-link login-back">&larr; back to chat</a>
+      <div class="login-card">
+        <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg></div>
+        <h1>The Vault</h1>
+        <p class="login-copy" id="loginCopy">Open MK.ai, sign in with your account, then tap the MK logo 5 times and enter the vault password.</p>
+        <a href="./" class="vault-open-chat">Open MK.ai</a>
+        <form id="loginForm" hidden>
           <input id="emailInput" type="email" placeholder="admin email" autocomplete="username" required />
           <input id="passwordInput" type="password" placeholder="password" autocomplete="current-password" required />
           <button type="submit">Unlock</button>
         </form>
         <button id="resendBtn" type="button" class="refresh-btn hidden">resend verification email</button>
-        <button id="forgotBtn" type="button" class="link-btn">Forgot password?</button>
+        <button id="forgotBtn" type="button" class="link-btn" hidden>Forgot password?</button>
         <p id="loginError" class="login-error"></p>
       </div>
     </section>
@@ -38,6 +51,49 @@
         </div>
         <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
+
+      <section class="activity-section control-centre" id="controlCentre">
+        <div class="activity-heading">
+          <h2>Control centre</h2>
+          <button type="button" id="testAlpacaBtn" class="refresh-btn">Test Alpaca</button>
+        </div>
+        <p class="col-hint">You control how Alpaca behaves for everyone. Changes apply the next time people open or refresh MK.ai.</p>
+        <p class="col-hint" id="testAlpacaOut" aria-live="polite"></p>
+        <form id="controlForm" class="control-form">
+          <label>How Alpaca answers
+            <select id="ctlMode">
+              <option value="auto">Smart (Alpaca Pro for almost everything; maths and quick replies instant)</option>
+              <option value="pro">Always Alpaca Pro (the big model for every answer)</option>
+              <option value="instant">Instant only (MK.ai's own knowledge, no big model)</option>
+            </select>
+          </label>
+          <label>Your instructions to Alpaca <span class="col-hint">(it follows these in every answer)</span>
+            <textarea id="ctlInstructions" rows="3" maxlength="2000" placeholder="e.g. Always answer in simple English. Mention MK.ai's Code School when someone asks about coding."></textarea>
+          </label>
+          <label>Announcement shown to everyone <span class="col-hint">(leave empty for none)</span>
+            <input id="ctlAnnounce" maxlength="300" placeholder="e.g. New: run Python code right in the chat!" />
+          </label>
+          <div class="control-grid">
+            <label class="check"><input type="checkbox" id="ctlVision" /> Alpaca Vision on</label>
+            <label class="check"><input type="checkbox" id="ctlOffice" /> PowerPoint, Word and Excel files on</label>
+            <label class="check"><input type="checkbox" id="ctlVoice" /> Voiceovers on</label>
+            <label class="check"><input type="checkbox" id="ctlCode" /> Run code in the chat on</label>
+            <label class="check"><input type="checkbox" id="ctlMaintenance" /> Maintenance mode (only you can chat)</label>
+            <label class="check"><input type="checkbox" id="ctlAutoPromote" /> Automatically promote everything MK.ai learns to the vault</label>
+          </div>
+          <div class="control-grid">
+            <label>Free tokens per 5 hours <input type="number" id="ctlWindow" min="1000" step="1000" /></label>
+            <label>Free tokens per week <input type="number" id="ctlWeek" min="10000" step="10000" /></label>
+          </div>
+          <div class="control-actions">
+            <button type="submit">Save controls</button>
+            <button type="button" id="promoteAllBtn" class="secondary">Promote all learned answers now</button>
+            <span id="controlStatus" class="col-hint" aria-live="polite"></span>
+          </div>
+        </form>
+        <h3 class="control-sub">Unlimited access requests <span class="count" id="requestsCount"></span></h3>
+        <div id="requestsList" class="requests-list"><p class="col-hint">No requests right now.</p></div>
+      </section>
 
       <section class="activity-section training" id="training">
         <div class="activity-heading">
@@ -54,10 +110,13 @@
           <div class="train-stats" id="trainStats"></div>
           <p class="train-topics" id="trainTopics"></p>
           <h3 class="train-h3">Questions MK.ai should learn <span class="count" id="needsCount"></span></h3>
-          <p class="col-hint">Questions it couldn't answer come first, then the ones people ask again and again. Tick the ones to learn.</p>
+          <p class="col-hint">Questions it couldn't answer come first, then the ones people ask again and again. Tick the ones to learn: MK.ai researches them itself and learns them straight away. The rest it learns on its own while pages sit idle and at night (2:00–5:30).</p>
           <div id="needsList" class="needs-list"></div>
           <div class="train-actions">
-            <button type="button" id="prepareBtn">Prepare answers with AI</button>
+            <button type="button" id="prepareBtn">Research &amp; learn</button>
+            <button type="button" id="learnModeBtn" class="secondary">Start learning mode</button>
+            <button type="button" id="trendingBtn" class="secondary">Learn today's top topics</button>
+            <button type="button" id="vitalBtn" class="secondary">Learn important topics</button>
             <button type="button" id="reanalyseBtn" class="secondary">analyse again</button>
           </div>
           <p class="train-status" id="prepareStatus" aria-live="polite"></p>
@@ -83,7 +142,7 @@
           <div class="train-actions">
             <label class="file-btn">upload .txt, .md or .pdf<input type="file" id="docFile" accept=".txt,.md,.pdf,text/plain,application/pdf" hidden /></label>
             <button type="button" id="docLearnBtn">Learn this document</button>
-            <button type="button" id="docQaBtn" class="secondary">Make Q&amp;A with AI</button>
+            <button type="button" id="docQaBtn" class="secondary">Make Q&amp;A</button>
           </div>
           <p class="train-status" id="docStatus" aria-live="polite"></p>
           <h3 class="train-h3">Documents MK.ai knows <span class="count" id="docsCount"></span></h3>
@@ -136,6 +195,7 @@
 
         <section class="vault-col">
           <h2>Self-taught memory <span class="count" id="learnedCount"></span></h2>
+          <p class="learn-report" id="learnReport" aria-live="polite"></p>
           <p class="col-hint">Every new AI answer is saved here, with how often it was reused and how people voted. Promote the good ones, delete the bad ones.</p>
           <div id="learnedList" class="entry-list"></div>
         </section>
@@ -192,6 +252,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/vault.js"></script>
+  <script type="module" src="js/vault.js?v=92"></script>
 </body>
 </html>

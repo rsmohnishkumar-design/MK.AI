@@ -5,6 +5,7 @@
 // and data/kb/index.json lists the packs.
 
 import { keywords, sameWord } from "./words.js";
+import { embed, closeness } from "./meaning.js";
 
 const BASE = new URL("../data/kb/", import.meta.url);
 
@@ -85,7 +86,38 @@ export async function knowledgeAnswer(question) {
     console.warn("Couldn't load the knowledge base:", err);
     return null;
   }
-  return bestEntry(question);
+  return bestEntry(question) || (await meaningEntry(question));
+}
+
+// Search by meaning (embeddings): when the words differ ("how tall is
+// Everest" / "height of Mount Everest"), the entries sharing the most words
+// are compared by their meaning vectors. Only once the neural model is ready.
+const MEANING_MATCH = 0.86;
+export async function meaningEntry(question, min = MEANING_MATCH) {
+  const words = keywords(prep(question));
+  if (!words.length || !entries.length) return null;
+  const numbers = numbersIn(prep(question));
+  const shared = new Map();
+  for (const w of words) for (const i of byWord.get(w) || []) shared.set(i, (shared.get(i) || 0) + 1);
+  const top = [...shared]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 40)
+    .map(([i]) => entries[i])
+    .filter((e) => e.phrasings.some((p) => p.numbers === numbers));
+  if (!top.length) return null;
+  let vecs = null;
+  try {
+    vecs = await embed([question, ...top.map((e) => e.q)]);
+  } catch (err) {
+    console.warn("Meaning search failed:", err);
+  }
+  if (!vecs) return null;
+  let best = null;
+  top.forEach((e, i) => {
+    const c = closeness(vecs[0], vecs[i + 1]);
+    if (!best || c > best.score) best = { entry: e, score: c };
+  });
+  return best && best.score >= min ? { question: best.entry.q, answer: best.entry.a, topic: best.entry.topic, score: best.score, byMeaning: true } : null;
 }
 
 // Other entries about the same thing, for Deep think's "Related" list.
@@ -114,4 +146,37 @@ export function relatedEntries(question, exclude = null, n = 2) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, n)
     .map(([i]) => ({ question: entries[i].q, answer: entries[i].a }));
+}
+
+// "Did you mean …?": swaps misspelt words for the closest word MK.ai knows
+// (up to 2 letters different), and returns the corrected question only when
+// the knowledge base then has an answer for it.
+function distance(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+export function spellFix(question) {
+  const words = question.toLowerCase().match(/[a-z]+/g) || [];
+  let changed = false;
+  const fixed = question.toLowerCase().replace(/[a-z]+/g, (w) => {
+    if (w.length < 4 || byWord.has(w)) return w;
+    let best = null;
+    for (const known of byWord.keys()) {
+      if (known[0] !== w[0] || !/^[a-z]+$/.test(known)) continue;
+      const d = distance(w, known);
+      if (d <= (w.length >= 7 ? 2 : 1) && (!best || d < best.d || (d === best.d && byWord.get(known).size > byWord.get(best.w).size))) best = { w: known, d };
+    }
+    if (!best) return w;
+    changed = true;
+    return best.w;
+  });
+  if (!changed || !words.length) return null;
+  const hit = bestEntry(fixed);
+  return hit ? { question: fixed, hit } : null;
 }

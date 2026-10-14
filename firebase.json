@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/__pycache__/**",
+      ".firebase/**",
+      ".git/**",
+      "**/.*",
+      "**/node_modules/**",
+      "kb-src/**",
+      "apps-src/**",
+      "README.md",
+      "firestore.rules"
+    ],
+    "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+}

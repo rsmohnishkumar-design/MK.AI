@@ -71,11 +71,16 @@ function rng(seed) {
 export function isVisionRequest(question) {
   const q = question.toLowerCase();
   if (/\b(app|application|website|web site|program|game|software|code)\b/.test(q)) return false;
+  // Flowcharts, mind maps and other diagrams are drawn by Alpaca as diagrams
+  if (/\b(flow ?charts?|flow diagram|mind ?maps?|diagram|timeline|sequence diagram|er diagram|uml|org(anisation|anization)? chart|tree diagram|venn)\b/.test(q) && !/\b(image|picture|photo|painting|wallpaper)\b/.test(q)) return false;
   if (/^(what|who|why|how|when|where|explain|define)\b/.test(q) && !/\b(draw|make|create)\b/.test(q)) return false;
   return (
     /^(draw|paint|sketch|illustrate|animate)\b/.test(q) ||
     /\b(draw|paint|sketch|create|make|generate|design|give me|show me)\b.*\b(image|picture|pic|photo|drawing|painting|poster|card|greeting|logo|wallpaper|video|animation|scene|art|artwork|kolam|rangoli|mandala|banner|chart|graph|invitation)\b/.test(q) ||
-    /\b(image|picture|photo|drawing|painting|video|animation) of\b/.test(q)
+    /\b(image|picture|photo|drawing|painting|video|animation) of\b/.test(q) ||
+    // "birthday card for Priya", "logo for MK Tech", "diwali wishes poster"
+    /\b(card|greeting|poster|banner|invitation|logo|wallpaper)\s+(for|of|with|to)\b/.test(q) ||
+    /^(a |an )?(happy \w+|diwali|pongal|christmas|new year|eid|holi|birthday|wedding|thank you|congratulations?)\b.*\b(card|greeting|poster|wishes image)\b/.test(q)
   );
 }
 
@@ -94,6 +99,9 @@ export function planPicture(question, variant = 0) {
   const colour = Object.keys(COLOURS).find((c) => new RegExp(`\\b${c}\\b`).test(q));
   if (colour) spec.colour = COLOURS[colour];
 
+  // Real photos come from the photo service; our own drawing is the fallback
+  // (and is used for logos, charts and patterns, or when asked for "offline").
+  spec.own = has(q, /\b(offline|your own drawing|own drawing|simple drawing|without internet)\b/);
   const fest = FESTIVALS.find(([, re]) => re.test(q));
   if (fest || has(q, /\b(card|greeting|wishes|invitation|poster|banner)\b/)) {
     spec.kind = "card";
@@ -110,7 +118,8 @@ export function planPicture(question, variant = 0) {
     spec.from = cap(spec.from);
     if (!spec.text) spec.text = fest ? fest[2] : "Best Wishes";
     if (spec.size === "landscape" && has(q, /card|poster|invitation/)) spec.size = "portrait";
-    return spec;
+    spec.photo = !spec.own;
+    return finishPhoto(spec, raw);
   }
   if (has(q, /\blogo\b/)) {
     spec.kind = "logo";
@@ -167,8 +176,108 @@ export function planPicture(question, variant = 0) {
     }
   }
   if (spec.kind === "underwater" && !spec.emoji.some((x) => x.water)) spec.emoji.push({ e: "🐟", w: "fish", n: 5, water: true }, { e: "🐠", w: "fish", n: 3, water: true });
+  spec.photo = !spec.own;
+  return finishPhoto(spec, raw);
+}
+
+// --- Real photos ------------------------------------------------------------------------------
+// The words are turned into a detailed photography prompt for the free
+// AI Horde image service (free, no key, no account). Only the description is sent.
+
+const CLEAN_COMMAND = /^(?:please\s+)?(?:can you\s+)?(?:draw|paint|sketch|create|make|generate|design|give me|show me|render|produce)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:\d+\s*(?:s|sec|second)s?\s+)?(?:(?:realistic|real|hd|high quality|beautiful|nice|good|cinematic|short)\s+)*(?:photo|picture|pic|image|drawing|painting|video|animation|clip|scene|wallpaper|illustration|art|artwork)?\s*(?:of\s+|showing\s+|about\s+|with\s+)?/i;
+export function subjectOfPicture(raw) {
+  return raw
+    .replace(CLEAN_COMMAND, "")
+    .replace(/,?\s*\b\d{1,2}\s*(?:s|sec|secs|second|seconds)\b(?:\s+(?:long|video|clip))?/gi, "")
+    .replace(/,?\s*\b(?:as an? |in )?(?:video|animation|animated|clip)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
+    .slice(0, 240);
+}
+
+const STYLE_WORDS = {
+  pixel: "pixel art, 16-bit",
+  neon: "neon lights, cyberpunk, cinematic night photography",
+  mono: "black and white photograph, high contrast, fine grain",
+  sepia: "vintage film photograph, sepia tones, 1970s",
+  soft: "soft watercolor painting, delicate brush strokes",
+};
+const PERSON_WORDS = /\b(person|people|man|men|woman|women|girl|girls|boy|boys|lady|guy|child|children|kid|kids|baby|family|friends?|mother|father|mom|dad|teacher|student|doctor|nurse|police|soldier|farmer|player|cricketer|dancer|singer|actor|actress|king|queen|prince|princess|crowd|portrait|face|selfie|me|myself|him|her|he|she|human|couple|bride|groom|chef|worker|athlete|astronaut|warrior|hero)\b/;
+const THING_WORDS = /\b(car|cars|bike|truck|bus|house|home|city|town|village|mountains?|beach|sea|ocean|forest|trees?|flowers?|rose|garden|sunset|sunrise|sky|clouds?|river|lake|waterfall|landscape|scenery|nature|cat|cats|dog|dogs|puppy|kitten|animals?|birds?|lion|tiger|elephant|horse|fish|dragon|dinosaur|food|cake|pizza|burger|fruit|space|planet|earth|moon|stars?|galaxy|building|temple|church|mosque|castle|palace|robot|train|plane|aeroplane|airplane|rocket|ship|boat|computer|laptop|phone|desert|snow|rain|storm|road|bridge|room|kitchen|school|classroom|library|office|stadium|park|field|farm|island|volcano|cave|shop|market|street|tower|monument|wallpaper|logo|alpaca|butterfly|peacock|parrot|owl|eagle|shark|whale|dolphin|bear|panda|monkey|cow|goat)\b/;
+function finishPhoto(spec, raw) {
+  if (!spec.photo) return spec;
+  const q = raw.toLowerCase();
+  const subject = subjectOfPicture(raw) || "a beautiful landscape";
+  const artsy = /\b(cartoon|anime|pixar|3d render|illustration|painting|oil painting|comic|sketch|drawing style|watercolou?r|pixel art|digital art|clay)\b/.test(q);
+  const extra = STYLE_WORDS[spec.style] || "";
+  // Portrait-style words ("50mm lens, shallow depth of field") made the free
+  // photo AI add a random woman to pictures of things and places, so people
+  // are only drawn when the request is about someone.
+  const person = PERSON_WORDS.test(q) || /\b[A-Z][a-z]+\s+[A-Z][a-z]+/.test(subject);
+  const noPeople = !person && THING_WORDS.test(q) ? ", no people, no person, no woman, no man" : "";
+  const quality = (artsy || extra ? "highly detailed, beautiful composition, vibrant colors" : "photorealistic, professional photography, natural lighting, highly detailed, sharp focus, 8k") + noPeople;
+  if (spec.kind === "card") {
+    const theme = { birthday: "birthday party with balloons, cake and candles", diwali: "Diwali festival with glowing oil lamps (diyas), rangoli and fireworks", pongal: "Pongal harvest festival in Tamil Nadu, clay pot overflowing with rice, sugarcane, kolam, sunrise", christmas: "Christmas tree with lights, gifts and snow", newyear: "New Year fireworks over a city at night", eid: "Eid crescent moon, lanterns and mosque at dusk", holi: "Holi festival colourful powder in the air", valentine: "roses and hearts with soft bokeh", wedding: "wedding flowers and rings with soft golden light", thanks: "bouquet of flowers with warm light", congrats: "golden trophy and confetti celebration", getwell: "fresh flowers by a sunny window", independence: "Indian flag waving against blue sky", teachers: "books, apple and chalkboard in a classroom", mothers: "pink flowers and a gift", fathers: "gift box, tie and coffee on a wooden table" }[spec.theme] || "festive celebration decorations";
+    spec.photoPrompt = `${theme}, festive background, bokeh lights, beautiful, no text, no letters, no words, ${quality}`;
+  } else spec.photoPrompt = `${subject}${extra ? `, ${extra}` : ""}, ${quality}`;
   return spec;
 }
+
+// Real photos come from AI Horde (aihorde.net): a free, volunteer-run image AI.
+// No account or key: the anonymous key is 0000000000. Only the prompt is sent.
+const HORDE = "https://aihorde.net/api/v2";
+const HORDE_HEADERS = { "Content-Type": "application/json", apikey: "0000000000", "Client-Agent": "MK.ai:1.0:https://mkai-c042b.web.app" };
+const HORDE_MODELS = ["AlbedoBase XL (SDXL)", "Juggernaut XL", "ICBINP - I Can't Believe It's Not Photography", "Realistic Vision", "Deliberate"];
+const NEGATIVE = "text, letters, watermark, signature, blurry, low quality, deformed, extra fingers, bad hands, nsfw, nude, violence, blood, gore, weapon, dead body, injury";
+// Horde sizes: multiples of 64, longest side 768
+export function hordeSize(spec) {
+  const [W, H] = sizeOf(spec);
+  const k = 768 / Math.max(W, H);
+  return [Math.round((W * k) / 64) * 64, Math.round((H * k) / 64) * 64];
+}
+export function hordeRequest(spec, withModels = true) {
+  const [width, height] = hordeSize(spec);
+  const n = !spec.video || spec.kind === "card" ? 1 : spec.duration >= 10 ? 5 : 4;
+  const prompt = spec.video && n > 1 ? `${spec.photoPrompt}, cinematic film still` : spec.photoPrompt;
+  const body = {
+    prompt: `${prompt} ### ${NEGATIVE}`,
+    params: { sampler_name: "k_euler_a", cfg_scale: 6, steps: 20, width, height, n, seed: String(spec.seed % 1000000), karras: true },
+    nsfw: false,
+    censor_nsfw: true,
+    r2: false,
+    slow_workers: true,
+  };
+  if (withModels) body.models = HORDE_MODELS;
+  return body;
+}
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+async function hordeJson(path, options = {}) {
+  const r = await fetch(HORDE + path, { ...options, headers: HORDE_HEADERS });
+  if (!r.ok) throw new Error(`AI Horde ${r.status}`);
+  return r.json();
+}
+
+// Things Alpaca Vision won't make
+const BLOCKED = new RegExp(
+  "\\b(" +
+    [
+      // adult content
+      "nude|naked|nudity|nsfw|porn\\w*|sex|sexy|sexual|topless|undress\\w*|lingerie|erotic|genitals?|bikini|kiss\\w*",
+      // death and dying
+      "die|dies|died|dying|dead|death\\w*|corpse\\w*|funeral|grave|coffin|skull|skeleton",
+      // violence and weapons
+      "kill\\w*|murder\\w*|stab\\w*|shooting|shot dead|gun\\w*|rifle|pistol|weapon\\w*|knife|knives|sword|bomb\\w*|explo(?:sion|de|ding)\\w*|terror\\w*|attack\\w*|fight\\w*|punch\\w*|beat(?:en|ing)|violen\\w*|war crime|massacre|execution|torture\\w*|hang(?:ed|ing)|noose|kidnap\\w*|hostage",
+      // injury, blood and harm
+      "gore|gory|blood\\w*|bleed\\w*|injur\\w*|wound\\w*|hurt\\w*|beheading|decapitat\\w*|mutilat\\w*|drown\\w*|self.?harm|suicid\\w*|cutting (?:myself|himself|herself)|abuse\\w*|bully\\w*|accident victim",
+      // drugs and hate
+      "drugs?|cocaine|heroin|smoking|cigarette\\w*|alcohol|drunk|racis\\w*|nazi\\w*",
+    ].join("|") +
+    ")\\b",
+  "i"
+);
+// Harmless phrases that contain a blocked word
+const ALLOWED = /\b(dead sea|death valley|dead end|screenshot|photo ?shoot|fight(?:ing)? for (?:freedom|justice)|pillow fight|water fight|snowball fight|fire ?fight\w*)\b/gi;
+export const isBlockedPicture = (q) => BLOCKED.test(q.replace(ALLOWED, " "));
 
 // A sentence saying what was drawn
 export function describePicture(spec) {
@@ -652,6 +761,14 @@ function drawWeather(ctx, W, H, spec, t, R) {
   }
 }
 
+// An image scaled to fill the frame (zoom ≥ 1), shifted by (dx, dy) of the spare room
+function drawCover(ctx, img, W, H, zoom = 1, dx = 0, dy = 0) {
+  const s = Math.max(W / img.width, H / img.height) * zoom;
+  const w = img.width * s;
+  const h = img.height * s;
+  ctx.drawImage(img, (W - w) / 2 + dx * (w - W) / 2, (H - h) / 2 + dy * (h - H) / 2, w, h);
+}
+
 function paintScene(ctx, W, H, spec, t) {
   const R = rng(spec.seed);
   drawSky(ctx, W, H, spec, t, rng(spec.seed + 1));
@@ -921,14 +1038,17 @@ function paintUnderwater(ctx, W, H, spec, t) {
   drawEmoji(ctx, W, H, { ...spec, land: ["sea"] }, t, R);
 }
 
-function paintCard(ctx, W, H, spec, t) {
+function paintCard(ctx, W, H, spec, t, photo = null) {
   const R = rng(spec.seed);
   const fest = FESTIVALS.find(([id]) => id === spec.theme);
   const bg = spec.colour ? [shade(spec.colour, -0.2), spec.colour] : fest ? fest[4] : ["#6366f1", "#ec4899"];
-  ctx.fillStyle = gradient(ctx, 0, 0, W, H, bg);
+  if (photo) {
+    drawCover(ctx, photo, W, H, spec.video ? 1.04 + 0.04 * Math.sin(t / 2) : 1, 0, 0);
+    ctx.fillStyle = gradient(ctx, 0, 0, 0, H, ["rgba(0,0,0,0.15)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.25)"]);
+  } else ctx.fillStyle = gradient(ctx, 0, 0, W, H, bg);
   ctx.fillRect(0, 0, W, H);
   const icons = fest ? fest[3] : ["✨", "🌸", "⭐"];
-  const dark = ["diwali", "newyear", "christmas", "eid"].includes(spec.theme);
+  const dark = photo || ["diwali", "newyear", "christmas", "eid"].includes(spec.theme);
   // decorations
   if (spec.theme === "diwali" || spec.theme === "newyear") drawFireworks(ctx, W, H * 0.8, t, rng(spec.seed + 3));
   for (let i = 0; i < 26; i++) {
@@ -950,8 +1070,8 @@ function paintCard(ctx, W, H, spec, t) {
   ctx.lineWidth = 1.5;
   ctx.strokeRect(34, 34, W - 68, H - 68);
   const S = Math.min(W, H);
-  // big icons
-  icons.slice(0, 3).forEach((e, i) => emoji(ctx, e, W * (0.25 + i * 0.25), H * 0.28 + Math.sin(t * 2 + i) * (spec.video ? 8 : 0), S * (i === 1 ? 0.2 : 0.13)));
+  // big icons (the photo already shows the festival)
+  if (!photo) icons.slice(0, 3).forEach((e, i) => emoji(ctx, e, W * (0.25 + i * 0.25), H * 0.28 + Math.sin(t * 2 + i) * (spec.video ? 8 : 0), S * (i === 1 ? 0.2 : 0.13)));
   // text grows in for videos
   const grow = spec.video ? Math.min(1, t / 1.2) : 1;
   const title = spec.text;
@@ -963,7 +1083,7 @@ function paintCard(ctx, W, H, spec, t) {
   textBlock(ctx, wishes, W / 2, H * 0.68, S * 0.045, "rgba(255,255,255,0.95)", { font: "system-ui, sans-serif", weight: "500", maxWidth: W * 0.8 });
   if (spec.from) textBlock(ctx, `— ${spec.from}`, W / 2, H * 0.8, S * 0.045, "#ffffff", { font: "Georgia, serif", weight: "italic 600" });
   ctx.globalAlpha = 1;
-  if (spec.theme === "diwali") for (let i = 0; i < 5; i++) emoji(ctx, "🪔", W * (0.15 + i * 0.175), H * 0.9, S * 0.07);
+  if (spec.theme === "diwali" && !photo) for (let i = 0; i < 5; i++) emoji(ctx, "🪔", W * (0.15 + i * 0.175), H * 0.9, S * 0.07);
 }
 
 function paintLogo(ctx, W, H, spec, t) {
@@ -1226,7 +1346,7 @@ function applyStyle(canvas, ctx, spec) {
 }
 
 // Paints one frame (t = seconds into the video; 0 for a still picture).
-export function paint(canvas, spec, t = 0) {
+export function paint(canvas, spec, t = 0, photo = null) {
   const [W, H] = sizeOf(spec);
   if (canvas.width !== W) canvas.width = W;
   if (canvas.height !== H) canvas.height = H;
@@ -1234,7 +1354,7 @@ export function paint(canvas, spec, t = 0) {
   ctx.save();
   ctx.clearRect(0, 0, W, H);
   const painter = { card: paintCard, logo: paintLogo, chart: paintChart, pattern: paintPattern, space: paintSpace, underwater: paintUnderwater }[spec.kind] || paintScene;
-  painter(ctx, W, H, spec, t);
+  painter(ctx, W, H, spec, t, photo);
   if (spec.text && ["scene", "space", "underwater", "pattern"].includes(spec.kind)) {
     const S = Math.min(W, H);
     textBlock(ctx, spec.text, W / 2, H * 0.12, Math.min(S * 0.09, (W * 1.5) / Math.max(8, spec.text.length)), "#ffffff", { maxWidth: W * 0.9 });
@@ -1250,6 +1370,348 @@ export function paint(canvas, spec, t = 0) {
   ctx.shadowBlur = 3;
   ctx.fillText("Alpaca Vision · MK.ai", W - 10, H - 10);
   ctx.restore();
+}
+
+// --- Photo videos -----------------------------------------------------------------------------
+
+// One frame of a photo video: slow zoom and pan on each shot, crossfades,
+// a soft vignette, live weather, and the title.
+function paintPhotoFrame(canvas, spec, photos, t) {
+  const [W, H] = sizeOf(spec);
+  if (canvas.width !== W) canvas.width = W;
+  if (canvas.height !== H) canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  if (spec.kind === "card") {
+    paint(canvas, spec, t, photos[0]);
+    return;
+  }
+  const n = photos.length;
+  const seg = spec.video ? spec.duration / n : 1;
+  const fade = Math.min(0.9, seg * 0.3);
+  const i = spec.video ? Math.min(n - 1, Math.floor(t / seg)) : 0;
+  const local = spec.video ? t - i * seg : 0;
+  const move = (k, u) => {
+    // each shot moves differently: zoom in, zoom out, pan left, pan right
+    const kind = k % 4;
+    const zoom = kind === 1 ? 1.16 - 0.12 * u : 1.04 + 0.12 * u;
+    const dx = kind === 2 ? 0.8 - 1.6 * u : kind === 3 ? -0.8 + 1.6 * u : 0;
+    const dy = kind === 0 ? -0.3 * u : 0;
+    return [zoom, dx, dy];
+  };
+  ctx.globalAlpha = 1;
+  drawCover(ctx, photos[i], W, H, ...(spec.video ? move(i, local / seg) : [1, 0, 0]));
+  if (spec.video && i < n - 1 && local > seg - fade) {
+    ctx.globalAlpha = (local - (seg - fade)) / fade;
+    drawCover(ctx, photos[i + 1], W, H, ...move(i + 1, 0));
+    ctx.globalAlpha = 1;
+  }
+  if (spec.video) {
+    // gentle vignette and a fade in/out
+    const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+    v.addColorStop(0, "rgba(0,0,0,0)");
+    v.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, W, H);
+    if (spec.weather && ["rain", "storm", "snow"].includes(spec.weather)) drawWeather(ctx, W, H, spec, t, rng(spec.seed + 9));
+    const edge = Math.min(t, spec.duration - t);
+    if (edge < 0.5) {
+      ctx.fillStyle = `rgba(0,0,0,${1 - edge / 0.5})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+  if (spec.text) {
+    const S = Math.min(W, H);
+    ctx.globalAlpha = spec.video ? Math.min(1, t / 1.2) : 1;
+    textBlock(ctx, spec.text, W / 2, H * 0.14, Math.min(S * 0.09, (W * 1.5) / Math.max(8, spec.text.length)), "#ffffff", { maxWidth: W * 0.9 });
+    ctx.globalAlpha = 1;
+  }
+  ctx.save();
+  ctx.font = "600 13px system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowBlur = 3;
+  ctx.fillText("Alpaca Vision · MK.ai", W - 10, H - 10);
+  ctx.restore();
+}
+
+// Loads one image; resolves with the image or null.
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img.naturalWidth ? img : null);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Jobs waiting at AI Horde, so "stop" can cancel them
+const activeJobs = new Set();
+let cancelGen = 0;
+export function cancelPhotos() {
+  cancelGen++;
+  const n = activeJobs.size;
+  for (const id of activeJobs) fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+  activeJobs.clear();
+  return n;
+}
+
+// Asks AI Horde for the photo (or the video's shots) and waits in its queue.
+// onProgress(text) gets "In the queue…" updates. Resolves with images, or null
+// (with photos.stopped = true when the person said "stop").
+// Alpaca Vision HD: Gemini's picture model, with the key saved in the vault
+async function geminiPhoto(spec, onProgress) {
+  if (spec.video && spec.kind !== "card") return null;
+  let tools;
+  try {
+    tools = [await import("./ai.js"), await import("./gemini-rest.js")];
+  } catch {
+    return null;
+  }
+  const [{ geminiModelsMatching }, { geminiImage }] = tools;
+  const { key, models } = await geminiModelsMatching(/image/i, ["gemini-2.5-flash-image"]);
+  if (!key) return null;
+  const [W, H] = sizeOf(spec);
+  const shape = W > H * 1.2 ? "a wide landscape (16:9)" : H > W * 1.2 ? "a tall portrait (9:16)" : "a square";
+  onProgress("Painting in HD…");
+  try {
+    const url = await geminiImage(key, models, `Create ${shape} image: ${spec.photoPrompt}. High quality, detailed, no text or watermarks unless asked. Family-friendly.`);
+    const img = await loadImage(url);
+    return img ? [img] : null;
+  } catch (err) {
+    console.warn("Gemini picture:", err);
+    return null;
+  }
+}
+
+// Pollinations: a free, keyless image AI that answers in seconds (only the
+// description is sent). A video gets a few shots of the same scene.
+async function fastPhotos(spec, onProgress) {
+  const [W, H] = hordeSize(spec);
+  const shots = spec.video && spec.kind !== "card" ? (spec.duration >= 10 ? 5 : 4) : 1;
+  const prompt = `${spec.photoPrompt}${shots > 1 ? ", cinematic film still" : ""}, high quality, detailed`;
+  onProgress("Painting…");
+  const url = (i) => `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${W}&height=${H}&seed=${(spec.seed + i * 7919) % 1000000}&nologo=true&safe=true&referrer=mkai-c042b.web.app`;
+  // First with cross-origin access (so it can be saved from the canvas); if the
+  // service doesn't allow that, load it plainly so it still shows.
+  const plain = (src) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.referrerPolicy = "origin";
+      img.onload = () => resolve(img.naturalWidth ? Object.assign(img, { plainSrc: src }) : null);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  const one = (i) =>
+    Promise.race([
+      loadImage(url(i)).then((img) => img || plain(url(i))),
+      new Promise((resolve) => setTimeout(() => resolve(null), 90000)),
+    ]);
+  const imgs = (await Promise.all(Array.from({ length: shots }, (_, i) => one(i)))).filter(Boolean);
+  return imgs.length ? imgs : null;
+}
+
+async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
+  const gen0 = cancelGen;
+  const hd = await geminiPhoto(spec, onProgress);
+  if (gen0 !== cancelGen) return { stopped: true };
+  if (hd) return hd;
+  const fast = await fastPhotos(spec, onProgress).catch(() => null);
+  if (gen0 !== cancelGen) return { stopped: true };
+  if (fast) return fast;
+  const until = Date.now() + timeoutMs;
+  const gen = cancelGen;
+  let id = null;
+  const submit = async (withModels) => {
+    if (id) {
+      activeJobs.delete(id);
+      fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+    }
+    id = (await hordeJson("/generate/async", { method: "POST", body: JSON.stringify(hordeRequest(spec, withModels)) })).id;
+    if (id) activeJobs.add(id);
+  };
+  try {
+    let anyModel = false;
+    try {
+      await submit(true);
+    } catch {
+      anyModel = true;
+      await submit(false);
+    }
+    if (!id) return null;
+    for (;;) {
+      if (Date.now() > until) throw new Error("timed out");
+      await pause(4000);
+      if (gen !== cancelGen) return { stopped: true };
+      const c = await hordeJson(`/generate/check/${id}`);
+      if (c.faulted) throw new Error("faulted");
+      if (c.done) break;
+      // The photo models have a long queue (or no volunteer has them): take any model
+      if (!anyModel && (c.is_possible === false || (c.wait_time || 0) > 120)) {
+        anyModel = true;
+        await submit(false);
+        continue;
+      }
+      const wait = Math.max(1, Math.round(c.wait_time || 0));
+      const time = wait >= 90 ? `${Math.round(wait / 60)} min` : `${wait} s`;
+      onProgress(c.processing ? `Painting… about ${time}` : c.queue_position ? `In the queue (#${c.queue_position}), about ${time}` : `Starting… about ${time}`);
+    }
+    const done = await hordeJson(`/generate/status/${id}`);
+    activeJobs.delete(id);
+    id = null;
+    const gens = (done.generations || []).filter((g) => g.img && !g.censored);
+    const imgs = await Promise.all(gens.map((g) => loadImage(g.img.startsWith("http") ? g.img : `data:image/webp;base64,${g.img}`)));
+    const photos = imgs.filter(Boolean);
+    return photos.length ? photos : null;
+  } catch (err) {
+    console.warn("Photo service:", err);
+    if (id) {
+      activeJobs.delete(id);
+      fetch(`${HORDE}/generate/status/${id}`, { method: "DELETE", headers: HORDE_HEADERS }).catch(() => {});
+    }
+    return null;
+  }
+}
+
+// --- A little game while a photo is being made: catch the falling stars ---------------------
+// Move the basket with a finger, the mouse or the arrow keys. Returns { stop }.
+export function waitGame(canvas, spec) {
+  const [W, H] = sizeOf(spec);
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const s = Math.min(W, H) / 400; // scale
+  const basket = { x: W / 2, w: 90 * s, h: 16 * s };
+  let items = [];
+  let score = 0;
+  let best = 0;
+  let missed = 0;
+  let raf = 0;
+  let last = performance.now();
+  let spawn = 0;
+  let running = true;
+  try {
+    best = Number(localStorage.getItem("mkai-star-best")) || 0;
+  } catch {}
+  const moveTo = (clientX) => {
+    const r = canvas.getBoundingClientRect();
+    basket.x = Math.max(basket.w / 2, Math.min(W - basket.w / 2, ((clientX - r.left) / r.width) * W));
+  };
+  const onPointer = (e) => moveTo(e.clientX);
+  const onTouch = (e) => {
+    if (e.touches[0]) moveTo(e.touches[0].clientX);
+    e.preventDefault();
+  };
+  const keys = {};
+  const onKey = (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") keys[e.key] = e.type === "keydown";
+  };
+  canvas.addEventListener("pointermove", onPointer);
+  canvas.addEventListener("pointerdown", onPointer);
+  canvas.addEventListener("touchmove", onTouch, { passive: false });
+  addEventListener("keydown", onKey);
+  addEventListener("keyup", onKey);
+  canvas.style.touchAction = "none";
+
+  const star = (x, y, r, color) => {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      const rr = i % 2 ? r * 0.45 : r;
+      ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
+  const tick = (now) => {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (keys.ArrowLeft) basket.x = Math.max(basket.w / 2, basket.x - 420 * s * dt);
+    if (keys.ArrowRight) basket.x = Math.min(W - basket.w / 2, basket.x + 420 * s * dt);
+    spawn -= dt;
+    if (spawn <= 0) {
+      const bomb = Math.random() < 0.18;
+      items.push({ x: 20 * s + Math.random() * (W - 40 * s), y: -20 * s, v: (120 + Math.random() * 120 + score * 3) * s, r: (bomb ? 12 : 14) * s, bomb });
+      spawn = Math.max(0.35, 0.9 - score * 0.01);
+    }
+    const by = H - 40 * s;
+    items = items.filter((it) => {
+      it.y += it.v * dt;
+      if (it.y > by - it.r && it.y < by + basket.h && Math.abs(it.x - basket.x) < basket.w / 2 + it.r * 0.6) {
+        if (it.bomb) {
+          score = Math.max(0, score - 5);
+        } else {
+          score++;
+          if (score > best) {
+            best = score;
+            try {
+              localStorage.setItem("mkai-star-best", String(best));
+            } catch {}
+          }
+        }
+        return false;
+      }
+      if (it.y > H + 20 * s) {
+        if (!it.bomb) missed++;
+        return false;
+      }
+      return true;
+    });
+    // draw
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#020617");
+    g.addColorStop(1, "#083344");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    for (const it of items) {
+      if (it.bomb) {
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, it.r, 0, 7);
+        ctx.fillStyle = "#475569";
+        ctx.fill();
+        ctx.fillStyle = "#f87171";
+        ctx.fillRect(it.x - 2 * s, it.y - it.r - 6 * s, 4 * s, 6 * s);
+      } else star(it.x, it.y, it.r, "#22d3ee");
+    }
+    ctx.fillStyle = "#22d3ee";
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(basket.x - basket.w / 2, by, basket.w, basket.h, 6 * s);
+    else ctx.rect(basket.x - basket.w / 2, by, basket.w, basket.h);
+    ctx.fill();
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = `600 ${16 * s}px Inter, system-ui, sans-serif`;
+    ctx.fillText(`Stars: ${score}   Best: ${best}`, 14 * s, 26 * s);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = `${12 * s}px Inter, system-ui, sans-serif`;
+    ctx.fillText("Move the basket to catch stars, dodge the bombs", 14 * s, 46 * s);
+    // a gentle "working" bar along the bottom
+    const p = (now / 1600) % 1;
+    ctx.fillStyle = "rgba(34,211,238,0.25)";
+    ctx.fillRect(0, H - 4 * s, W, 4 * s);
+    ctx.fillStyle = "#22d3ee";
+    ctx.fillRect(p * W - W * 0.2, H - 4 * s, W * 0.2, 4 * s);
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  return {
+    get score() {
+      return score;
+    },
+    stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointermove", onPointer);
+      canvas.removeEventListener("pointerdown", onPointer);
+      canvas.removeEventListener("touchmove", onTouch);
+      removeEventListener("keydown", onKey);
+      removeEventListener("keyup", onKey);
+      canvas.style.touchAction = "";
+    },
+  };
 }
 
 // --- In the chat -------------------------------------------------------------------------------
@@ -1274,16 +1736,21 @@ function saveBlob(blob, name) {
 }
 const fileBase = (spec) => (spec.prompt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "alpaca-vision");
 
-// Records the animation as a WebM video, in real time.
-export function recordVideo(spec, onProgress = () => {}) {
+// Records frames drawn by draw(canvas, t) as a video, in real time.
+export function recordVideo(spec, onProgress = () => {}, draw = (c, t) => paint(c, spec, t)) {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
-    paint(canvas, spec, 0);
+    draw(canvas, 0);
     if (!canvas.captureStream || typeof MediaRecorder === "undefined") return reject(new Error("This browser can't record video."));
-    const stream = canvas.captureStream(30);
     const type = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"].find((t) => MediaRecorder.isTypeSupported(t));
     if (!type) return reject(new Error("This browser can't record video."));
-    const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 4_000_000 });
+    let stream;
+    try {
+      stream = canvas.captureStream(30);
+    } catch {
+      return reject(new Error("This picture can't be recorded here."));
+    }
+    const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 6_000_000 });
     const chunks = [];
     rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     rec.onstop = () => resolve(new Blob(chunks, { type: type.split(";")[0] }));
@@ -1291,7 +1758,7 @@ export function recordVideo(spec, onProgress = () => {}) {
     rec.start(250);
     const frame = () => {
       const t = (performance.now() - start) / 1000;
-      paint(canvas, spec, t);
+      draw(canvas, Math.min(t, spec.duration));
       onProgress(Math.min(1, t / spec.duration));
       if (t < spec.duration) requestAnimationFrame(frame);
       else rec.stop();
@@ -1318,61 +1785,108 @@ export function mountVision(container, specText) {
   const bar = document.createElement("div");
   bar.className = "vision-bar";
   const label = document.createElement("span");
-  label.textContent = spec.video ? `🎬 ${spec.duration} s video` : "🖼️ picture";
   const actions = document.createElement("span");
   actions.className = "code-actions";
   bar.append(label, actions);
   box.append(canvas, bar);
   container.append(box);
+
+  let photos = null; // loaded real photos, or null for our own drawing
   let playing = false;
   let raf = 0;
   let started = 0;
-  const draw = () => paint(canvas, spec, 0);
+  let loadToken = 0;
+  let game = null; // the waiting game, while a photo is being made
+  const frame = (c, t) => (game && c === canvas ? null : photos ? paintPhotoFrame(c, spec, photos, t) : paint(c, spec, t));
   const loop = () => {
     const t = ((performance.now() - started) / 1000) % spec.duration;
-    paint(canvas, spec, t);
+    frame(canvas, t);
     raf = requestAnimationFrame(loop);
   };
+  let playBtn = null;
   const setPlaying = (on) => {
     playing = on;
     cancelAnimationFrame(raf);
     if (on) {
       started = performance.now();
       loop();
-    }
-    playBtn && (playBtn.textContent = on ? "⏸ pause" : "▶ play");
+    } else frame(canvas, 0);
+    if (playBtn) playBtn.textContent = on ? "⏸ pause" : "▶ Play";
   };
-  let playBtn = null;
+  const setLabel = () => {
+    const kind = photos ? (spec.video ? `${spec.duration} s video · ${photos.length} AI photos` : "AI photo") : spec.video ? `${spec.duration} s animation` : "Drawing";
+    label.textContent = kind;
+  };
+
+  async function load() {
+    const token = ++loadToken;
+    photos = null;
+    if (!spec.photo) {
+      setLabel();
+      frame(canvas, 0);
+      return;
+    }
+    // Meanwhile: a little game to play, with the photo's progress
+    let waitText = "Starting…";
+    game?.stop();
+    game = waitGame(canvas, spec);
+    const showWaiting = () => {
+      label.textContent = `Creating your ${spec.video ? "video" : "photo"}: ${waitText} · Catch the stars while you wait!`;
+    };
+    showWaiting();
+    const got = await loadPhotos(spec, (text) => {
+      waitText = text;
+      if (token === loadToken) showWaiting();
+    });
+    if (token !== loadToken) return;
+    game?.stop();
+    game = null;
+    const stopped = got && got.stopped;
+    photos = Array.isArray(got) && got.length ? got : null;
+    if (!photos) label.dataset.fallback = "1";
+    setLabel();
+    if (!photos) label.textContent += stopped ? " (real photo stopped — drawn by Alpaca)" : " (photo service busy — drawn by Alpaca)";
+    if (spec.video && playing) setPlaying(true);
+    else frame(canvas, 0);
+  }
+
   if (spec.video) {
-    playBtn = btn("▶ play", () => setPlaying(!playing));
+    playBtn = btn("▶ Play", () => setPlaying(!playing));
     actions.append(playBtn);
     actions.append(
-      btn("⬇ video", async (e) => {
+      btn("⬇ Video", async (e) => {
         const b = e.currentTarget;
         const was = b.textContent;
         b.disabled = true;
         try {
-          const blob = await recordVideo(spec, (p) => (b.textContent = `recording ${Math.round(p * 100)}%`));
+          const blob = await recordVideo(spec, (p) => (b.textContent = `recording ${Math.round(p * 100)}%`), frame);
           saveBlob(blob, `${fileBase(spec)}.${blob.type.includes("mp4") ? "mp4" : "webm"}`);
+          b.textContent = was;
         } catch (err) {
           b.textContent = err.message;
           setTimeout(() => (b.textContent = was), 3000);
-          return;
         } finally {
           b.disabled = false;
         }
-        b.textContent = was;
       })
     );
   }
   actions.append(
-    btn("⬇ image", () => canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png")),
-    btn("🔄 new version", () => {
+    btn("⬇ Image", () => {
+      try {
+        canvas.toBlob((blob) => blob && saveBlob(blob, `${fileBase(spec)}.png`), "image/png");
+      } catch {
+        // A photo the service didn't allow copying: open it to save from there
+        const src = photos?.find((p) => p.plainSrc)?.plainSrc;
+        if (src) window.open(src, "_blank", "noopener");
+      }
+    }),
+    btn("New version", () => {
       spec = { ...spec, seed: (spec.seed + 7919) >>> 0 };
-      playing ? null : draw();
+      load().then(() => spec.video && playing && setPlaying(true));
     })
   );
-  draw();
+  load();
   // Videos play on their own while they're on screen
   if (spec.video && "IntersectionObserver" in window) {
     new IntersectionObserver((entries) => {
@@ -1385,17 +1899,24 @@ export function mountVision(container, specText) {
 }
 
 // The chat answer for a picture or video request.
-export function visionAnswer(question) {
+export function visionAnswer(question, { allowVideo = true } = {}) {
+  if (isBlockedPicture(question)) return "I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
   const spec = planPicture(question);
-  const what = describePicture(spec);
+  // Videos are made only for the admin; everyone else gets a still picture
+  const videoBlocked = spec.video && !allowVideo;
+  if (videoBlocked) spec.video = false;
+  const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
-    `🎨 **Alpaca Vision** — ${spec.video ? "here's your video" : "here's your picture"}: ${what}.`,
+    ...(videoBlocked ? ["Video creation is reserved for MK.ai's admin, so here's a picture instead.", ""] : []),
+    `**Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
     "",
     "```alpaca-vision\n" + JSON.stringify(spec) + "\n```",
     "",
-    spec.video
-      ? "It plays right here. Tap **⬇ video** to save it as a video file, **⬇ image** for a still, or **🔄 new version** for a different take."
-      : "Tap **⬇ image** to save it, or **🔄 new version** for a different take. Add words like sunset, night, rain, snow, beach, mountains, city, temple, neon, pixel art or video to change it.",
   ];
+  if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and turn them into a short film with camera moves. It plays right here; tap **⬇ Video** to save it, or **New version** for different shots.");
+  else if (spec.photo && spec.kind === "card") lines.push("A real photo background with your wishes on top. Tap **⬇ Image** to save or share it, or **New version** for a different photo.");
+  else if (spec.photo) lines.push(`A real AI photo (it takes a few seconds). Tap **⬇ Image** to save it, or **New version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting)${allowVideo ? ' or "video"' : ""} to change it.`);
+  else if (spec.video) lines.push("It plays right here. Tap **⬇ Video** to save it as a video file, **⬇ Image** for a still, or **New version** for a different take.");
+  else lines.push("Tap **⬇ Image** to save it, or **New version** for a different take.");
   return lines.join("\n");
 }

@@ -6,12 +6,12 @@ const STOPWORDS = new Set(
     "a an the is are was were be been am do does did of to in on at for by with from and or but " +
     "what whats who whom which when where why how can could would should will shall may might " +
     "i me my you your it its this that these those tell please about there their they them " +
-    "give explain know want need some any much many"
+    "give explain know want need some any much many s t ll re ve d m"
   ).split(" ")
 );
 
 export function normalize(str) {
-  return str.trim().toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  return str.trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 }
 
 function stem(word) {

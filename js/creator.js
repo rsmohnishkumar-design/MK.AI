@@ -23,7 +23,7 @@ import { knowledgeSize } from "./kb.js";
 const QUESTION_START = /^(who|whom|whose|did|do|does|what|can|could|how|why|when|where|which|is|are|was|were)\b/;
 
 function normalize(text) {
-  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{N}\s']/gu, " ").replace(/\s+/g, " ").trim();
+  return text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{M}\p{N}\s']/gu, " ").replace(/\s+/g, " ").trim();
 }
 
 // "I created you", "I'm your creator", "it's me, Mohnishkumar"…
@@ -153,8 +153,8 @@ export async function detailsReport({ user, profile, chats }) {
     `- Name: MK.ai`,
     `- Model: ${MODEL_NAME} 🦙 (maths engine + ${knowledgeSize() ? knowledgeSize().toLocaleString("en-IN") + " built-in answers" : "built-in knowledge base"} + coding help + memory)`,
     `- Creator: ${CREATOR_NAME}`,
-    `- Answer order: curated answers → my own brain (maths, coding) → built-in knowledge → memory → your documents → Wikipedia → "teach me" (unknown questions go on my learning list)`,
-    `- Outside AI: never used in chat, only as a helper in the Training room`,
+    `- Modes: Instant (maths, conversions, built-in knowledge, memory) · Pro (writing, explaining, code, office files) · Live (news, with Google Search) · Deep (step by step)`,
+    `- Answer order: curated answers → my own brain → Alpaca Pro/Live for writing, code and news → built-in knowledge → memory → Wikipedia → Alpaca Pro → learning list`,
     "",
     "🧠 My brain",
     `- Things I've learned: ${show(total)}`,
@@ -164,8 +164,9 @@ export async function detailsReport({ user, profile, chats }) {
     `- Curated answers in the vault: ${show(curated)}`,
     "",
     "⚡ Training helpers",
-    `- Training-room helpers: ${services === "none saved yet" ? "Gemini" : `${services}, Gemini`}`,
+    `- Big models behind Alpaca: ${services === "none saved yet" ? "Gemini (through Firebase)" : `${services}, Gemini (through Firebase)`}`,
     `- Neural memory (meaning matching): ${meaningReady() ? "on" : "starting / word matching for now"}`,
+    "- Language pipeline: tokenizer → NLP (language, intent, key words) → embeddings (meaning search) → Alpaca (LLM)",
     "",
     "👤 Your account",
     `- Email: ${user.email}`,

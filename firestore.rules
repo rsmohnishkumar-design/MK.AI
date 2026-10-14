@@ -15,6 +15,8 @@ service cloud.firestore {
     function unlimitedCode() { return 'change-this-code'; }
     // The creator's secret code: saying "I created you" in the chat asks for it.
     function creatorCode() { return 'change-this-creator-code'; }
+    // The vault password: checked here, never stored in the website's code
+    function vaultCode() { return 'change-this-vault-password'; }
     // ====================================================
 
     // Trial length: 3 hours (180 minutes) plus 5 minutes for clock differences.
@@ -36,10 +38,10 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function changed() { return incoming().diff(resource.data).affectedKeys(); }
 
-    // Unlimited accounts always, trial accounts until their time runs out.
+    // Unlimited and free-plan accounts (the free plan's token limits are counted in the app).
     function hasAccess() {
       let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return profile.tier == 'unlimited' || (profile.tier == 'trial' && profile.expiresAt > request.time);
+      return profile.tier == 'unlimited' || profile.tier == 'trial';
     }
 
     // --- Accounts: one profile per user, created at first sign-in ---
@@ -72,9 +74,36 @@ service cloud.firestore {
         && incoming().accessCode == unlimitedCode()
       ) || (
         signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['usage'])
+        && incoming().usage is map
+        && incoming().usage.keys().hasOnly(['windowStart', 'windowTokens', 'weekStart', 'weekTokens'])
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['accessRequest'])
+        && incoming().accessRequest.keys().hasOnly(['status', 'at'])
+        && incoming().accessRequest.status == 'pending'
+        && incoming().accessRequest.at == request.time
+        && resource.data.tier == 'trial'
+        && (!('accessRequest' in resource.data) || resource.data.accessRequest.status != 'pending')
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['limitHits', 'limitHitAt'])
+        && incoming().limitHits == resource.data.get('limitHits', 0) + 1
+        && incoming().limitHitAt == request.time
+        && (!('limitHitAt' in resource.data) || request.time > resource.data.limitHitAt + duration.value(6, 'd'))
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['tier', 'expiresAt', 'autoUnlimited'])
+        && resource.data.tier == 'trial'
+        && resource.data.get('limitHits', 0) >= 5
+        && incoming().tier == 'unlimited'
+        && incoming().expiresAt == null
+        && incoming().autoUnlimited == true
+      ) || (
+        signedIn() && request.auth.uid == uid
         && changed().hasOnly(['creator', 'creatorCode'])
         && incoming().creator == true
-        && incoming().creatorCode == creatorCode()
+        && (incoming().creatorCode == creatorCode() || incoming().creatorCode == vaultCode())
       );
 
       allow delete: if isAdmin();
@@ -150,6 +179,23 @@ service cloud.firestore {
     match /settings/{id} {
       allow read: if signedIn() && hasAccess();
       allow write: if isAdmin();
+    }
+
+    // --- Learning list: questions MK.ai couldn't answer yet. Open MK.ai pages
+    // research them in the background and delete each one once it's learned. ---
+    match /unknown/{id} {
+      allow read: if signedIn() && hasAccess();
+      allow create: if signedIn() && hasAccess()
+        && incoming().keys().hasOnly(['question', 'tries', 'createdBy', 'createdAt'])
+        && incoming().question is string && incoming().question.size() <= 500
+        && incoming().tries == 0
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if signedIn() && hasAccess()
+        && changed().hasOnly(['tries', 'lastTriedAt'])
+        && incoming().tries == resource.data.tries + 1
+        && incoming().lastTriedAt == request.time;
+      allow delete: if signedIn() && hasAccess();
     }
 
     // --- Activity log: people add their own entries, only the admin reads ---

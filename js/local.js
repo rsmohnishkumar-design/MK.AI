@@ -292,9 +292,9 @@ const RULES = [
   {
     test: /^(what|which) (ai )?(model|version|brain|llm|engine) (are you|is this|do you (use|run( on)?)|powers you|are you (using|running|built on))|^(what is|tell me about|who is) (the )?alpaca( model)?\b|^(your|mk ?ai'?s?) (model|version)\b/,
     creator: () =>
-      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 It's all my own: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and memory that grows as people teach me. My picture and video model is Alpaca Vision 🎨. No outside AI in chat.`,
+      `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 Four modes: **Instant** (my own maths engine, science solver, knowledge base and memory, right in the browser), **Pro** (writing, explaining, code and office files, using large language models like Google Gemini), **Live** (news, with Google Search) and **Deep** (step-by-step thinking). Everything I look up is saved to my memory. My picture and video model is Alpaca Vision 🎨.`,
     reply: () =>
-      `I run on ${MODEL_NAME} 🦙, MK.ai's own model: a maths engine (from times tables to calculus, complex numbers and matrices), a built-in knowledge base, coding help, and a memory that learns from people. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …"). No outside AI is used in chat.`,
+      `I'm ${MODEL_NAME} 🦙, MK.ai's model, with four modes: **Instant** for maths, science, conversions and my own knowledge (right in your browser), **Pro** for writing, explaining, advice and code (built on large language models such as Google Gemini), **Live** for news and anything happening now (with Google Search), and **Deep** for careful step-by-step thinking. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …").`,
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
@@ -304,7 +304,39 @@ const RULES = [
   {
     test: /^(what can you do|help|what do you do|how can you help|how do you work|what are your features)\b/,
     reply: () =>
-      "Here's what I can do:\n- Chat with you 😊\n- Answer simple questions (\"what is photosynthesis?\", \"who is APJ Abdul Kalam?\")\n- Maths: \"12 x 7\", \"15% of 200\", \"square root of 81\"\n- Conversions: \"10 km to miles\", \"37 c to f\"\n- Tell the time and date\n- Tell jokes\n- Learn anything you teach me",
+      [
+        `Here's what I can do (${MODEL_NAME} model):`,
+        "- **Maths with steps:** \"15% of 200\", \"solve 2x + 5 = 13\", \"differentiate x^3 sin x\", \"integrate 1/(x^2+1)\"",
+        "- **Science:** \"a car goes from 0 to 20 m/s in 5 s, find the acceleration\", \"molar mass of H2SO4\", \"balance Fe + O2 = Fe2O3\"",
+        "- **Coding:** \"make a calculator app\", \"bubble sort in python\", \"what is recursion\"",
+        "- **Build any management system:** \"make a library management system with book name, author and year\", \"create a hospital management system\"",
+        "- **Simulators:** \"make an ATM simulator\", traffic light, elevator, vending machine, solar system, projectile motion",
+        "- **🎙️ AI voiceovers:** \"make a voiceover: <your script>\" or \"make a voiceover about the water cycle\", with ✨ HD voices you can download",
+        "- **Build anything:** describe any app, game, website or simulator and I'll write it; if it shows an error, tap Fix with Alpaca",
+        "- **Knowledge:** science, countries, India and Tamil Nadu, history, people, festivals, careers, full forms, important days, proverbs and the Thirukkural",
+        "- **Conversions, time and date:** \"10 km to miles\", \"37 c to f\"",
+        "- **✦ Alpaca Pro:** essays, letters, explanations, advice and code: just ask",
+        "- **✦ Alpaca Live:** news, scores and anything happening now, searched on the web",
+        "- **Photos and PDFs:** attach one and ask about it (homework, bills, notices)",
+        "- **YouTube and web pages:** paste a link and ask me to summarise it or make notes",
+        "- **Study packs:** \"make a study pack on photosynthesis for class 9\": notes, flashcards, practice questions and answers",
+        "- **Run code here:** tap ▶ Run on Python and JavaScript code to see the output; if it fails, tap Fix with Alpaca",
+        "- **Personalities and voice chat:** in the ⋯ menu, choose Tutor, Coder, Writer, Career guide or Friend, or talk hands-free",
+        "- **🧠 Deep think:** switch it on under the message box for careful, step-by-step answers",
+        "- **Office files:** \"make a ppt on the solar system\", \"word document on pollution\", \"excel sheet for student marks\"",
+        "- **Chat:** \"tell me a story\", \"tell me a riddle\", \"motivate me\", \"I'm stressed about exams\"",
+        "- **Quiz me:** \"quiz me on capitals\", \"quiz me on full forms\"",
+        "- **Summaries:** \"summarise: <paste a long text>\"",
+        "- **I remember you:** \"my name is …\", \"I'm in class 9\", \"what do you know about me\"",
+        "- **Learning:** if I don't know something, I research it, and you can teach me too",
+        "",
+        "Unlimited members also get 🎨 **Alpaca Vision** (pictures and videos) and the **Code School**. More on the [About page](about.html).",
+      ].join("\n"),
+  },
+  {
+    test: /\b(privacy|privacy policy|terms of (use|service)|is my (data|chat|information) (safe|private|secure)|do you (store|save|keep|sell) my (data|chats?|messages|information)|who can (see|read) my (chats?|messages))\b/,
+    reply: () =>
+      "🔒 **Your privacy:** your chats are saved to your account and only you can read them. The questions people ask are logged so MK.ai can learn what to improve, and answers it learns are shared with everyone, so please don't teach it private information. MK.ai never sells data, shows ads or sends your chats to outside AI companies.\n\nRead the full [privacy policy](about.html#privacy) and [terms of use](about.html#terms).",
   },
   {
     test: /^(are you (a )?(robot|bot|human|ai|real)|are you alive)\b/,

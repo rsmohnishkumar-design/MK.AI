@@ -64,20 +64,27 @@ answers in this order, stopping at the first that works:
    **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
 
 **Alpaca Vision (pictures and videos).** A model menu under the message
-box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**, MK.ai's
-own picture and video model; saying "draw …" or "make a video of …" also
-goes to it. It reads the description and paints it on a canvas — sky and
-time of day, sun, moon, stars, clouds, rainbows, auroras, mountains, hills,
-sea and beaches, lakes, deserts, forests, cities, villages, temples,
-lighthouses, windmills, boats, balloons, kites, fireworks, weather (rain,
-snow, storms, fog), animals and objects, text, and styles (neon, pixel art,
-black and white, vintage, watercolour). It also makes festival greeting
-cards (birthday, Diwali, Pongal, Christmas, Eid …), logos, kolam, mandala and
-geometric patterns, bar/line/pie charts, space and underwater scenes.
-"Video" brings the scene to life (waves, rain, birds, rising sun,
-fireworks) and records it as a WebM file in the browser. Only a small plan
-of the picture is saved with the chat, and it's redrawn when shown. No
-outside AI is used. (`js/vision.js`)
+box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**;
+saying "draw …", "photo of …", "make a video of …", "birthday card for …"
+or "logo for …" also goes to it.
+
+- **Real photos:** Alpaca turns the description into a detailed photography
+  prompt (lighting, lens, detail, style words like cinematic, anime or oil
+  painting) and gets a real AI photo from the free, volunteer-run
+  [AI Horde](https://aihorde.net) (no key, no account; only the description
+  is sent; it can take a minute or two while waiting in the queue). Adult or violent requests are refused
+  before anything is sent.
+- **Photo videos:** 4–5 AI photos of the scene are joined into a short film with slow zooms and pans,
+  crossfades, a vignette, fades, live rain or snow, and the title. It plays
+  in the chat and "⬇ video" records it as a WebM file in the browser.
+- **Greeting cards** get a real festive photo background with Alpaca's own
+  exact text on top (AI photos can't spell).
+- **Alpaca's own drawing engine** makes logos, kolam/mandala/geometric
+  patterns and charts, draws scenes when asked for "offline", and takes over
+  automatically if the photo service can't be reached.
+
+Only a small plan of the picture is saved with the chat, and it's recreated
+when shown. (`js/vision.js`)
 
 **Normal and Deep think.** A switch under the message box picks how MK.ai
 answers. **⚡ Normal** gives the first good answer instantly. **🧠 Deep think**
@@ -195,17 +202,46 @@ using the admin email from step 3. That's it.
 - **Install it:** on Android, tap **Install app** in the header (or the
   browser menu → **Add to Home screen**). On iPhone, Share → **Add to
   Home Screen**.
-- **Open the admin vault:** tap the **MK** logo at the top left 7 times
+- **Open the admin vault:** tap the **MK** logo at the top left 5 times and enter the vault password
   quickly, and log in with the admin account. The account verified as the
   creator (see "Creator mode") is an admin too.
 
 ## Accounts and access
 
-- Every new account gets a **3-hour trial**.
+- Every new account starts on the **free plan**: 10,000 tokens per 5-hour window and 100,000 per week (1 token ≈ 4 characters of question + answer; limits in `js/limits.js`). Usage is stored in the profile (`usage`), and the usage meter shows it.
 - Anyone who enters the **access code** (on sign-up or at login) gets
   unlimited use.
 - In the vault you can grant unlimited access, start a new trial, or
   block an account.
+
+## About, privacy and terms
+
+`about.html` describes MK.ai and its models (Alpaca, Alpaca Vision) and holds the privacy policy and terms of use. The chat links to it from the sidebar (**about**) and the note under the message box; asking MK.ai "is my data safe" also points there.
+
+## Access levels
+
+- **Free-plan accounts** chat with Alpaca within their token limits. **Alpaca Vision** and the
+  **Code School** are for unlimited members; trial users see a message
+  inviting them to help train MK.ai, since the admin gives unlimited access
+  to people who help.
+- An access code can be entered at login ("Have an access code?") or later
+  in the chat (**🔑 enter access code** under the email).
+
+## Self-learning (no outside AI, no keys)
+
+- A question MK.ai can't answer goes on a shared **learning list**
+  (Firestore `unknown`; keyboard mashing and bare numbers are skipped).
+- Any open MK.ai page that has been quiet for 90 seconds researches one of
+  them (knowledge base, then Wikipedia) and saves the answer to memory,
+  which MK.ai uses straight away. No approval step.
+- **Learning mode** runs from 2:00 to 5:30 at night in any open MK.ai page,
+  working through the whole list and keeping the screen on. The vault's
+  **🌙 Start learning mode** button runs it any time. MK.ai has no server,
+  so a device has to stay open (a tablet on charge works).
+- More open sources: Wiktionary (word meanings), Tamil Wikipedia (questions in Tamil) and Simple English Wikipedia. Learning mode also learns Wikipedia's most-read topics each night; the vault's **📰 Learn today's top topics** does it on demand. YouTube, Instagram and Google search block this kind of reading, so they aren't used.
+- **Documents** are read by MK.ai itself: PDF text with PDF.js (Mozilla's reader, in `lib/pdfjs`, Apache 2.0), and **Make Q&A** turns the document's definition sentences ("X is …") into questions for review. Scanned PDFs (pictures of pages) have no text inside, so paste their text instead.
+- The vault's **Research & learn** button researches the ticked questions
+  the same way and saves them straight into the vault.
 
 ## The admin vault
 

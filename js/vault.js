@@ -24,11 +24,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { keywords, votes, lookup } from "./brain.js";
-import { askGemini, aiErrorMessage } from "./ai.js";
-import { readAttachment } from "./attach.js";
 import * as training from "./training.js";
+import { research, worthLearning, startAutoLearner, learnTrending, learnCurriculum } from "./learning.js";
+import { pdfText, makeQA } from "./docreader.js";
 import { TRIAL_HOURS } from "../firebase-config.js";
 import { PROVIDERS, keyField, listModels, chooseModels, quickChat } from "./providers.js";
+import { unlockVault, vaultUnlocked } from "./vaultkey.js";
 
 const $ = (id) => document.getElementById(id);
 const loginScreen = $("loginScreen");
@@ -112,28 +113,70 @@ async function isAdmin() {
   }
 }
 
+// Learning report: what MK.ai taught itself in the last day, and overnight
+function renderLearnReport(learned) {
+  const now = Date.now();
+  const when = (e) => e.createdAt?.toMillis?.() || 0;
+  const self = learned.filter((e) => e.source === "wikipedia");
+  const day = self.filter((e) => now - when(e) < 86400000);
+  const night = day.filter((e) => {
+    const d = new Date(when(e));
+    const m = d.getHours() * 60 + d.getMinutes();
+    return m >= 115 && m < 335; // 1:55 to 5:35
+  });
+  const latest = self[0];
+  $("learnReport").innerHTML = "";
+  const parts = [
+    `Learned by itself in the last 24 hours: <b>${day.length}</b>`,
+    `During last night's learning time (2:00–5:30): <b>${night.length}</b>`,
+    latest ? `Latest: “${escapeHtml(latest.question)}” at ${new Date(when(latest)).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}` : "Nothing learned by itself yet.",
+  ];
+  $("learnReport").innerHTML = parts.join("<br>");
+}
+// The vault password: any signed-in account plus the vault password (checked by the
+// database, see vaultkey.js). No admin email needed.
+const showGate = (message = "") => {
+  vaultScreen.classList.add("hidden");
+  loginScreen.classList.add("hidden");
+  $("gateScreen").classList.remove("hidden");
+  $("gateError").textContent = message;
+  $("gatePass").value = "";
+  $("gatePass").focus();
+};
+$("gateForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const pass = $("gatePass").value.trim();
+  if (!pass) return;
+  $("gateError").textContent = "Checking…";
+  try {
+    await unlockVault(pass);
+    location.reload();
+  } catch (err) {
+    $("gateError").textContent = err.code === "wrong" ? "Wrong password." : err.code === "signin" ? "Sign in to MK.ai first." : friendlyError(err);
+  }
+});
+
 if (configured) {
   onAuthStateChanged(auth, async (user) => {
     resendBtn.classList.add("hidden");
     if (!user) {
+      // Sign in happens in the chat; the vault only asks for its password
+      $("gateScreen").classList.add("hidden");
       vaultScreen.classList.add("hidden");
       loginScreen.classList.remove("hidden");
       return;
     }
-    // The security rules decide who the admin is (by email).
-    if (!(await isAdmin())) {
-      loginError.textContent =
-        `You were signed in as ${user.email}, which isn't an admin. Log in below with the admin email, ` +
-        `or open the chat with your own account, say "I created you" and enter the creator code: the creator is an admin too.`;
-      await signOut(auth);
-      return;
-    }
+    if (!vaultUnlocked()) return showGate();
+    // The security rules decide who the admin is: the admin email, or the creator
+    // (any account that entered the vault password)
+    if (!(await isAdmin())) return showGate("Enter the vault password to open the vault on this account.");
     loginScreen.classList.add("hidden");
     vaultScreen.classList.remove("hidden");
     loadEntries();
     loadActivity();
     loadUsers();
     loadGroqKey();
+    loadControl();
     loadTraining();
     loadDocuments();
   });
@@ -173,7 +216,7 @@ function renderList(container, entries, kind) {
       stats.className = "entry-stats";
       stats.textContent =
         `${entry.source === "taught" ? "taught by a person · " : entry.source === "wikipedia" ? "from Wikipedia · " : ""}` +
-        `used ${entry.uses || 1}× · 👍 ${up} · 👎 ${down}` +
+        `used ${entry.uses || 1}× · helpful ${up} · not helpful ${down}` +
         (entry.timeSensitive ? " · time-sensitive" : "");
       actions.appendChild(stats);
       button("promote to vault", () => promoteLearned(entry));
@@ -194,6 +237,7 @@ async function loadEntries() {
     const learned = learnedSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
     vaultCount.textContent = `(${vault.length})`;
     learnedCount.textContent = `(${learned.length})`;
+    renderLearnReport(learned);
     renderList(vaultList, vault, "vault");
     renderList(learnedList, learned, "learned");
   } catch (err) {
@@ -308,7 +352,8 @@ refreshActivityBtn.addEventListener("click", loadActivity);
 
 // --- Registered users ---
 function tierLabel(user) {
-  if (user.tier === "unlimited") return '<span class="badge badge-vault">unlimited</span>';
+  if (user.tier !== "unlimited" && user.accessRequest?.status === "pending") return '<span class="badge badge-vault">asked for unlimited</span>';
+  if (user.tier === "unlimited") return `<span class="badge badge-vault">unlimited${user.autoUnlimited ? " · auto" : ""}</span>`;
   if (user.tier !== "trial") return '<span class="badge badge-error">blocked</span>';
   const msLeft = user.expiresAt ? user.expiresAt.toMillis() - Date.now() : -1;
   if (msLeft <= 0) return '<span class="badge badge-error">expired</span>';
@@ -329,10 +374,129 @@ async function setTier(id, fields) {
   }
 }
 
+// --- Control centre: the admin's controls for the whole of MK.ai (settings/control) ---
+const controlRef = () => doc(db, "settings", "control");
+const CONTROL_DEFAULTS = { mode: "auto", instructions: "", announcement: "", vision: true, office: true, voice: true, code: true, maintenance: false, autoPromote: true, windowTokens: 10000, weekTokens: 100000 };
+let control = { ...CONTROL_DEFAULTS };
+async function loadControl() {
+  try {
+    const snap = await getDoc(controlRef());
+    control = { ...CONTROL_DEFAULTS, ...(snap.exists() ? snap.data() : {}) };
+  } catch (err) {
+    showError(err);
+  }
+  $("ctlMode").value = control.mode;
+  $("ctlInstructions").value = control.instructions || "";
+  $("ctlAnnounce").value = control.announcement || "";
+  $("ctlVision").checked = control.vision !== false;
+  $("ctlOffice").checked = control.office !== false;
+  $("ctlVoice").checked = control.voice !== false;
+  $("ctlCode").checked = control.code !== false;
+  $("ctlMaintenance").checked = !!control.maintenance;
+  $("ctlAutoPromote").checked = control.autoPromote !== false;
+  $("ctlWindow").value = control.windowTokens;
+  $("ctlWeek").value = control.weekTokens;
+  if (control.autoPromote !== false) promoteAll(true);
+}
+$("controlForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const next = {
+    mode: $("ctlMode").value,
+    instructions: $("ctlInstructions").value.trim().slice(0, 2000),
+    announcement: $("ctlAnnounce").value.trim().slice(0, 300),
+    vision: $("ctlVision").checked,
+    office: $("ctlOffice").checked,
+    voice: $("ctlVoice").checked,
+    code: $("ctlCode").checked,
+    maintenance: $("ctlMaintenance").checked,
+    autoPromote: $("ctlAutoPromote").checked,
+    windowTokens: Math.max(1000, Number($("ctlWindow").value) || CONTROL_DEFAULTS.windowTokens),
+    weekTokens: Math.max(10000, Number($("ctlWeek").value) || CONTROL_DEFAULTS.weekTokens),
+    updatedAt: serverTimestamp(),
+  };
+  try {
+    await setDoc(controlRef(), next);
+    control = next;
+    $("controlStatus").textContent = "Saved. Everyone gets these on their next visit.";
+    if (next.autoPromote) promoteAll(true);
+  } catch (err) {
+    $("controlStatus").textContent = `Not saved: ${friendlyError(err)}`;
+  }
+});
+
+// Everything MK.ai has learned goes into the vault (answers people marked unhelpful stay out)
+async function promoteAll(quiet = false) {
+  try {
+    const snap = await getDocs(query(collection(db, "learned"), limit(400)));
+    const good = snap.docs.filter((d) => {
+      const e = d.data();
+      const { up, down } = votes(e);
+      return e.question && e.answer && !(down > 0 && down >= up);
+    });
+    for (let i = 0; i < good.length; i += 200) {
+      const batch = writeBatch(db);
+      for (const d of good.slice(i, i + 200)) {
+        const e = d.data();
+        batch.set(doc(collection(db, "vault")), { ...vaultFields(e.question, e.answer), createdAt: serverTimestamp() });
+        batch.delete(d.ref);
+      }
+      await batch.commit();
+    }
+    if (!quiet || good.length) $("controlStatus").textContent = good.length ? `Promoted ${good.length} learned answer${good.length === 1 ? "" : "s"} to the vault.` : "Nothing new to promote.";
+    if (good.length) loadEntries();
+  } catch (err) {
+    $("controlStatus").textContent = `Couldn't promote: ${friendlyError(err)}`;
+  }
+}
+$("promoteAllBtn")?.addEventListener("click", () => promoteAll(false));
+
+// "Test Alpaca": asks the big models a tiny question and shows which one answered
+$("testAlpacaBtn")?.addEventListener("click", async () => {
+  const out = $("testAlpacaOut");
+  out.textContent = "Asking Alpaca…";
+  const started = performance.now();
+  try {
+    const { askAlpaca } = await import("./ai.js");
+    const r = await askAlpaca("In one short sentence, say hello and name the capital of Tamil Nadu.", [], { good: [], bad: [], docs: [] });
+    const via = (r.by || "").replace(/^geminikey:/, "Gemini (your key): ").replace(/^gemini:/, "Gemini (Firebase): ");
+    out.textContent = `Working. Answered by ${via || "a big model"} in ${((performance.now() - started) / 1000).toFixed(1)} s: “${r.answer.slice(0, 160)}”`;
+  } catch (err) {
+    out.textContent = `Alpaca Pro isn't answering: ${err.message || err}. Check the keys in AI settings below (use Test on each), then try again.`;
+  }
+});
+
+// Unlimited access requests
+async function renderRequests(users) {
+  const list = $("requestsList");
+  const pending = users.filter((u) => u.accessRequest?.status === "pending" && u.tier !== "unlimited");
+  $("requestsCount").textContent = pending.length ? `(${pending.length})` : "";
+  list.innerHTML = "";
+  if (!pending.length) {
+    list.innerHTML = '<p class="col-hint">No requests right now.</p>';
+    return;
+  }
+  for (const u of pending) {
+    const row = document.createElement("div");
+    row.className = "request-row";
+    const used = u.usage?.weekTokens ? ` · ${Number(u.usage.weekTokens).toLocaleString()} tokens this week` : "";
+    row.innerHTML = `<span class="question">${escapeHtml(u.email)}</span><span class="col-hint">asked ${formatTime(u.accessRequest.at)} · weekly limit reached ${u.limitHits || 0}×${used}</span>`;
+    const yes = document.createElement("button");
+    yes.textContent = "Approve";
+    yes.onclick = () => setTier(u.id, { tier: "unlimited", expiresAt: null, accessRequest: { status: "approved", at: serverTimestamp() } });
+    const no = document.createElement("button");
+    no.textContent = "Not yet";
+    no.className = "secondary";
+    no.onclick = () => setTier(u.id, { accessRequest: { status: "rejected", at: serverTimestamp() } });
+    row.append(yes, no);
+    list.append(row);
+  }
+}
+
 async function loadUsers() {
   try {
     const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc")));
     usersCount.textContent = `(${snap.size})`;
+    renderRequests(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     usersBody.innerHTML = "";
     if (snap.empty) {
       usersBody.innerHTML = `<tr><td colspan="4" class="empty-col-note">No one has signed up yet.</td></tr>`;
@@ -591,7 +755,7 @@ async function loadTraining() {
     $("trainTopics").innerHTML = analysis.topics.length
       ? `What people ask about most: ${analysis.topics.map(([w, n]) => `<b>${escapeHtml(w)}</b> (${n})`).join(", ")}`
       : "";
-    needs = analysis.needs.slice(0, 60);
+    needs = analysis.needs.filter((n) => worthLearning(n.question)).slice(0, 60);
     $("needsCount").textContent = `(${needs.length})`;
     const list = $("needsList");
     list.innerHTML = needs.length ? "" : `<p class="empty-col-note">Nothing to learn right now. As people ask questions, MK.ai lists what it should learn here.</p>`;
@@ -613,36 +777,80 @@ async function loadTraining() {
 }
 $("reanalyseBtn").addEventListener("click", loadTraining);
 
+// Researches the ticked questions itself (knowledge base, then Wikipedia) and
+// saves what it finds straight into the vault. No outside AI, no approval step.
 $("prepareBtn").addEventListener("click", async () => {
   const picked = needs.filter((n) => n.picked);
   if (!picked.length) return setStatus("prepareStatus", "Tick at least one question first.", "bad");
   $("prepareBtn").disabled = true;
-  const ready = [];
-  let failed = 0;
+  const learnt = [];
+  const missing = [];
   for (const [i, need] of picked.entries()) {
-    setStatus("prepareStatus", `Writing answer ${i + 1} of ${picked.length}…`);
+    setStatus("prepareStatus", `Researching ${i + 1} of ${picked.length}…`);
+    const found = await research(need.question).catch(() => null);
+    if (!found) {
+      missing.push(need.question);
+      continue;
+    }
     try {
-      // What MK.ai already knows (including taught documents) goes in as background.
-      const { knowledge } = await lookup(need.question).catch(() => ({ knowledge: { good: [], bad: [] } }));
-      const result = await askGemini(need.question, [], knowledge);
-      if (result.answer && !result.partial) ready.push({ question: need.question, answer: result.answer });
-      else failed++;
+      await addDoc(collection(db, "vault"), { ...vaultFields(need.question, found.answer), createdAt: serverTimestamp() });
+      learnt.push(need.question);
     } catch (err) {
-      failed++;
-      console.warn("Couldn't prepare an answer:", aiErrorMessage(err));
-      if (/resting|quota|used up/i.test(aiErrorMessage(err))) break;
+      missing.push(need.question);
+      console.warn("Couldn't save:", err);
     }
   }
   $("prepareBtn").disabled = false;
   setStatus(
     "prepareStatus",
-    ready.length
-      ? `${ready.length} answer${ready.length === 1 ? "" : "s"} ready below.${failed ? ` ${failed} couldn't be written (the AI may be busy) — try those again later.` : ""}`
-      : "The AI couldn't write answers right now (it may be busy or used up for today). Try again later.",
-    ready.length ? "good" : "bad"
+    (learnt.length ? `✓ Learned ${learnt.length}: MK.ai answers ${learnt.length === 1 ? "it" : "them"} now. ` : "") +
+      (missing.length ? `Couldn't find ${missing.length} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}): teach ${missing.length === 1 ? "it" : "those"} yourself under Curated answers.` : ""),
+    learnt.length ? "good" : "bad"
   );
-  setReview(ready);
+  if (learnt.length) {
+    loadEntries();
+    loadTraining();
+  }
 });
+
+// Learns Wikipedia's most-read topics right now
+$("trendingBtn")?.addEventListener("click", async () => {
+  $("trendingBtn").disabled = true;
+  setStatus("prepareStatus", "Reading today's most popular topics…");
+  // Today's list first; once that's known, the days before it
+  let n = 0;
+  for (let day = 1; day <= 14 && n === 0; day++) {
+    n = await learnTrending(25, (q) => setStatus("prepareStatus", `Learned: ${q}`), day).catch(() => 0);
+  }
+  $("trendingBtn").disabled = false;
+  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now. Tap again for more.` : "Nothing new: MK.ai already knows the last two weeks' popular topics.", n ? "good" : "");
+});
+
+// Learns 20 of Wikipedia's most important topics right now
+$("vitalBtn")?.addEventListener("click", async () => {
+  $("vitalBtn").disabled = true;
+  setStatus("prepareStatus", "Studying important topics…");
+  const n = await learnCurriculum(20, (q) => setStatus("prepareStatus", `Learned: ${q}`)).catch(() => 0);
+  $("vitalBtn").disabled = false;
+  setStatus("prepareStatus", n ? `✓ Learned ${n} important topics. Tap again for more.` : "Nothing new this time. Tap again to keep going.", n ? "good" : "");
+});
+
+// Learning mode: works through the learning list and keeps the screen on.
+// Leave this page open (tablet on charge) and MK.ai studies by itself.
+let stopLearning = null;
+$("learnModeBtn")?.addEventListener("click", async () => {
+  const btn = $("learnModeBtn");
+  if (stopLearning) {
+    stopLearning();
+    stopLearning = null;
+    btn.textContent = "Start learning mode";
+    return setStatus("prepareStatus", "Learning mode stopped.");
+  }
+  btn.textContent = "⏹ Stop learning mode";
+  setStatus("prepareStatus", "Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open MK.ai page.");
+  stopLearning = startAutoLearner({ canLearn: () => true, forceNight: () => true, onStatus: (t) => t && setStatus("prepareStatus", t) });
+});
+
 
 // --- Bulk answers ---
 $("bulkFile").addEventListener("change", async (e) => {
@@ -670,7 +878,7 @@ $("docFile").addEventListener("change", async (e) => {
   if (!$("docTitle").value.trim()) $("docTitle").value = file.name.replace(/\.[^.]+$/, "");
   try {
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
-      docPdf = await readAttachment(file);
+      docPdf = file;
       $("docText").value = "";
       $("docText").placeholder = `PDF ready: ${file.name}. MK.ai will read it when you tap a button below.`;
       setStatus("docStatus", `PDF ready: ${file.name}`, "good");
@@ -687,14 +895,16 @@ $("docText").addEventListener("input", () => {
   if ($("docText").value.trim()) docPdf = null;
 });
 
-// The document's text: typed/pasted, or read out of the PDF by the AI.
+// The document's text: typed/pasted, or read out of the PDF by MK.ai itself.
 async function documentText() {
   const typed = $("docText").value.trim();
   if (typed) return typed;
   if (!docPdf) return "";
-  setStatus("docStatus", "Reading the PDF…");
-  const result = await askGemini(training.TEXT_FROM_DOCUMENT, [], { good: [], bad: [] }, () => {}, { attachment: docPdf });
-  return result.answer.trim();
+  const text = await pdfText(docPdf, (n, total) => setStatus("docStatus", `Reading the PDF: page ${n} of ${total}…`));
+  if (!text) throw Object.assign(new Error("no text"), { friendly: "This PDF has no text inside (it's pictures of pages, like a scan). Type or paste the text instead." });
+  $("docText").value = text; // shows what was read, and is reused for Q&A
+  docPdf = null;
+  return text;
 }
 
 $("docLearnBtn").addEventListener("click", async () => {
@@ -717,31 +927,29 @@ $("docLearnBtn").addEventListener("click", async () => {
     setStatus("docStatus", `✓ MK.ai learned "${title}" (${chunks.length} passage${chunks.length === 1 ? "" : "s"}). It answers questions about it from now on.`, "good");
     loadDocuments();
   } catch (err) {
-    setStatus("docStatus", /permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : aiErrorMessage(err), "bad");
+    setStatus("docStatus", err.friendly || (/permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : "The document couldn't be read. Try pasting its text instead."), "bad");
   } finally {
     $("docLearnBtn").disabled = false;
   }
 });
 
+// Questions and answers from the document's own definition sentences (no AI)
 $("docQaBtn").addEventListener("click", async () => {
-  const title = $("docTitle").value.trim() || "the document";
   $("docQaBtn").disabled = true;
-  setStatus("docStatus", "MK.ai is reading the document and writing questions and answers…");
   try {
-    const typed = $("docText").value.trim();
-    const attachment = typed ? { kind: "text", name: title, text: typed } : docPdf;
-    if (!attachment) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
-    const result = await askGemini(training.QA_FROM_DOCUMENT(20), [], { good: [], bad: [] }, () => {}, { attachment });
-    const pairs = training.readPairsJson(result.answer);
-    if (!pairs.length) return setStatus("docStatus", "The AI's reply couldn't be read as questions and answers. Try again.", "bad");
-    setStatus("docStatus", `${pairs.length} questions and answers ready below.`, "good");
+    const text = await documentText();
+    if (!text) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
+    const pairs = makeQA(text, 20);
+    if (!pairs.length) return setStatus("docStatus", "I couldn't find definition sentences (like \"X is …\") to turn into questions. Use \"Learn this document\" instead: MK.ai still answers from it.", "bad");
+    setStatus("docStatus", `${pairs.length} questions and answers ready below. Check them, then save.`, "good");
     setReview(pairs);
   } catch (err) {
-    setStatus("docStatus", aiErrorMessage(err), "bad");
+    setStatus("docStatus", err.friendly || "The document couldn't be read. Try pasting its text instead.", "bad");
   } finally {
     $("docQaBtn").disabled = false;
   }
 });
+
 
 async function loadDocuments() {
   try {
