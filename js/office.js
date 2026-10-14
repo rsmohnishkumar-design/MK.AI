@@ -260,10 +260,17 @@ async function alpacaPlan(question, kind) {
   const result = await askAlpaca(question, [], { good: [], bad: [], docs: [] }, () => {}, { system: note }).catch(() => null);
   const j = jsonIn(result?.answer);
   if (!j || !j.title) return null;
+  return planFrom(j, kind);
+}
+
+// A plan (what the preview and file builders use) from Alpaca's JSON
+function planFrom(j, kind, { title = "", edit = false } = {}) {
+  j.title ||= title;
+  if (!j.title) return null;
   const str = (v) => String(v ?? "").trim();
   if (kind === "ppt") {
-    const slides = (j.slides || []).filter((x) => x?.title && Array.isArray(x.bullets) && x.bullets.length).slice(0, 14);
-    if (slides.length < 2) return null;
+    const slides = (j.slides || []).filter((x) => x?.title && Array.isArray(x.bullets) && (x.bullets.length || edit)).slice(0, edit ? 40 : 14);
+    if (slides.length < (edit ? 1 : 2)) return null;
     return {
       kind,
       title: str(j.title),
@@ -276,12 +283,44 @@ async function alpacaPlan(question, kind) {
     };
   }
   if (kind === "word") {
-    const blocks = (j.sections || []).filter((x) => x?.heading && Array.isArray(x.paragraphs)).map((x) => ({ h: str(x.heading), p: x.paragraphs.map(str).filter(Boolean) }));
-    return blocks.length >= 2 ? { kind, title: str(j.title), blocks, source: "Alpaca" } : null;
+    const blocks = (j.sections || []).filter((x) => (x?.heading || edit) && Array.isArray(x.paragraphs)).map((x) => ({ h: str(x.heading), p: x.paragraphs.map(str).filter(Boolean) }));
+    return blocks.length >= (edit ? 1 : 2) ? { kind, title: str(j.title), blocks, source: "Alpaca" } : null;
   }
   const headers = (j.headers || []).map(str);
-  const rows = (j.rows || []).filter(Array.isArray).slice(0, 60).map((r) => headers.map((_, i) => (typeof r[i] === "number" ? r[i] : str(r[i]))));
+  const rows = (j.rows || []).filter(Array.isArray).slice(0, edit ? 300 : 60).map((r) => headers.map((_, i) => (typeof r[i] === "number" ? r[i] : str(r[i]))));
   return headers.length >= 2 && rows.length ? { kind, title: str(j.title), headers, rows } : null;
+}
+
+// ---------- Editing a Word, PowerPoint or Excel file the user attached ----------
+const EDIT_NOTE = {
+  pptx: `You are editing the user's PowerPoint presentation (its slides are below). Apply their instruction carefully: fix, rewrite, reorder, add or remove slides as asked, and keep everything else. Reply with ONLY a JSON object, no other text:
+{"title": "...", "subtitle": "...", "slides": [{"title": "...", "bullets": ["...", "..."]}]}
+List every content slide (not the title or thank-you slides, which are added for you), 2-6 bullets each. Write in the presentation's language.`,
+  docx: `You are editing the user's Word document (its text is below). Apply their instruction carefully (proofread, rewrite, shorten, expand, change the tone, add or remove sections) and keep everything else. Reply with ONLY a JSON object, no other text:
+{"title": "...", "sections": [{"heading": "...", "paragraphs": ["...", "..."]}]}
+Keep the document's structure unless asked to change it. Write in the document's language.`,
+  xlsx: `You are editing the user's Excel sheet (its rows are below; row 1 is the headers). Apply their instruction carefully (fix values, add columns or rows, add totals or formulas, sort) and keep the rest. Reply with ONLY a JSON object, no other text:
+{"title": "...", "headers": ["...", "..."], "rows": [["...", 1, "=B2*C2"]]}
+Numbers as numbers; formulas start with = and use real cell references (data starts on row 2).`,
+};
+const KIND_OF = { pptx: "ppt", docx: "word", xlsx: "excel" };
+const NAME_OF = { pptx: "PowerPoint presentation", docx: "Word document", xlsx: "Excel sheet" };
+
+export const DOC_EDIT = /\b(edit|change|fix|correct|proofread|grammar|spelling|rewrite|reword|rephrase|improve|polish|shorten|shorter|longer|expand|summari[sz]e (it )?into|simplify|simpler|formal|professional|tone|translate|convert|add|insert|remove|delete|replace|update|reorder|rearrange|sort|redesign|make (it|this|the)|turn (it|this))\b/i;
+
+export async function editOfficeFile(office, instruction, { signal } = {}) {
+  const kind = KIND_OF[office.format];
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return "Editing documents needs the internet (Alpaca rewrites them). Connect and try again.";
+  const { askAlpaca } = await import("./ai.js");
+  const content = office.text.length > 14000 ? `${office.text.slice(0, 14000)}\n…(the rest was cut to fit)` : office.text;
+  const result = await askAlpaca(`Instruction: ${instruction}\n\nThe ${NAME_OF[office.format]}:\n${content}`, [], { good: [], bad: [], docs: [] }, () => {}, { system: EDIT_NOTE[office.format], signal }).catch(() => null);
+  const j = jsonIn(result?.answer);
+  if (!j) return null;
+  const plan = planFrom(j, kind, { title: office.title, edit: true });
+  if (!plan) return null;
+  plan.source = "";
+  const what = kind === "ppt" ? `${plan.slides.length - 2} content slides` : kind === "word" ? `${plan.blocks.length} sections` : `${plan.rows.length} rows`;
+  return `**${plan.title}**: your edited ${NAME_OF[office.format]} (${what}). Preview it below and download the new file.\n\nNote: MK.ai rebuilds the file with its own clean layout, so the original fonts, colours, pictures and charts aren't kept. Only the text and data are edited.\n\n\`\`\`mkai-office\n${JSON.stringify(plan)}\n\`\`\``;
 }
 
 export async function officeAnswer(question) {
@@ -360,7 +399,7 @@ async function buildWord(plan) {
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 300 }, children: [new TextRun({ text: new Date().toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" }), italics: true, color: "666666" })] }),
   ];
   for (const b of plan.blocks) {
-    children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 }, children: [new TextRun(b.h)] }));
+    if (b.h) children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 }, children: [new TextRun(b.h)] }));
     for (const p of b.p) children.push(new Paragraph({ spacing: { after: 160, line: 320 }, alignment: AlignmentType.JUSTIFIED, children: [new TextRun({ text: p, size: 24 })] }));
   }
   if (plan.source) children.push(new Paragraph({ spacing: { before: 300 }, children: [new TextRun({ text: `Source: ${plan.source}. Made with MK.ai.`, italics: true, size: 18, color: "888888" })] }));
@@ -489,7 +528,7 @@ export function mountOffice(container, text) {
     const page = el("div", "office-page");
     page.append(el("h3", null, plan.title));
     plan.blocks.forEach((b) => {
-      page.append(el("h4", null, b.h));
+      if (b.h) page.append(el("h4", null, b.h));
       b.p.forEach((p) => page.append(el("p", null, p)));
     });
     body.append(page);
