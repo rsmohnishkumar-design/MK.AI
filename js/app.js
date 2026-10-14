@@ -40,12 +40,14 @@ import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
 import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText, setLimits } from "./limits.js";
-import { officeKind, officeAnswer, mountOffice } from "./office.js";
+import { officeKind, officeAnswer, mountOffice, DOC_EDIT, editOfficeFile } from "./office.js";
 import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
 import { startMeaning } from "./meaning.js";
 import { analyze, nlpNote, nextSteps } from "./nlp.js";
 import { applySettings, openSettings, pref } from "./settings.js";
 import { toggleSaved, isSaved, openSaved } from "./saved.js";
+import { PHOTO_EDIT, editPhoto, renderPhotoBlock, setPhotoKeepEditing } from "./photoedit.js";
+import { editVideo, renderVideoBlock } from "./videoedit.js";
 import { recentWithin } from "./tokenizer.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -88,6 +90,22 @@ setCodeActionHandler((code, lang, anchor) => {
     { heading: "Convert to" },
     ...other.slice(0, 4).map((l) => ({ label: l, run: () => ask(`Convert this code to ${l}. Give the complete, working ${l} code and note any differences.`) })),
   ]);
+});
+// Editing results: photos, videos and code files opened in the studio
+registerBlock("mkai-photo", renderPhotoBlock);
+registerBlock("mkai-video", renderVideoBlock);
+setPhotoKeepEditing((file) => useFile(file));
+const studioFiles = new Map(); // id → { code, lang, name }
+registerBlock("mkai-studio", (container, text) => {
+  let info = {};
+  try {
+    info = JSON.parse(text);
+  } catch {}
+  const f = studioFiles.get(info.id);
+  const b = Object.assign(document.createElement("button"), { type: "button", className: "photo-btn", textContent: f ? `Open ${f.name} in Code Studio` : "This file isn't open any more (attach it again)" });
+  b.disabled = !f;
+  b.addEventListener("click", async () => (await import("./editor.js")).openEditor(f.code, f.lang, { fileName: f.name }));
+  container.append(b);
 });
 registerBlock("mkai-quiz", (container, text) =>
   mountQuiz(container, text, (label) => {
@@ -1737,6 +1755,54 @@ const DONT_KNOW = [
 // 6. "I don't know yet": the question goes on its learning list for the Training room
 // Outside AI is never used here; it only helps the admin in the Training room.
 // think(step) notes what MK.ai is doing, for Deep think's "Thought for …" list.
+// Attachments with an editing instruction go to the right editor; plain
+// questions about a file ("what's in this photo?") are answered as usual.
+const ASKING = /^(what|who|whom|whose|where|why|which|when|how (many|much|old|long|does|do|is|are|can|did)|is |are |does |do |did |describe|explain|summari[sz]e|tell me|read|list|count|identify|analy[sz]e|review)\b/i;
+const CODE_FILE = /\.(js|mjs|ts|py|java|c|cpp|h|cs|html|css|sql|sh|json|xml|ya?ml|php|rb|go|rs|kt|swift|dart)$/i;
+const CODE_EDIT = /\b(edit|open|fix|debug|refactor|improve|add|change|rename|convert|optimi[sz]e|clean( it)? up|format|update|rewrite|remove|implement)\b/i;
+const LANG_OF = { js: "javascript", mjs: "javascript", ts: "javascript", py: "python", java: "java", c: "c", cpp: "cpp", h: "c", cs: "text", html: "html", css: "css", sql: "sql", json: "json" };
+async function editAttachment(question, att, think, signal, fresh = true) {
+  const nothingSaved = Promise.resolve(null);
+  const q = question.trim();
+  // Code in the message, or a long follow-up about an earlier file, isn't an edit of that file
+  if (/```/.test(q) || (!fresh && q.length > 160)) return null;
+  if (att.kind === "video") {
+    const r = editVideo(att, q);
+    if (r.edited) think("Editing your video on this device");
+    return { answer: r.answer, saved: nothingSaved, source: "edit" };
+  }
+  if (ASKING.test(q)) return null;
+  if (att.kind === "image" && PHOTO_EDIT.test(q)) {
+    think("Editing your photo");
+    const r = await editPhoto(att, q, think);
+    return { answer: r.answer, saved: nothingSaved, source: "edit" };
+  }
+  if (att.office && DOC_EDIT.test(q)) {
+    think(`Alpaca is editing ${att.name}`);
+    const answer = await editOfficeFile(att.office, q, { signal }).catch((err) => (console.warn("Edit:", err), null));
+    return answer
+      ? { answer, credit: `✦ Alpaca edited ${att.name}`, saved: nothingSaved, source: "edit" }
+      : { answer: "Alpaca couldn't edit the file right now. Try again in a minute.", saved: nothingSaved, source: "edit" };
+  }
+  if (att.kind === "text" && !att.office && CODE_FILE.test(att.name) && CODE_EDIT.test(q)) {
+    const ext = att.name.split(".").pop().toLowerCase();
+    const lang = LANG_OF[ext] || ext;
+    // "open it" just opens; anything more is sent to Alpaca inside the studio
+    const request = /^(please\s+)?(open|edit)( it| this( file| code)?| the (file|code))?( in (the )?(editor|code studio|studio))?[.!]?$/i.test(q) ? "" : q;
+    const id = `s${Date.now().toString(36)}`;
+    studioFiles.set(id, { code: att.text, lang, name: att.name });
+    const { openEditor } = await import("./editor.js");
+    openEditor(att.text, lang, { fileName: att.name, request });
+    think(`Opened ${att.name} in Code Studio`);
+    return {
+      answer: `I opened **${att.name}** in Alpaca Code Studio${request ? " and asked Alpaca to make your change. Tap **Changes** to see exactly what changed, **Undo** to go back, and **⬇ Download** to save the file" : ". Edit it yourself or tell Alpaca what to change; **⬇ Download** saves the file"}.\n\n\`\`\`mkai-studio\n${JSON.stringify({ id })}\n\`\`\``,
+      saved: nothingSaved,
+      source: "edit",
+    };
+  }
+  return null;
+}
+
 async function answer(question, onText, attachment = null, think = () => {}, opts = {}) {
   const nothingSaved = Promise.resolve(null);
   // The question asked before this one in the chat (answered or not).
@@ -1747,6 +1813,12 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   const nlp = analyze(question);
   const langNote = nlpNote(nlp);
   think(`Read your message: ${nlp.intent === "statement" ? "a message" : `a ${nlp.intent}`} in ${nlp.language}, ${nlp.tokens} token${nlp.tokens === 1 ? "" : "s"}`);
+
+  // Editing: a photo, video, Word/PowerPoint/Excel or code file with an instruction
+  if (attachment) {
+    const edited = await editAttachment(question, attachment, think, opts.signal, opts.freshFile !== false);
+    if (edited) return edited;
+  }
 
   // A photo, PDF or text file: Alpaca reads it (photos and PDFs need the big models).
   if (attachment && navigator.onLine) {
@@ -2436,7 +2508,7 @@ composer.addEventListener("submit", async (e) => {
                   },
                   fileForAnswer,
                   undefined,
-                  { retry: retryNow, signal: stopCtrl.signal }
+                  { retry: retryNow, signal: stopCtrl.signal, freshFile: !!attachment }
                 ))(),
       stopped,
     ]);

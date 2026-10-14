@@ -1,14 +1,18 @@
-// Attachments: a photo, a PDF or a text/code file sent with a question.
+// Attachments: a photo, a video, a PDF, a Word, PowerPoint or Excel file, or a
+// text/code file sent with a question.
 // Photos are shrunk on the device before sending. Photos and PDFs are read by
 // Gemini (it can see images and documents); text files are added to the
 // question itself, so every AI service can use them.
+
+import { readOfficeFile, OFFICE_FILE, OLD_OFFICE_FILE } from "./officeread.js";
+import { MAX_VIDEO_MB, VIDEO_FILE } from "./videoedit.js";
 
 export const MAX_FILE_MB = 8;
 const MAX_TEXT_CHARS = 12000;
 const MAX_IMAGE_SIDE = 1600;
 const TEXT_TYPES = /\.(txt|md|csv|json|js|mjs|ts|py|java|c|cpp|h|cs|html|css|xml|yml|yaml|sql|sh|log)$/i;
 
-export const ACCEPT = "image/*,application/pdf,.txt,.md,.csv,.json,.js,.ts,.py,.java,.c,.cpp,.html,.css,.xml,.yml,.yaml,.sql,.log";
+export const ACCEPT = "image/*,video/*,application/pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.js,.ts,.py,.java,.c,.cpp,.html,.css,.xml,.yml,.yaml,.sql,.log";
 export const TEXT_ACCEPT = ".txt,.md,.csv,.json,.js,.ts,.py,.java,.c,.cpp,.html,.css,.xml,.yml,.yaml,.sql,.log,text/plain";
 
 function fail(message) {
@@ -47,10 +51,26 @@ async function shrinkImage(file) {
   return blob;
 }
 
-// Resolves { name, kind: "image" | "pdf" | "text", mimeType, data | text, previewUrl }.
+// Resolves { name, kind: "image" | "pdf" | "text" | "video", mimeType, data | text, previewUrl }.
+// Word, PowerPoint and Excel files become text (with office: their structure).
 export async function readAttachment(file) {
-  if (file.size > MAX_FILE_MB * 1024 * 1024) throw fail(`That file is too big. The limit is ${MAX_FILE_MB} MB.`);
   const name = (file.name || "pasted image").slice(0, 80);
+  // Videos stay on the device (they're edited here, never uploaded)
+  if (file.type.startsWith("video/") || VIDEO_FILE.test(name)) {
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) throw fail(`That video is too big. The limit is ${MAX_VIDEO_MB} MB.`);
+    return { name, kind: "video", mimeType: file.type || "video/mp4", file, previewUrl: null };
+  }
+  if (file.size > MAX_FILE_MB * 1024 * 1024) throw fail(`That file is too big. The limit is ${MAX_FILE_MB} MB.`);
+  if (OFFICE_FILE.test(name)) {
+    let office;
+    try {
+      office = await readOfficeFile(file);
+    } catch (err) {
+      throw fail(`That file couldn't be opened: ${err.message || "it may be damaged"}.`);
+    }
+    return { name, kind: "text", mimeType: "text/plain", text: office.text, office };
+  }
+  if (OLD_OFFICE_FILE.test(name)) throw fail("That's an old Office format (.doc, .ppt or .xls). Save it as .docx, .pptx or .xlsx and attach it again.");
 
   if (file.type.startsWith("image/")) {
     const blob = await shrinkImage(file);
@@ -64,11 +84,11 @@ export async function readAttachment(file) {
     if (text.includes("\u0000")) throw fail("That doesn't look like a text file.");
     return { name, kind: "text", mimeType: "text/plain", text };
   }
-  throw fail("That file type isn't supported yet. Try a photo, a PDF, or a text or code file.");
+  throw fail("That file type isn't supported yet. Try a photo, a video, a PDF, a Word, PowerPoint or Excel file, or a text or code file.");
 }
 
 // Photos and PDFs need an AI that can see them.
-export const needsVision = (att) => att && att.kind !== "text";
+export const needsVision = (att) => att && (att.kind === "image" || att.kind === "pdf");
 
 // A text file's content, added in front of the question.
 export function withFileText(att, question) {
@@ -78,6 +98,7 @@ export function withFileText(att, question) {
 
 export function defaultQuestion(att) {
   if (att.kind === "image") return "What's in this picture? Explain it.";
+  if (att.kind === "video") return "What can you do with this video?";
   return "Summarise this file.";
 }
 

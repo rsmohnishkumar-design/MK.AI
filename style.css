@@ -1742,3 +1742,31 @@ a.voice-btn { text-decoration: none; display: inline-block; }
   #printView pre { white-space: pre-wrap; background: #f4f4f5 !important; color: #111 !important; padding: 8pt; border-radius: 4pt; }
 }
 :root[data-theme="light"] .sidebar { background: #eef2f5; }
+
+/* ---- Photo and video editing ---- */
+.photo-edit, .video-edit { margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
+.photo-img, .video-out { max-width: 100%; max-height: 520px; border-radius: 10px; border: 1px solid var(--panel-border); background: var(--ink-soft); align-self: flex-start; }
+.photo-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.photo-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--paper);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.photo-btn:hover:not(:disabled) { border-color: var(--brass); }
+.photo-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.photo-note { margin: 0; font-size: 13px; color: var(--paper-dim); }
+.video-progress { height: 8px; border-radius: 999px; background: var(--panel-border); overflow: hidden; max-width: 420px; }
+.video-progress span { display: block; height: 100%; width: 0; background: var(--grand); transition: width 0.25s linear; }
+
+/* ---- Code Studio: what Alpaca changed ---- */
+.studio-diff { margin: 0; font: 13px/1.55 var(--font-code); white-space: pre-wrap; word-break: break-word; }
+.studio-diff .diff-add { display: block; background: rgba(52, 211, 153, 0.14); color: #6ee7b7; }
+.studio-diff .diff-del { display: block; background: rgba(248, 113, 113, 0.14); color: #fca5a5; text-decoration: line-through; text-decoration-color: rgba(252, 165, 165, 0.5); }
+.studio-diff .diff-same { display: block; color: #a1a1aa; }
+.studio-diff .diff-fold { display: block; color: #71717a; }

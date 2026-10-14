@@ -20,8 +20,9 @@ function codeIn(text) {
   return m ? m[1].replace(/\n$/, "") : null;
 }
 
-export function openEditor(code, lang = "text") {
+export function openEditor(code, lang = "text", { fileName = "", request = "" } = {}) {
   lang = normalise(lang);
+  let lastChange = null; // { before, after } of Alpaca's latest edit
   document.querySelector(".studio")?.remove();
   const history = [];
   const box = $el("div", "studio");
@@ -30,7 +31,7 @@ export function openEditor(code, lang = "text") {
 
   // Top bar
   const bar = $el("div", "studio-bar");
-  const title = $el("span", "studio-title", "Alpaca Code Studio");
+  const title = $el("span", "studio-title", fileName ? `Alpaca Code Studio · ${fileName}` : "Alpaca Code Studio");
   const langSel = $el("select", "studio-lang");
   langSel.setAttribute("aria-label", "Language");
   for (const l of LANGS) langSel.add(new Option(l === "cpp" ? "C++" : l === "javascript" ? "JavaScript" : l === "html" ? "HTML" : l.charAt(0).toUpperCase() + l.slice(1), l));
@@ -38,12 +39,15 @@ export function openEditor(code, lang = "text") {
   langSel.value = lang;
   const runBtn = $el("button", "studio-btn primary", "▶ Run");
   const undoBtn = $el("button", "studio-btn", "Undo");
+  const diffBtn = $el("button", "studio-btn", "Changes");
+  diffBtn.title = "See what Alpaca changed";
+  diffBtn.disabled = true;
   const copyBtn = $el("button", "studio-btn", "Copy");
   const saveBtn = $el("button", "studio-btn", "⬇ Download");
   const closeBtn = $el("button", "studio-btn", "Close");
-  for (const b of [runBtn, undoBtn, copyBtn, saveBtn, closeBtn]) b.type = "button";
+  for (const b of [runBtn, undoBtn, diffBtn, copyBtn, saveBtn, closeBtn]) b.type = "button";
   undoBtn.disabled = true;
-  bar.append(title, langSel, runBtn, undoBtn, copyBtn, saveBtn, closeBtn);
+  bar.append(title, langSel, runBtn, undoBtn, diffBtn, copyBtn, saveBtn, closeBtn);
 
   // Editor with line numbers
   const main = $el("div", "studio-main");
@@ -110,7 +114,7 @@ export function openEditor(code, lang = "text") {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([area.value], { type: "text/plain" }));
     const t = langSel.value === "html" && area.value.match(/<title>([^<]{1,60})<\/title>/i);
-    a.download = `${(t ? t[1] : "code").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "code"}.${EXT[langSel.value] || "txt"}`;
+    a.download = fileName || `${(t ? t[1] : "code").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "code"}.${EXT[langSel.value] || "txt"}`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   });
@@ -124,6 +128,32 @@ export function openEditor(code, lang = "text") {
   };
   document.addEventListener("keydown", onKey);
   closeBtn.addEventListener("click", close);
+
+  // What Alpaca changed: removed lines in red, added lines in green
+  function showDiff() {
+    if (!lastChange) return;
+    outBody.replaceChildren();
+    const rows = lineDiff(lastChange.before, lastChange.after);
+    const added = rows.filter((r) => r.t === "+").length;
+    const removed = rows.filter((r) => r.t === "-").length;
+    outBody.append($el("p", "studio-hint", rows.length ? `Alpaca's changes: ${added} line${added === 1 ? "" : "s"} added, ${removed} removed. Undo puts the old code back.` : "Too big to compare line by line."));
+    const pre = $el("pre", "studio-diff");
+    // Long unchanged stretches are folded
+    let same = 0;
+    rows.forEach((r, i) => {
+      if (r.t === "=") {
+        const near = rows.slice(Math.max(0, i - 2), i + 3).some((x) => x.t !== "=");
+        if (!near) {
+          if (!same++) pre.append($el("span", "diff-fold", "  ⋯\n"));
+          return;
+        }
+      }
+      same = 0;
+      pre.append($el("span", r.t === "+" ? "diff-add" : r.t === "-" ? "diff-del" : "diff-same", `${r.t === "=" ? " " : r.t} ${r.line}\n`));
+    });
+    outBody.append(pre);
+  }
+  diffBtn.addEventListener("click", showDiff);
 
   // Run
   runBtn.addEventListener("click", async () => {
@@ -181,7 +211,10 @@ export function openEditor(code, lang = "text") {
       const r = await askAlpaca(`${request}\n\n\`\`\`${l}\n${area.value}\n\`\`\``, [], { good: [], bad: [], docs: [] }, (t) => (status.textContent = explainOnly ? "Writing the explanation…" : `Writing the new code… ${t.length} characters`), { system });
       const next = !explainOnly && codeIn(r.answer);
       if (next && !r.partial) {
+        lastChange = { before: area.value, after: next };
         setCode(next);
+        diffBtn.disabled = false;
+        showDiff();
         if (l === "html") runBtn.click(); // show the updated app straight away
         const note = r.answer.slice(r.answer.lastIndexOf("```") + 3).trim();
         status.textContent = note ? `Done: ${note.slice(0, 160)}` : "Done. Press ▶ Run to try it, or Undo.";
@@ -196,5 +229,34 @@ export function openEditor(code, lang = "text") {
       askBtn.disabled = false;
     }
   });
+  if (request) {
+    input.value = request;
+    ask.requestSubmit();
+  }
   return { close, get code() { return area.value; } };
+}
+
+// Line-by-line differences (longest common subsequence); [] when too big
+export function lineDiff(a, b) {
+  const x = a.split("\n");
+  const y = b.split("\n");
+  if (x.length * y.length > 4_000_000) return [];
+  const n = x.length;
+  const m = y.length;
+  const L = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = x[i] === y[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < n && j < m) {
+    if (x[i] === y[j]) {
+      out.push({ t: "=", line: x[i] });
+      i++;
+      j++;
+    } else if (L[i + 1][j] >= L[i][j + 1]) out.push({ t: "-", line: x[i++] });
+    else out.push({ t: "+", line: y[j++] });
+  }
+  while (i < n) out.push({ t: "-", line: x[i++] });
+  while (j < m) out.push({ t: "+", line: y[j++] });
+  return out;
 }
