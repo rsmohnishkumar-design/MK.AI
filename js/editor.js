@@ -20,7 +20,7 @@ function codeIn(text) {
   return m ? m[1].replace(/\n$/, "") : null;
 }
 
-export function openEditor(code, lang = "text", { fileName = "", request = "" } = {}) {
+export function openEditor(code, lang = "text", { fileName = "", request = "", onSave = null } = {}) {
   lang = normalise(lang);
   let lastChange = null; // { before, after } of Alpaca's latest edit
   document.querySelector(".studio")?.remove();
@@ -45,9 +45,12 @@ export function openEditor(code, lang = "text", { fileName = "", request = "" } 
   const copyBtn = $el("button", "studio-btn", "Copy");
   const saveBtn = $el("button", "studio-btn", "⬇ Download");
   const closeBtn = $el("button", "studio-btn", "Close");
-  for (const b of [runBtn, undoBtn, diffBtn, copyBtn, saveBtn, closeBtn]) b.type = "button";
+  // Opened from a folder workspace: save straight back into the file
+  const toFolderBtn = $el("button", "studio-btn primary", "Save to folder");
+  toFolderBtn.hidden = !onSave;
+  for (const b of [runBtn, undoBtn, diffBtn, copyBtn, toFolderBtn, saveBtn, closeBtn]) b.type = "button";
   undoBtn.disabled = true;
-  bar.append(title, langSel, runBtn, undoBtn, diffBtn, copyBtn, saveBtn, closeBtn);
+  bar.append(title, langSel, runBtn, undoBtn, diffBtn, copyBtn, toFolderBtn, saveBtn, closeBtn);
 
   // Editor with line numbers
   const main = $el("div", "studio-main");
@@ -109,6 +112,17 @@ export function openEditor(code, lang = "text", { fileName = "", request = "" } 
       copyBtn.textContent = "Copied";
       setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
     } catch {}
+  });
+  toFolderBtn.addEventListener("click", async () => {
+    toFolderBtn.disabled = true;
+    try {
+      const note = await onSave(area.value);
+      status.textContent = note || `Saved ${fileName}.`;
+    } catch (err) {
+      status.textContent = `Couldn't save: ${err.message || err}`;
+    } finally {
+      toFolderBtn.disabled = false;
+    }
   });
   saveBtn.addEventListener("click", () => {
     const a = document.createElement("a");
