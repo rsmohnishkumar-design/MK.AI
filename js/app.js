@@ -48,6 +48,7 @@ import { applySettings, openSettings, pref } from "./settings.js";
 import { toggleSaved, isSaved, openSaved } from "./saved.js";
 import { PHOTO_EDIT, editPhoto, renderPhotoBlock, setPhotoKeepEditing } from "./photoedit.js";
 import { editVideo, renderVideoBlock } from "./videoedit.js";
+import { startWorkspace } from "./wsui.js";
 import { recentWithin } from "./tokenizer.js";
 import * as voice from "./voice.js";
 import * as attach from "./attach.js";
@@ -1144,6 +1145,7 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
         setTimeout(() => openMenu(btn, Object.entries(PERSONAS).map(([k, v]) => ({ label: `${k === persona ? "✓ " : ""}${v.label}`, run: () => setPersona(k) }))), 0);
       },
     },
+    { label: "Open a folder (workspace)", run: () => startWorkspace({ onError: (m) => addErrorMessage(m) }) },
     { label: "Saved answers", run: () => openSaved({ onAsk: (q) => ((questionInput.value = q), composer.requestSubmit()) }) },
     { label: "Settings", run: openSettings },
     { label: "Keyboard shortcuts", run: showShortcuts },
@@ -1213,6 +1215,7 @@ const SLASH = [
   { cmd: "email", hint: "A polite email or letter", text: "Write a polite, professional email about " },
   { cmd: "image", hint: "Make a picture", text: "Draw a picture of " },
   { cmd: "deep", hint: "Deep thinking for the next question", run: () => { deepOnce = true; toast("Deep thinking is on for your next question."); } },
+  { cmd: "folder", hint: "Open a folder and work on its files", run: () => startWorkspace({ onError: (m) => addErrorMessage(m) }) },
   { cmd: "new", hint: "Start a new chat", run: () => newChat() },
 ];
 let slashMenu = null;
