@@ -1,4 +1,4 @@
-// MK.ai's own algebra: two-number word problems ("the difference of two
+// Nova AI's own algebra: two-number word problems ("the difference of two
 // numbers is 5 and their product is -2") and quadratic equations
 // ("solve x^2 - 5x + 6 = 0"), solved step by step with exact roots.
 

@@ -4,7 +4,7 @@
 
 const FENCE = /```([\w+#.-]*)[^\n]*\n?([\s\S]*?)(?:```|$)/g;
 
-// Only links to MK.ai's own lessons or to https sites become clickable.
+// Only links to Nova AI's own lessons or to https sites become clickable.
 const SAFE_LINK = /^((learn|about)\.html(#[\w-]+)?|https:\/\/[^\s]+)$/;
 
 function inline(parent, text) {
@@ -84,7 +84,7 @@ export function setFixHandler(fn) {
 }
 
 // Runs an HTML app in a sealed-off frame: its own blank origin, so it can't
-// touch MK.ai's login, storage or pages.
+// touch Nova AI's login, storage or pages.
 export function runPreview(code) {
   const overlay = document.createElement("div");
   overlay.className = "preview-overlay";
@@ -124,7 +124,7 @@ export function runPreview(code) {
   document.addEventListener("keydown", onKey);
 }
 
-// Syntax colouring (highlight.js, hosted with MK.ai), loaded the first time code appears
+// Syntax colouring (highlight.js, hosted with Nova AI), loaded the first time code appears
 let hljsReady = null;
 function loadHighlighter() {
   if (window.hljs) return Promise.resolve(window.hljs);
@@ -355,7 +355,7 @@ export function readableMath(text) {
     .replace(/\$([^$\n]+?)\$/g, (whole, m) => (/\\[a-zA-Z]|[\^_=]|^[a-z]$/.test(m) ? mathToText(m) : whole));
 }
 
-// Special blocks drawn by other parts of MK.ai (e.g. "alpaca-vision" pictures).
+// Special blocks drawn by other parts of Nova AI (e.g. "alpaca-vision" pictures).
 const BLOCKS = new Map();
 export function registerBlock(lang, render) {
   BLOCKS.set(lang, render);

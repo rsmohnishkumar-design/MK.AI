@@ -1,4 +1,4 @@
-// MK.ai's own maths solver, part 2: everyday and exam word problems:
+// Nova AI's own maths solver, part 2: everyday and exam word problems:
 // percentages, interest, profit and loss, averages, ratios, speed/time,
 // work, sequences, combinations, logarithms, trigonometry, number systems,
 // Pythagoras, areas and volumes, clock angles. Step by step, no outside service.

@@ -1,4 +1,4 @@
-// MK.ai's own maths solver, part 4: everyday school maths. Multiplication
+// Nova AI's own maths solver, part 4: everyday school maths. Multiplication
 // tables, calendar questions, decimals/fractions/percentages, rounding,
 // surds and roots, coordinate geometry, unit conversions (time, data, area,
 // volume), and classic exam problems: unitary method, successive discounts,

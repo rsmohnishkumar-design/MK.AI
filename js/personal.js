@@ -1,4 +1,4 @@
-// MK.ai remembers a few things people tell it about themselves ("my name is
+// Nova AI remembers a few things people tell it about themselves ("my name is
 // Priya", "I'm in class 10", "I like cricket") and uses them: in greetings,
 // and when asked "what do you know about me". Kept on this device only.
 
@@ -28,7 +28,7 @@ export function personalAnswer(question, uid) {
   const me = aboutMe(uid);
   let m;
 
-  // --- Telling MK.ai something ---
+  // --- Telling Nova AI something ---
   if ((m = q.match(/^(?:my name is|call me|i am called|i'm called|you can call me)\s+([a-z][a-z .'-]{0,30})$/i)) && !NOT_A_NAME.test(m[1])) {
     me.name = title(clean(m[1]).toLowerCase());
     save(uid, me);
@@ -61,7 +61,7 @@ export function personalAnswer(question, uid) {
     return `You like **${like}**, nice! 😄 I'll remember that.`;
   }
 
-  // --- Asking what MK.ai remembers ---
+  // --- Asking what Nova AI remembers ---
   if (/^(what(?:'s| is) my name|who am i|do you (?:know|remember) my name)\b/.test(low)) {
     return me.name ? `You're **${me.name}**! 😊` : `I don't know your name yet. Tell me: "my name is …"`;
   }

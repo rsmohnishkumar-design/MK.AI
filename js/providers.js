@@ -1,4 +1,4 @@
-// Free AI services MK.ai can use with a key the admin saves in the vault.
+// Free AI services Nova AI can use with a key the admin saves in the vault.
 // All speak the same OpenAI-style chat API, so one client handles them all.
 // Each service's model list is checked once per session, and the preferred
 // models it actually offers are used in order (for OpenRouter, only free ones).
@@ -45,7 +45,7 @@ export const PROVIDERS = [
       "qwen/qwen3-235b-a22b:free",
       "mistralai/mistral-small-3.2-24b-instruct:free",
     ],
-    extraHeaders: { "X-Title": "MK.ai" },
+    extraHeaders: { "X-Title": "Nova AI" },
   },
   {
     id: "github",

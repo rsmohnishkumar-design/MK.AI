@@ -1,4 +1,4 @@
-// Alpaca Vision: MK.ai's own picture and video model. It reads a description
+// Alpaca Vision: Nova AI's own picture and video model. It reads a description
 // ("a sunset over mountains with a lake", "diwali greeting card for Asha",
 // "logo for MK Tech", "video of rain in a forest at night") and paints it on
 // a canvas — sky, sun and moon, landscapes, water, buildings, animals and
@@ -226,7 +226,7 @@ function finishPhoto(spec, raw) {
 // Real photos come from AI Horde (aihorde.net): a free, volunteer-run image AI.
 // No account or key: the anonymous key is 0000000000. Only the prompt is sent.
 const HORDE = "https://aihorde.net/api/v2";
-const HORDE_HEADERS = { "Content-Type": "application/json", apikey: "0000000000", "Client-Agent": "MK.ai:1.0:https://mkai-c042b.web.app" };
+const HORDE_HEADERS = { "Content-Type": "application/json", apikey: "0000000000", "Client-Agent": "Nova AI:1.0:https://mkai-c042b.web.app" };
 const HORDE_MODELS = ["AlbedoBase XL (SDXL)", "Juggernaut XL", "ICBINP - I Can't Believe It's Not Photography", "Realistic Vision", "Deliberate"];
 const NEGATIVE = "text, letters, watermark, signature, blurry, low quality, deformed, extra fingers, bad hands, nsfw, nude, violence, blood, gore, weapon, dead body, injury";
 // Horde sizes: multiples of 64, longest side 768
@@ -1368,7 +1368,7 @@ export function paint(canvas, spec, t = 0, photo = null) {
   ctx.fillStyle = spec.kind === "logo" || spec.kind === "chart" ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.7)";
   ctx.shadowColor = spec.kind === "logo" || spec.kind === "chart" ? "transparent" : "rgba(0,0,0,0.5)";
   ctx.shadowBlur = 3;
-  ctx.fillText("Alpaca Vision · MK.ai", W - 10, H - 10);
+  ctx.fillText("Alpaca Vision · Nova AI", W - 10, H - 10);
   ctx.restore();
 }
 
@@ -1432,7 +1432,7 @@ function paintPhotoFrame(canvas, spec, photos, t) {
   ctx.fillStyle = "rgba(255,255,255,0.75)";
   ctx.shadowColor = "rgba(0,0,0,0.6)";
   ctx.shadowBlur = 3;
-  ctx.fillText("Alpaca Vision · MK.ai", W - 10, H - 10);
+  ctx.fillText("Alpaca Vision · Nova AI", W - 10, H - 10);
   ctx.restore();
 }
 
@@ -1907,7 +1907,7 @@ export function visionAnswer(question, { allowVideo = true } = {}) {
   if (videoBlocked) spec.video = false;
   const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
-    ...(videoBlocked ? ["Video creation is reserved for MK.ai's admin, so here's a picture instead.", ""] : []),
+    ...(videoBlocked ? ["Video creation is reserved for Nova AI's admin, so here's a picture instead.", ""] : []),
     `**Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
     "",
     "```alpaca-vision\n" + JSON.stringify(spec) + "\n```",

@@ -2,7 +2,7 @@
 // It works out the language and script, the kind of message (question,
 // request, greeting, maths…), the key words, the sentences and things like
 // numbers, links, emails and dates. The router and Alpaca use the result, so
-// a Tamil question gets a Tamil answer and the right part of MK.ai replies.
+// a Tamil question gets a Tamil answer and the right part of Nova AI replies.
 
 import { tokenize } from "./tokenizer.js";
 import { keywords, normalize } from "./words.js";

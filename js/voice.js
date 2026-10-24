@@ -47,7 +47,7 @@ export function listen({ lang = "en-IN", onText, onEnd, onError }) {
 
 export function listenErrorMessage(code) {
   if (code === "not-allowed" || code === "service-not-allowed") {
-    return "MK.ai can't use the microphone. Allow microphone access for this site in your browser settings, then try again.";
+    return "Nova AI can't use the microphone. Allow microphone access for this site in your browser settings, then try again.";
   }
   if (code === "no-speech") return "I didn't hear anything. Tap the mic and speak again.";
   if (code === "network") return "Voice typing needs the internet. Check your connection and try again.";

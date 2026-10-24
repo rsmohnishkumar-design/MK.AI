@@ -1,4 +1,4 @@
-// MK.ai's own brain: answers greetings, small talk, time and date, maths and
+// Nova AI's own brain: answers greetings, small talk, time and date, maths and
 // unit conversions instantly, on the device, with no outside service.
 // Returns a reply string, or null when it's not something this brain handles.
 
@@ -13,7 +13,7 @@ import { solveWordProblems } from "./mathword.js";
 import { solveHigherMaths } from "./mathplus.js";
 import { solveEveryday } from "./mathextra.js";
 
-// The name of MK.ai's own model (its brain: solvers + knowledge + memory).
+// The name of Nova AI's own model (its brain: solvers + knowledge + memory).
 export const MODEL_NAME = "Alpaca";
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
@@ -232,11 +232,11 @@ const RULES = [
       pick([
         `${greetingForNow()}, ${boss()}! 👑 Welcome back. What shall we do today?`,
         `Hello ${boss()}! 😊 Always happy to see my creator. How can I help?`,
-        `Hey ${boss()}! 👋 Your MK.ai is ready and waiting. What's on your mind?`,
+        `Hey ${boss()}! 👋 Your Nova AI is ready and waiting. What's on your mind?`,
       ]),
     reply: () =>
       pick([
-        `${greetingForNow()}! 👋 I'm MK.ai. What would you like to know?`,
+        `${greetingForNow()}! 👋 I'm Nova AI. What would you like to know?`,
         "Hi there! 😊 How can I help you today?",
         "Hello! 👋 Ask me anything — I'm here to help.",
         "Hey! Nice to see you. What's on your mind?",
@@ -285,16 +285,16 @@ const RULES = [
   {
     test: /^(who are you|what are you|what is your name|what'?s your name|your name|introduce yourself|tell me about yourself)\b/,
     creator: () =>
-      `I'm MK.ai 🤖 (running the ${MODEL_NAME} model) — your creation, ${boss()}! I chat, answer questions, do maths and conversions, look things up, and learn from everything people teach me. Say "show your details" to see my full report.`,
+      `I'm Nova AI 🤖 (running the ${MODEL_NAME} model) — your creation, ${boss()}! I chat, answer questions, do maths and conversions, look things up, and learn from everything people teach me. Say "show your details" to see my full report.`,
     reply: () =>
-      `I'm MK.ai 🤖, running the ${MODEL_NAME} model — a friendly assistant that learns from every conversation. I can chat, answer questions, solve maths from basics to calculus, do conversions, tell the time, and look things up. If I don't know something, you can teach me!`,
+      `I'm Nova AI 🤖, running the ${MODEL_NAME} model — a friendly assistant that learns from every conversation. I can chat, answer questions, solve maths from basics to calculus, do conversions, tell the time, and look things up. If I don't know something, you can teach me!`,
   },
   {
     test: /^(what|which) (ai )?(model|version|brain|llm|engine) (are you|is this|do you (use|run( on)?)|powers you|are you (using|running|built on))|^(what is|tell me about|who is) (the )?alpaca( model)?\b|^(your|mk ?ai'?s?) (model|version)\b/,
     creator: () =>
       `I run on ${MODEL_NAME}, ${boss()} — the model you're building! 🦙 Four modes: **Instant** (my own maths engine, science solver, knowledge base and memory, right in the browser), **Pro** (writing, explaining, code and office files, using large language models like Google Gemini), **Live** (news, with Google Search) and **Deep** (step-by-step thinking). Everything I look up is saved to my memory. My picture and video model is Alpaca Vision 🎨.`,
     reply: () =>
-      `I'm ${MODEL_NAME} 🦙, MK.ai's model, with four modes: **Instant** for maths, science, conversions and my own knowledge (right in your browser), **Pro** for writing, explaining, advice and code (built on large language models such as Google Gemini), **Live** for news and anything happening now (with Google Search), and **Deep** for careful step-by-step thinking. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …").`,
+      `I'm ${MODEL_NAME} 🦙, Nova AI's model, with four modes: **Instant** for maths, science, conversions and my own knowledge (right in your browser), **Pro** for writing, explaining, advice and code (built on large language models such as Google Gemini), **Live** for news and anything happening now (with Google Search), and **Deep** for careful step-by-step thinking. For pictures and videos there's **Alpaca Vision** 🎨 (pick it in the model menu, or just say "draw …").`,
   },
   {
     test: /^(who (made|created|built|developed|owns) you|who is your (creator|owner|developer|maker)|who designed you)\b/,
@@ -336,7 +336,7 @@ const RULES = [
   {
     test: /\b(privacy|privacy policy|terms of (use|service)|is my (data|chat|information) (safe|private|secure)|do you (store|save|keep|sell) my (data|chats?|messages|information)|who can (see|read) my (chats?|messages))\b/,
     reply: () =>
-      "🔒 **Your privacy:** your chats are saved to your account and only you can read them. The questions people ask are logged so MK.ai can learn what to improve, and answers it learns are shared with everyone, so please don't teach it private information. MK.ai never sells data, shows ads or sends your chats to outside AI companies.\n\nRead the full [privacy policy](about.html#privacy) and [terms of use](about.html#terms).",
+      "🔒 **Your privacy:** your chats are saved to your account and only you can read them. The questions people ask are logged so Nova AI can learn what to improve, and answers it learns are shared with everyone, so please don't teach it private information. Nova AI never sells data, shows ads or sends your chats to outside AI companies.\n\nRead the full [privacy policy](about.html#privacy) and [terms of use](about.html#terms).",
   },
   {
     test: /^(are you (a )?(robot|bot|human|ai|real)|are you alive)\b/,

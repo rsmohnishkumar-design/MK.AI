@@ -3,7 +3,7 @@
 // symbols, then breaks long words into sub-word pieces ("unbelievable" →
 // "un" "believ" "able"). It works for any language: English and other Latin
 // scripts by sub-words, Tamil, Hindi and other Indian scripts by syllables,
-// Chinese and Japanese by character. MK.ai uses it to count usage, to decide
+// Chinese and Japanese by character. Nova AI uses it to count usage, to decide
 // how much of the conversation Alpaca can see, and in its language analysis.
 
 // Short, very common words are one token each in every big model's vocabulary.

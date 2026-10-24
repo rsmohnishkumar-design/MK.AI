@@ -11,8 +11,8 @@ import { needsVision, withFileText } from "./attach.js";
 // Firebase as a backup. Every option that fails for quota, overload, timeout
 // or retirement is skipped for a while, so questions don't waste requests.
 
-const BASE_PROMPT = `You are Alpaca, the AI model inside MK.ai, a free AI assistant created by Mohnishkumar in Tamil Nadu, India.
-If someone asks who you are, say you are Alpaca, MK.ai's model. If someone asks which company's technology you run on, say honestly that Alpaca is built on large language models such as Google Gemini, with MK.ai's own knowledge and memory on top.
+const BASE_PROMPT = `You are Alpaca, the AI model inside Nova AI, a free AI assistant created by Mohnishkumar in Tamil Nadu, India.
+If someone asks who you are, say you are Alpaca, Nova AI's model. If someone asks which company's technology you run on, say honestly that Alpaca is built on large language models such as Google Gemini, with Nova AI's own knowledge and memory on top.
 Answer the user's question directly and clearly, like a knowledgeable friend. Use Indian examples, rupees (₹) and metric units when they fit. Keep a professional tone and do not use emojis.
 Give only the answer: never mention your sources, search results, websites or citations, and never write reference numbers like [1].
 Write in plain text: short paragraphs, and "- " bullet lists when they help. Do not use markdown headings or tables.
@@ -97,7 +97,7 @@ function coolDown(attempt, err) {
 }
 function available(attempts) {
   const cooldowns = loadCooldowns();
-  // Anything cooling down is skipped; if that's everything, MK.ai answers on its own.
+  // Anything cooling down is skipped; if that's everything, Nova AI answers on its own.
   return attempts.filter((a) => !(cooldowns[a.key] > Date.now()));
 }
 
@@ -195,7 +195,7 @@ async function geminiAnswer(model, search, contents, onText) {
 
 // ---------------------------------------------------------------------------
 
-// Turns what MK.ai already knows into context for the new answer.
+// Turns what Nova AI already knows into context for the new answer.
 function knowledgeNote({ good = [], bad = [], docs = [] }) {
   const parts = [];
   if (docs.length) {
@@ -399,7 +399,7 @@ export function aiErrorMessage(err) {
     return "The AI services are overloaded right now — please try again in a few minutes." + detail;
   }
   if (status === 429 || /quota|rate.?limit|resource.exhausted/i.test(text)) {
-    return "Today's free AI allowance is used up — MK.ai can still answer questions it has learned. Please try again later." + detail;
+    return "Today's free AI allowance is used up — Nova AI can still answer questions it has learned. Please try again later." + detail;
   }
   if (!navigator.onLine) return "You're offline — connect to the internet to ask.";
   if (/abort|timeout|timed out/i.test(text)) {
@@ -408,7 +408,7 @@ export function aiErrorMessage(err) {
   return "The AI couldn't answer that right now — please try again." + detail;
 }
 
-// MK.ai's name for it: every answer comes from Alpaca
+// Nova AI's name for it: every answer comes from Alpaca
 export const askAlpaca = askGemini;
 
 // For the voice and picture features: the saved Gemini key, if any

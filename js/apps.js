@@ -1,4 +1,4 @@
-// MK.ai's app builder: "make a calculator app", "create a snake game",
+// Nova AI's app builder: "make a calculator app", "create a snake game",
 // "tic tac toe in python" → a complete, tested program from data/apps.json,
 // ready to run (▶ run), download or copy. No outside service is used.
 

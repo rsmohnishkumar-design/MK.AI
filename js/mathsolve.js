@@ -1,4 +1,4 @@
-// MK.ai's own maths solver: school and competitive-exam problems, solved step
+// Nova AI's own maths solver: school and competitive-exam problems, solved step
 // by step with exact answers where possible. Every solver takes the cleaned
 // question and returns a written answer, or null when it isn't its kind of
 // problem. No outside service is used.

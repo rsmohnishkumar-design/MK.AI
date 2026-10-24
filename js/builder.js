@@ -1,4 +1,4 @@
-// MK.ai app builder: understands requests like "make a library management
+// Nova AI app builder: understands requests like "make a library management
 // system with book name, author and year" and writes a complete, working
 // app for them: a form for the fields, a searchable and sortable table,
 // edit and delete, totals for number fields, CSV export, and saving in the
@@ -153,7 +153,7 @@ export function buildManagementApp(plan) {
 </style>
 </head>
 <body>
-<header><h1 id="title"></h1><span>Saved in this browser · made with MK.ai</span></header>
+<header><h1 id="title"></h1><span>Saved in this browser · made with Nova AI</span></header>
 <main>
   <div class="stats" id="stats"></div>
   <div class="card">

@@ -1,6 +1,6 @@
 // The vault password. It is checked by the database's security rules (the
 // password lives only there), so it never appears in the website's code: the
-// signed-in account asks to become MK.ai's creator with it, and the rules say
+// signed-in account asks to become Nova AI's creator with it, and the rules say
 // yes only when it's right. The creator is an admin, so the vault opens.
 
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
@@ -11,7 +11,7 @@ const OK_KEY = "mkai-vault-ok";
 // Resolves when the password is right; throws { code: "signin" | "wrong" } otherwise.
 export async function unlockVault(password) {
   const user = auth.currentUser;
-  if (!user) throw Object.assign(new Error("Sign in to MK.ai first."), { code: "signin" });
+  if (!user) throw Object.assign(new Error("Sign in to Nova AI first."), { code: "signin" });
   try {
     await updateDoc(doc(db, "users", user.uid), { creator: true, creatorCode: password.trim() });
   } catch (err) {

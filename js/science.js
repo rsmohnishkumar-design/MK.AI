@@ -1,4 +1,4 @@
-// MK.ai's science solver: physics numericals (force, motion, energy, power,
+// Nova AI's science solver: physics numericals (force, motion, energy, power,
 // pressure, electricity, waves, heat, lenses …) worked step by step with
 // units, and chemistry (molar mass, moles, percentage composition and
 // balancing equations). Runs on the device; no outside service.

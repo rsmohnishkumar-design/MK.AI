@@ -1,4 +1,4 @@
-// Diagnostics: runs each step MK.ai depends on, one at a time, with timings.
+// Diagnostics: runs each step Nova AI depends on, one at a time, with timings.
 import { getToken } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";

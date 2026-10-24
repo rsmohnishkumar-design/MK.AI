@@ -1,8 +1,8 @@
-// Deep think: MK.ai's slower, more careful mode. It works out what kind of
+// Deep think: Nova AI's slower, more careful mode. It works out what kind of
 // question it is, splits questions with several parts, double-checks maths,
 // adds related facts, and tries harder before saying "I don't know". Every
 // step is written down so the person can open "Thought for …" and see how
-// the answer was reached. Everything runs on MK.ai's own brain.
+// the answer was reached. Everything runs on Nova AI's own brain.
 
 import { parse, evaluate, vars, simplify } from "./symbolic.js";
 import { cleanMaths } from "./mathsolve.js";

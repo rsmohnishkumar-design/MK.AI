@@ -1,4 +1,4 @@
-// MK.ai's built-in coding teacher: answers "what is a variable?", "explain
+// Nova AI's built-in coding teacher: answers "what is a variable?", "explain
 // loops", "what is git?" and similar instantly, with a small example and a
 // link to the matching Code School lesson (learn.html).
 
@@ -20,20 +20,20 @@ const TOPICS = [
     words: ["html"],
     answer:
       "HTML decides what is on a web page: headings, text, buttons, boxes. It's the walls and rooms of a website.\n\n" +
-      "```html\n<button id=\"sendBtn\">Send</button>\n```\n\nMK.ai's chat box and send button are written in HTML (index.html)." +
+      "```html\n<button id=\"sendBtn\">Send</button>\n```\n\nNova AI's chat box and send button are written in HTML (index.html)." +
       lesson("trio", "HTML, CSS and JavaScript"),
   },
   {
     words: ["css"],
     answer:
       "CSS decides how a web page looks: colours, sizes, fonts, spacing, rounded corners. It's the paint and furniture.\n\n" +
-      "```css\n#sendBtn {\n  background: gold;\n  border-radius: 10px;\n}\n```\n\nMK.ai's dark colours and gold logo are CSS (style.css)." +
+      "```css\n#sendBtn {\n  background: gold;\n  border-radius: 10px;\n}\n```\n\nNova AI's dark colours and gold logo are CSS (style.css)." +
       lesson("trio", "HTML, CSS and JavaScript"),
   },
   {
     words: ["javascript", "js"],
     answer:
-      "JavaScript makes a web page do things: react to clicks, send messages, fetch answers. Every web browser can run it, and MK.ai is written in it.\n\n" +
+      "JavaScript makes a web page do things: react to clicks, send messages, fetch answers. Every web browser can run it, and Nova AI is written in it.\n\n" +
       "```javascript\nsendBtn.addEventListener(\"click\", () => {\n  sendMessage();\n});\n```" +
       lesson("trio", "HTML, CSS and JavaScript"),
   },
@@ -77,7 +77,7 @@ const TOPICS = [
     needsContext: true,
     answer:
       "An object groups labelled facts about one thing, as name: value pairs.\n\n" +
-      "```javascript\nlet message = { role: \"user\", text: \"hi\" };\nconsole.log(message.text);  // hi\n```\n\nEvery chat message in MK.ai is stored as an object like this." +
+      "```javascript\nlet message = { role: \"user\", text: \"hi\" };\nconsole.log(message.text);  // hi\n```\n\nEvery chat message in Nova AI is stored as an object like this." +
       lesson("vars", "Variables and data"),
   },
   {
@@ -99,7 +99,7 @@ const TOPICS = [
     needsContext: true,
     answer:
       "A function is a reusable recipe: inputs go in, it runs, and it returns a result. Write it once, use it many times.\n\n" +
-      "```javascript\nfunction square(n) {\n  return n * n;\n}\nconsole.log(square(9));  // 81\n```\n\nMK.ai's own brain is a function: localAnswer(question)." +
+      "```javascript\nfunction square(n) {\n  return n * n;\n}\nconsole.log(square(9));  // 81\n```\n\nNova AI's own brain is a function: localAnswer(question)." +
       lesson("functions", "Functions"),
   },
   {
@@ -114,20 +114,20 @@ const TOPICS = [
     words: ["front end", "frontend", "front-end", "back end", "backend", "back-end"],
     answer:
       "The front end is the part that runs in your browser: HTML, CSS and JavaScript you can see and click. The back end runs on servers: it stores data and does work the browser shouldn't.\n\n" +
-      "MK.ai's front end is on GitHub Pages; its back end is Firebase (login and the Firestore database)." +
+      "Nova AI's front end is on GitHub Pages; its back end is Firebase (login and the Firestore database)." +
       lesson("stack", "Front end and database"),
   },
   {
     words: ["database", "databases"],
     answer:
       "A database stores information permanently so it survives refreshes and can be shared between devices and people.\n\n" +
-      "MK.ai uses Firestore to store users, chats and everything it learns. Security rules decide who can read or change what." +
+      "Nova AI uses Firestore to store users, chats and everything it learns. Security rules decide who can read or change what." +
       lesson("stack", "Front end and database"),
   },
   {
     words: ["api", "apis"],
     answer:
-      "An API is a way for one program to ask another for something, using agreed messages. When MK.ai asks Gemini or Groq a question, it sends a request to their API and gets the answer back.\n\n" +
+      "An API is a way for one program to ask another for something, using agreed messages. When Nova AI asks Gemini or Groq a question, it sends a request to their API and gets the answer back.\n\n" +
       "```javascript\nconst res = await fetch(\"https://api.example.com/answer?q=hi\");\nconst data = await res.json();\n```" +
       lesson("stack", "Front end and database"),
   },
@@ -140,7 +140,7 @@ const TOPICS = [
   {
     words: ["github"],
     answer:
-      "GitHub is a website that stores Git projects (repositories) online. You can review changes as pull requests, and GitHub Pages can host a website for free, which is how MK.ai is online." +
+      "GitHub is a website that stores Git projects (repositories) online. You can review changes as pull requests, and GitHub Pages can host a website for free, which is how Nova AI is online." +
       lesson("git", "Git and GitHub"),
   },
   {
@@ -160,13 +160,13 @@ const TOPICS = [
   {
     words: ["pull request", "pull requests", "pr"],
     answer:
-      "A pull request (PR) is a proposal to merge a branch into main. People can review the changes first. Every MK.ai feature, like chat sync (#22) and creator mode (#25), went in as a PR." +
+      "A pull request (PR) is a proposal to merge a branch into main. People can review the changes first. Every Nova AI feature, like chat sync (#22) and creator mode (#25), went in as a PR." +
       lesson("git", "Git and GitHub"),
   },
   {
     words: ["repository", "repositories", "repo", "repos"],
     answer:
-      "A repository (repo) is a project folder together with its whole history of changes. MK.ai lives in the repo rsmohnishkumar-design/MK.AI on GitHub." +
+      "A repository (repo) is a project folder together with its whole history of changes. Nova AI lives in the repo rsmohnishkumar-design/MK.AI on GitHub." +
       lesson("git", "Git and GitHub"),
   },
 ];

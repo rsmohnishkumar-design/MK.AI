@@ -1,4 +1,4 @@
-// MK.ai's built-in knowledge base: thousands of checked answers on school and
+// Nova AI's built-in knowledge base: thousands of checked answers on school and
 // general-knowledge topics that ship with the app (data/kb/*.json) and are
 // answered instantly, with no outside service. Each pack is
 //   { "topic": "…", "entries": [["question", "answer", ["other ways to ask", …]], …] }
@@ -148,7 +148,7 @@ export function relatedEntries(question, exclude = null, n = 2) {
     .map(([i]) => ({ question: entries[i].q, answer: entries[i].a }));
 }
 
-// "Did you mean …?": swaps misspelt words for the closest word MK.ai knows
+// "Did you mean …?": swaps misspelt words for the closest word Nova AI knows
 // (up to 2 letters different), and returns the corrected question only when
 // the knowledge base then has an answer for it.
 function distance(a, b) {

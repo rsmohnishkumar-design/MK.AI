@@ -19,7 +19,7 @@ export const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
 // models are listed in js/providers.js; their keys are saved in the vault.
 
 // Backup: Gemini models through Firebase, tried in order. Each has its own free daily allowance, and
-// MK.ai skips one for a while when it's used up, retired or overloaded.
+// Nova AI skips one for a while when it's used up, retired or overloaded.
 // (gemini-flash-latest is currently Gemini 3.8 Flash: only 20 free requests a day.)
 export const GEMINI_MODELS = [
   "gemini-3.6-flash",

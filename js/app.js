@@ -157,7 +157,7 @@ if (!configured) {
   document.querySelector(".auth-tabs").classList.add("hidden");
   document.querySelector(".auth-hint").classList.add("hidden");
   authCopy.textContent =
-    "MK.ai isn't connected to Firebase yet. The owner needs to fill in firebase-config.js — see the README.";
+    "Nova AI isn't connected to Firebase yet. The owner needs to fill in firebase-config.js — see the README.";
 }
 
 authForm.addEventListener("submit", async (e) => {
@@ -352,13 +352,13 @@ const creatorOff = () => {
 };
 const isCreator = () => profile?.creator === true && !creatorOff();
 const isUnlimited = () => profile?.tier === "unlimited";
-// MK.ai's admin (the master account)
+// Nova AI's admin (the master account)
 const ADMIN_EMAIL = "mkaiadmin@gmail.com";
 const isAdmin = () => (auth.currentUser?.email || "").toLowerCase() === ADMIN_EMAIL || profile?.creator === true;
 const unlimitedOnly = (what) =>
   `${what === "Alpaca Vision" ? "Pictures are" : "This is"} available to unlimited members.\n\n` +
   "**Want unlimited access?** Tap **Ask for unlimited access** under your email, and the admin will review it. " +
-  "People who use MK.ai a lot get it automatically.";
+  "People who use Nova AI a lot get it automatically.";
 
 // The empty chat greets the person by name, a little differently each time
 function nameOf(email = "") {
@@ -470,7 +470,7 @@ $("creatorExitBtn").addEventListener("click", () => {
   renderTier();
   emptyState.classList.contains("hidden") || renderGreeting();
   const msg = createAiMessage();
-  msg.finish('You\'ve left creator mode on this device, so MK.ai treats you as a normal member now. To come back, say **"I created you"** and enter your creator code.');
+  msg.finish('You\'ve left creator mode on this device, so Nova AI treats you as a normal member now. To come back, say **"I created you"** and enter your creator code.');
   emptyState.classList.add("hidden");
   scrollToBottom();
 });
@@ -544,7 +544,7 @@ function renderAccessRequest() {
     req === "pending"
       ? "Request sent. The admin will review it soon."
       : req === "rejected"
-        ? "The admin said not yet. Keep using MK.ai: he may give it when you use it more."
+        ? "The admin said not yet. Keep using Nova AI: he may give it when you use it more."
         : hits
           ? `Weekly limit reached ${hits} of ${AUTO_UNLIMITED_AFTER} times. At ${AUTO_UNLIMITED_AFTER}, unlimited access turns on by itself.`
           : `Heavy users get unlimited access automatically after reaching the weekly limit ${AUTO_UNLIMITED_AFTER} times.`;
@@ -586,7 +586,7 @@ async function noteLimitHit(hit) {
       sendBtn.disabled = false;
       setModel(activeModel);
       const msg = createAiMessage();
-      msg.finish(`**Unlimited access is on.** You've reached the weekly limit ${AUTO_UNLIMITED_AFTER} times, so MK.ai upgraded you automatically. Thank you for using MK.ai so much!`);
+      msg.finish(`**Unlimited access is on.** You've reached the weekly limit ${AUTO_UNLIMITED_AFTER} times, so Nova AI upgraded you automatically. Thank you for using Nova AI so much!`);
       scrollToBottom();
       return;
     }
@@ -1035,7 +1035,7 @@ document.addEventListener("keydown", (e) => e.key === "Escape" && closeMenu());
 addEventListener("resize", closeMenu);
 
 function chatText(chat) {
-  return chat.messages.map((m) => `${m.role === "user" ? "You" : "MK.ai"}: ${m.text || ""}`).join("\n\n");
+  return chat.messages.map((m) => `${m.role === "user" ? "You" : "Nova AI"}: ${m.text || ""}`).join("\n\n");
 }
 function renameChat(id) {
   const chat = store.chats.find((c) => c.id === id);
@@ -1058,7 +1058,7 @@ function togglePin(id) {
 async function shareChat(id) {
   const chat = store.chats.find((c) => c.id === id);
   if (!chat) return;
-  const text = `${chat.title}\n\n${chatText(chat)}\n\n— shared from MK.ai (https://mkai-c042b.web.app)`;
+  const text = `${chat.title}\n\n${chatText(chat)}\n\n— shared from Nova AI (https://mkai-c042b.web.app)`;
   try {
     if (navigator.share) return await navigator.share({ title: chat.title, text });
   } catch (err) {
@@ -1103,14 +1103,14 @@ function printChat(id) {
   h.textContent = chat.title;
   const meta = document.createElement("p");
   meta.className = "print-meta";
-  meta.textContent = `MK.ai chat · ${new Date(chat.updatedAt || Date.now()).toLocaleString()}`;
+  meta.textContent = `Nova AI chat · ${new Date(chat.updatedAt || Date.now()).toLocaleString()}`;
   view.append(h, meta);
   for (const m of chat.messages) {
     const block = document.createElement("section");
     block.className = m.role === "user" ? "print-q" : "print-a";
     const who = document.createElement("p");
     who.className = "print-who";
-    who.textContent = m.role === "user" ? "You" : "MK.ai";
+    who.textContent = m.role === "user" ? "You" : "Nova AI";
     const body = document.createElement("div");
     if (m.role === "user") body.textContent = m.text;
     else renderAnswer(body, m.text || "");
@@ -1149,7 +1149,7 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
     { label: "Saved answers", run: () => openSaved({ onAsk: (q) => ((questionInput.value = q), composer.requestSubmit()) }) },
     { label: "Settings", run: openSettings },
     { label: "Keyboard shortcuts", run: showShortcuts },
-    { label: "About MK.ai", run: () => (location.href = "about.html") },
+    { label: "About Nova AI", run: () => (location.href = "about.html") },
   );
   if (id && store.chats.some((c) => c.id === id)) items.push("-", { label: "Delete chat", danger: true, run: () => deleteChat(id) });
   openMenu(e.currentTarget, items);
@@ -1473,7 +1473,7 @@ function createAiMessage() {
       box.append(more, simpler);
       actions.append(box);
     },
-    // "You might also ask": related questions MK.ai knows the answers to
+    // "You might also ask": related questions Nova AI knows the answers to
     setFollowUps(questions, title = "You might also ask:") {
       const box = document.createElement("div");
       box.className = "follow-ups";
@@ -1509,7 +1509,7 @@ function createAiMessage() {
       credit.textContent = text;
       credit.classList.remove("hidden");
     },
-    // "I don't know yet" answers get a box to teach MK.ai the right answer.
+    // "I don't know yet" answers get a box to teach Nova AI the right answer.
     enableTeaching(question) {
       const form = el.querySelector(".teach-form");
       const box = form.querySelector("textarea");
@@ -1622,7 +1622,7 @@ const CODER_NOTE = `This is a coding request. Answer like a world-class senior e
 - Handle edge cases and errors; prefer simple, modern, secure, efficient solutions; mention time/space complexity for algorithms.
 - After the code: how to run it, a quick example of input and output, and (for bugs) what was wrong and why the fix works.`;
 
-// What the person told MK.ai about themselves, so Alpaca can tailor its answers
+// What the person told Nova AI about themselves, so Alpaca can tailor its answers
 function personalNote() {
   const me = aboutMe(auth.currentUser?.uid) || {};
   const bits = [];
@@ -1699,11 +1699,11 @@ async function loadControl() {
     bar.textContent = control.announcement || "";
     bar.hidden = !control.announcement;
   }
-  if (control.maintenance && !isAdmin()) lockChat("MK.ai is being updated by the admin. Please come back in a little while.");
+  if (control.maintenance && !isAdmin()) lockChat("Nova AI is being updated by the admin. Please come back in a little while.");
   renderTier();
   if (isAdmin() && control.autoPromote !== false) setTimeout(promoteLearned, 4000);
 }
-// While the admin is signed in, everything MK.ai has learned moves into the vault
+// While the admin is signed in, everything Nova AI has learned moves into the vault
 // (answers people marked unhelpful stay out), a few hundred at a time.
 async function promoteLearned() {
   try {
@@ -1726,7 +1726,7 @@ async function promoteLearned() {
   }
 }
 
-// What MK.ai's own brain is exact at: maths, units, time and date, who it is
+// What Nova AI's own brain is exact at: maths, units, time and date, who it is
 const INSTANT_ASK = /^(what(?:'s| is)? (the )?(time|date|day)|what day is|who (made|created|built|developed|owns) you|who is your (creator|owner|developer)|what can you do|help|what are your features|what (ai |)(model|version) (are you|is this)|who are you|what is your name|convert\b|\d)|\b(to|in) (km|miles?|kg|pounds?|lbs?|celsius|fahrenheit|°?[cf]|metres?|meters?|feet|ft|inches|cm|mm|litres?|liters?|gallons?|rupees?|inr|usd|dollars?)\b|[\d)]\s*[-+*/×÷^%=]\s*[\d(]|\b(sqrt|square root|cube root|factorial|percent|% of|log|sin|cos|tan|derivative|differentiate|integrate|integral|solve|simplify|factori[sz]e|lcm|hcf|gcd|prime)\b/i;
 // "Alpaca" (automatic), "pro", "deep" or "vision" from the model menu; the admin can
 // also force every answer to "pro" or "instant" from the vault
@@ -1749,7 +1749,7 @@ const DONT_KNOW = [
   "Hmm, that's new to me! It's on my learning list now. If you know the answer, teach me below.",
 ];
 
-// MK.ai answers everything itself, in this order, stopping at the first that works:
+// Nova AI answers everything itself, in this order, stopping at the first that works:
 // 1. Curated answers (the vault: taught and approved in the Training room)
 // 2. Its own brain (greetings, small talk, time, maths, conversions, coding)
 // 3. The built-in knowledge base, then memory (everything learned or taught, matched by meaning)
@@ -1757,7 +1757,7 @@ const DONT_KNOW = [
 // 5. Wikipedia, for simple "what is / who is" questions
 // 6. "I don't know yet": the question goes on its learning list for the Training room
 // Outside AI is never used here; it only helps the admin in the Training room.
-// think(step) notes what MK.ai is doing, for Deep think's "Thought for …" list.
+// think(step) notes what Nova AI is doing, for Deep think's "Thought for …" list.
 // Attachments with an editing instruction go to the right editor; plain
 // questions about a file ("what's in this photo?") are answered as usual.
 const ASKING = /^(what|who|whom|whose|where|why|which|when|how (many|much|old|long|does|do|is|are|can|did)|is |are |does |do |did |describe|explain|summari[sz]e|tell me|read|list|count|identify|analy[sz]e|review)\b/i;
@@ -1841,7 +1841,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
       source: "file",
     };
   }
-  // A text file sent with the question: MK.ai reads it itself.
+  // A text file sent with the question: Nova AI reads it itself.
   if (attachment) {
     think(`Reading the file ${attachment.name}`);
     logActivity(question, "file");
@@ -1850,7 +1850,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
       answer: found
         ? `${wantsSummary(question) ? "Here's a summary of" : "Here's what"} ${attachment.name}${wantsSummary(question) ? ":" : " says about that:"}\n\n${found}`
         : `I couldn't find that in ${attachment.name}. Try asking with words that appear in the file, or say "summarise this file".`,
-      credit: `read by MK.ai from ${attachment.name}`,
+      credit: `read by Nova AI from ${attachment.name}`,
       saved: nothingSaved,
       source: "file",
     };
@@ -1859,7 +1859,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   async function tryAlpaca(route, knowledge = { good: [], bad: [], docs: [] }) {
     think(ALPACA_STEP[route] || "Alpaca Pro: writing a full answer");
     const system = [
-      control.instructions ? `Instructions from MK.ai's admin (follow them): ${control.instructions}` : "",
+      control.instructions ? `Instructions from Nova AI's admin (follow them): ${control.instructions}` : "",
       route === "study" ? STUDY_NOTE : personaNote(),
       CODE_ASK.test(question) && persona !== "coder" ? CODER_NOTE : "",
       personalNote(),
@@ -1932,7 +1932,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     think("This sounds serious: sharing people who can help right now");
     return { answer: converse(question), saved: nothingSaved, source: "local" };
   }
-  // Things people tell MK.ai about themselves ("my name is …", "what do you know about me")
+  // Things people tell Nova AI about themselves ("my name is …", "what do you know about me")
   const personal = !attachment && personalAnswer(question, auth.currentUser?.uid);
   if (personal) {
     think("This is about you: using what you've told me");
@@ -1982,7 +1982,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     if (office) return { answer: office, saved: nothingSaved, source: "local" };
   }
 
-  // AI voiceover: a script (given or written by MK.ai) read aloud
+  // AI voiceover: a script (given or written by Nova AI) read aloud
   if (!attachment && isVoiceoverRequest(question) && (control.voice !== false || isAdmin())) {
     think("Writing the voiceover script");
     const voice = await voiceoverAnswer(question).catch((err) => (console.warn(err), null));
@@ -2038,7 +2038,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   if (memory && memory.collection === "vault" && !opts.retry) return fromMemory();
 
-  // Alpaca-first: MK.ai's own brain answers only what it is exact at (maths,
+  // Alpaca-first: Nova AI's own brain answers only what it is exact at (maths,
   // conversions, time, who it is); an exact earlier Alpaca answer is reused.
   const exactOwn = own && (INSTANT_ASK.test(question.trim()) || /\d/.test(question) || question.trim().split(/\s+/).length <= 3);
   if (aiFirst && !opts.retry && memory && memory.collection === "learned" && !memory.similarTo && ["ai", "taught"].includes(memory.source || "ai")) return fromMemory();
@@ -2048,7 +2048,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     return { answer: own, saved: nothingSaved, source: "local" };
   }
 
-  // Apps and programs MK.ai builds from its tested templates (data/apps.json).
+  // Apps and programs Nova AI builds from its tested templates (data/apps.json).
   think("Checking whether it's something I can build");
   const built = await appAnswer(question, onText);
   if (built) {
@@ -2071,7 +2071,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   let route = alpacaRoute(question, { contextual, deep: opts.deep });
   if (opts.retry && navigator.onLine && !route) route = "pro";
-  // Alpaca answers everything else; what MK.ai already knows is given to it as facts
+  // Alpaca answers everything else; what Nova AI already knows is given to it as facts
   if (aiFirst && !route && (worthLearning(question) || contextual)) route = "pro";
   if (!aiFirst) route = null;
   if (route) {
@@ -2082,7 +2082,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     if (pro) return pro;
     think("The big models are busy, so I'm answering from my own knowledge");
   }
-  // Big models unavailable: MK.ai's own friendly replies for everyday talk
+  // Big models unavailable: Nova AI's own friendly replies for everyday talk
   const talk = !quickChat && !attachment && converse(question);
   if (talk) {
     think("Talking with you like a friend");
@@ -2094,7 +2094,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     return { answer: own, saved: nothingSaved, source: "local" };
   }
 
-  // The built-in knowledge base (checked answers that ship with MK.ai).
+  // The built-in knowledge base (checked answers that ship with Nova AI).
   think("Searching my built-in knowledge base");
   const known = await knowledgeAnswer(searchFor);
   if (known) {
@@ -2105,7 +2105,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
 
   if (memory) return fromMemory();
 
-  // Documents taught in the Training room: MK.ai picks out the sentences that answer.
+  // Documents taught in the Training room: Nova AI picks out the sentences that answer.
   for (const passage of knowledge.docs || []) {
     const found = passage.score >= 0.6 && bestSentences(searchFor, passage.text);
     if (found) {
@@ -2135,7 +2135,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
     }
   }
 
-  // "Did you mean …?": a spelling slip away from something MK.ai knows
+  // "Did you mean …?": a spelling slip away from something Nova AI knows
   if (!contextual) {
     await loadKnowledge().catch(() => {});
     const fix = spellFix(question);
@@ -2156,7 +2156,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
       return { answer: more.answer, credit: `from ${more.source}`, saved: learn(question, more.answer, "wikipedia").catch(() => null), source: "wiki" };
     }
   }
-  // Still unknown: MK.ai's teacher, Gemini, answers, and MK.ai keeps the answer in
+  // Still unknown: Nova AI's teacher, Gemini, answers, and Nova AI keeps the answer in
   // its memory so next time it answers on its own.
   if (worthLearning(question) && routeMode() !== "instant") {
     think("Asking Alpaca Pro");
@@ -2619,7 +2619,7 @@ const attachInput = $("attachInput");
 const attachChip = $("attachChip");
 let pendingAttachment = null;
 const lastAttachment = new Map(); // chat id → its most recent file, for follow-ups
-// MK.ai reads text and code files itself; photos and PDFs would need outside AI.
+// Nova AI reads text and code files itself; photos and PDFs would need outside AI.
 attachInput.accept = attach.ACCEPT;
 
 function clearAttachment() {

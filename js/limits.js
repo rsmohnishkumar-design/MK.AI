@@ -1,5 +1,5 @@
 // Free plan limits, counted in tokens like other AI assistants: the question
-// plus the answer, split into tokens by MK.ai's tokenizer (js/tokenizer.js):
+// plus the answer, split into tokens by Nova AI's tokenizer (js/tokenizer.js):
 // - 10,000 tokens per 5-hour window, which starts with the first message;
 // - 100,000 tokens per week, which starts with the first use.
 // Usage is kept in the account's profile, so it follows the person across devices.
