@@ -1,4 +1,4 @@
-// MK.ai's own maths solver, part 3: higher maths. Polynomial equations up to
+// Nova AI's own maths solver, part 3: higher maths. Polynomial equations up to
 // degree 4, inequalities, differentiation and integration of polynomials,
 // matrices (determinant, inverse), probability with coins, dice and cards,
 // and writing numbers in words (Indian and international). No outside service.

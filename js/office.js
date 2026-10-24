@@ -1,9 +1,9 @@
-// MK.ai Office: PowerPoint presentations, Word documents and Excel sheets,
+// Nova AI Office: PowerPoint presentations, Word documents and Excel sheets,
 // made from a prompt ("make a ppt on photosynthesis", "word document on
-// pollution", "excel sheet for student marks"). MK.ai researches the topic
+// pollution", "excel sheet for student marks"). Nova AI researches the topic
 // itself (its knowledge base, then Wikipedia), shows a preview in the chat,
 // and builds a real .pptx / .docx / .xlsx in the browser with open-source
-// libraries hosted with MK.ai (PptxGenJS, docx, SheetJS). No outside AI.
+// libraries hosted with Nova AI (PptxGenJS, docx, SheetJS). No outside AI.
 
 import { knowledgeAnswer } from "./kb.js";
 
@@ -91,7 +91,7 @@ export async function researchTopic(topic) {
     const known = await knowledgeAnswer(`what is ${topic}`).catch(() => null);
     if (known?.answer) {
       out.intro = sentencesOf(known.answer.replace(/\*\*/g, ""));
-      out.source = "MK.ai's knowledge base";
+      out.source = "Nova AI's knowledge base";
     }
   }
   return out;
@@ -320,7 +320,7 @@ export async function editOfficeFile(office, instruction, { signal } = {}) {
   if (!plan) return null;
   plan.source = "";
   const what = kind === "ppt" ? `${plan.slides.length - 2} content slides` : kind === "word" ? `${plan.blocks.length} sections` : `${plan.rows.length} rows`;
-  return `**${plan.title}**: your edited ${NAME_OF[office.format]} (${what}). Preview it below and download the new file.\n\nNote: MK.ai rebuilds the file with its own clean layout, so the original fonts, colours, pictures and charts aren't kept. Only the text and data are edited.\n\n\`\`\`mkai-office\n${JSON.stringify(plan)}\n\`\`\``;
+  return `**${plan.title}**: your edited ${NAME_OF[office.format]} (${what}). Preview it below and download the new file.\n\nNote: Nova AI rebuilds the file with its own clean layout, so the original fonts, colours, pictures and charts aren't kept. Only the text and data are edited.\n\n\`\`\`mkai-office\n${JSON.stringify(plan)}\n\`\`\``;
 }
 
 export async function officeAnswer(question) {
@@ -361,7 +361,7 @@ function loadScript(file, global) {
   });
 }
 
-const fileName = (title, ext) => `${title.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "MK.ai"}.${ext}`;
+const fileName = (title, ext) => `${title.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "Nova AI"}.${ext}`;
 
 async function buildPpt(plan) {
   const PptxGenJS = await loadScript("pptxgen.bundle.js", "PptxGenJS");
@@ -385,7 +385,7 @@ async function buildPpt(plan) {
         { x: 0.8, y: 1.5, w: 11.7, h: 5.3, fontSize: 20, color: TEXT, fontFace: "Calibri", valign: "top" }
       );
     }
-    slide.addText("MK.ai", { x: 11.9, y: 7.0, w: 1.2, h: 0.35, fontSize: 10, color: "8A94A6", align: "right" });
+    slide.addText("Nova AI", { x: 11.9, y: 7.0, w: 1.2, h: 0.35, fontSize: 10, color: "8A94A6", align: "right" });
   }
   if (plan.source) pres.slides[pres.slides.length - 1].addText(`Source: ${plan.source}`, { x: 0.8, y: 6.6, w: 11.7, h: 0.4, fontSize: 11, color: "8A94A6" });
   return { blob: await pres.write({ outputType: "blob" }), name: fileName(plan.title, "pptx") };
@@ -402,8 +402,8 @@ async function buildWord(plan) {
     if (b.h) children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 }, children: [new TextRun(b.h)] }));
     for (const p of b.p) children.push(new Paragraph({ spacing: { after: 160, line: 320 }, alignment: AlignmentType.JUSTIFIED, children: [new TextRun({ text: p, size: 24 })] }));
   }
-  if (plan.source) children.push(new Paragraph({ spacing: { before: 300 }, children: [new TextRun({ text: `Source: ${plan.source}. Made with MK.ai.`, italics: true, size: 18, color: "888888" })] }));
-  const doc = new Document({ creator: "MK.ai", title: plan.title, sections: [{ children }] });
+  if (plan.source) children.push(new Paragraph({ spacing: { before: 300 }, children: [new TextRun({ text: `Source: ${plan.source}. Made with Nova AI.`, italics: true, size: 18, color: "888888" })] }));
+  const doc = new Document({ creator: "Nova AI", title: plan.title, sections: [{ children }] });
   return { blob: await Packer.toBlob(doc), name: fileName(plan.title, "docx") };
 }
 
@@ -444,7 +444,7 @@ const el = (tag, cls, text) => {
 };
 
 // Works out formula values for the preview, like Excel does (the file keeps the
-// real formulas). Handles the formulas MK.ai writes: cell references, + - * /,
+// real formulas). Handles the formulas Nova AI writes: cell references, + - * /,
 // %, SUM, ROUND, IF and COUNTIF.
 function sheetCalculator(rows) {
   const col = (letters) => letters.split("").reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MK.ai — Vault</title>
+<title>Nova AI — Vault</title>
 <meta name="robots" content="noindex, nofollow" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-<link rel="stylesheet" href="style.css?v=95" />
-<link rel="stylesheet" href="vault.css?v=95" />
+<link rel="stylesheet" href="style.css?v=96" />
+<link rel="stylesheet" href="vault.css?v=96" />
 </head>
 <body>
   <div class="vault-app">
@@ -30,8 +30,8 @@
       <div class="login-card">
         <div class="header-mark"><svg width="44" height="44" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="#06b6d4"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" font-size="46" fill="#000000" letter-spacing="-3">MK</text></svg></div>
         <h1>The Vault</h1>
-        <p class="login-copy" id="loginCopy">Open MK.ai, sign in with your account, then tap the MK logo 5 times and enter the vault password.</p>
-        <a href="./" class="vault-open-chat">Open MK.ai</a>
+        <p class="login-copy" id="loginCopy">Open Nova AI, sign in with your account, then tap the logo 5 times and enter the vault password.</p>
+        <a href="./" class="vault-open-chat">Open Nova AI</a>
         <form id="loginForm" hidden>
           <input id="emailInput" type="email" placeholder="admin email" autocomplete="username" required />
           <input id="passwordInput" type="password" placeholder="password" autocomplete="current-password" required />
@@ -47,7 +47,7 @@
       <header class="vault-header">
         <div>
           <h1>The Vault</h1>
-          <p>What you add here, MK.ai answers from directly, and follows when writing related answers.</p>
+          <p>What you add here, Nova AI answers from directly, and follows when writing related answers.</p>
         </div>
         <div class="vault-header-links"><a href="./" class="back-link">&larr; back to chat</a><button id="signOutBtn" class="refresh-btn">sign out</button></div>
       </header>
@@ -57,18 +57,18 @@
           <h2>Control centre</h2>
           <button type="button" id="testAlpacaBtn" class="refresh-btn">Test Alpaca</button>
         </div>
-        <p class="col-hint">You control how Alpaca behaves for everyone. Changes apply the next time people open or refresh MK.ai.</p>
+        <p class="col-hint">You control how Alpaca behaves for everyone. Changes apply the next time people open or refresh Nova AI.</p>
         <p class="col-hint" id="testAlpacaOut" aria-live="polite"></p>
         <form id="controlForm" class="control-form">
           <label>How Alpaca answers
             <select id="ctlMode">
               <option value="auto">Smart (Alpaca Pro for almost everything; maths and quick replies instant)</option>
               <option value="pro">Always Alpaca Pro (the big model for every answer)</option>
-              <option value="instant">Instant only (MK.ai's own knowledge, no big model)</option>
+              <option value="instant">Instant only (Nova AI's own knowledge, no big model)</option>
             </select>
           </label>
           <label>Your instructions to Alpaca <span class="col-hint">(it follows these in every answer)</span>
-            <textarea id="ctlInstructions" rows="3" maxlength="2000" placeholder="e.g. Always answer in simple English. Mention MK.ai's Code School when someone asks about coding."></textarea>
+            <textarea id="ctlInstructions" rows="3" maxlength="2000" placeholder="e.g. Always answer in simple English. Mention Nova AI's Code School when someone asks about coding."></textarea>
           </label>
           <label>Announcement shown to everyone <span class="col-hint">(leave empty for none)</span>
             <input id="ctlAnnounce" maxlength="300" placeholder="e.g. New: run Python code right in the chat!" />
@@ -79,7 +79,7 @@
             <label class="check"><input type="checkbox" id="ctlVoice" /> Voiceovers on</label>
             <label class="check"><input type="checkbox" id="ctlCode" /> Run code in the chat on</label>
             <label class="check"><input type="checkbox" id="ctlMaintenance" /> Maintenance mode (only you can chat)</label>
-            <label class="check"><input type="checkbox" id="ctlAutoPromote" /> Automatically promote everything MK.ai learns to the vault</label>
+            <label class="check"><input type="checkbox" id="ctlAutoPromote" /> Automatically promote everything Nova AI learns to the vault</label>
           </div>
           <div class="control-grid">
             <label>Free tokens per 5 hours <input type="number" id="ctlWindow" min="1000" step="1000" /></label>
@@ -99,7 +99,7 @@
         <div class="activity-heading">
           <h2>Training room</h2>
         </div>
-        <p class="col-hint">MK.ai learns by analysing what people give it: the questions they ask, lists of answers, and documents. What it prepares waits here for you to approve, then it uses it straight away.</p>
+        <p class="col-hint">Nova AI learns by analysing what people give it: the questions they ask, lists of answers, and documents. What it prepares waits here for you to approve, then it uses it straight away.</p>
         <div class="train-tabs" role="tablist">
           <button type="button" class="train-tab active" data-tab="users" role="tab" aria-selected="true">Learn from users</button>
           <button type="button" class="train-tab" data-tab="bulk" role="tab" aria-selected="false">Bulk answers</button>
@@ -109,8 +109,8 @@
         <div class="train-panel" id="tab-users">
           <div class="train-stats" id="trainStats"></div>
           <p class="train-topics" id="trainTopics"></p>
-          <h3 class="train-h3">Questions MK.ai should learn <span class="count" id="needsCount"></span></h3>
-          <p class="col-hint">Questions it couldn't answer come first, then the ones people ask again and again. Tick the ones to learn: MK.ai researches them itself and learns them straight away. The rest it learns on its own while pages sit idle and at night (2:00–5:30).</p>
+          <h3 class="train-h3">Questions Nova AI should learn <span class="count" id="needsCount"></span></h3>
+          <p class="col-hint">Questions it couldn't answer come first, then the ones people ask again and again. Tick the ones to learn: Nova AI researches them itself and learns them straight away. The rest it learns on its own while pages sit idle and at night (2:00–5:30).</p>
           <div id="needsList" class="needs-list"></div>
           <div class="train-actions">
             <button type="button" id="prepareBtn">Research &amp; learn</button>
@@ -136,7 +136,7 @@
         </div>
 
         <div class="train-panel hidden" id="tab-docs">
-          <p class="col-hint">Give MK.ai notes, a textbook chapter, rules, a school handbook… It reads the document, remembers it in passages, and answers questions from it. It can also turn the document into questions and answers for you to approve.</p>
+          <p class="col-hint">Give Nova AI notes, a textbook chapter, rules, a school handbook… It reads the document, remembers it in passages, and answers questions from it. It can also turn the document into questions and answers for you to approve.</p>
           <input id="docTitle" class="train-input" type="text" maxlength="120" placeholder="Document name, e.g. Class 10 Science – Chapter 3" />
           <textarea id="docText" class="train-text" rows="8" placeholder="Paste the document's text here, or upload a file below."></textarea>
           <div class="train-actions">
@@ -145,13 +145,13 @@
             <button type="button" id="docQaBtn" class="secondary">Make Q&amp;A</button>
           </div>
           <p class="train-status" id="docStatus" aria-live="polite"></p>
-          <h3 class="train-h3">Documents MK.ai knows <span class="count" id="docsCount"></span></h3>
+          <h3 class="train-h3">Documents Nova AI knows <span class="count" id="docsCount"></span></h3>
           <div id="docsList" class="docs-list"></div>
         </div>
 
         <div class="review hidden" id="review">
           <h3 class="train-h3">Ready for you to approve <span class="count" id="reviewCount"></span></h3>
-          <p class="col-hint">Edit anything, untick what's wrong, then save. Saved answers go into the vault, and MK.ai answers from them straight away.</p>
+          <p class="col-hint">Edit anything, untick what's wrong, then save. Saved answers go into the vault, and Nova AI answers from them straight away.</p>
           <div id="reviewList" class="review-list"></div>
           <div class="train-actions">
             <button type="button" id="reviewSave">Save selected</button>
@@ -166,7 +166,7 @@
           <h2>AI settings</h2>
           
         </div>
-        <p class="col-hint">Paste a key from any of these free services (no card needed). MK.ai uses every key you save, in this order, with Gemini as the last backup. Keys are stored in your database, readable only by signed-in members — never in the public code.</p>
+        <p class="col-hint">Paste a key from any of these free services (no card needed). Nova AI uses every key you save, in this order, with Gemini as the last backup. Keys are stored in your database, readable only by signed-in members — never in the public code.</p>
         <div id="providerRows" class="provider-rows"></div>
         
       </section>
@@ -252,6 +252,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/vault.js?v=95"></script>
+  <script type="module" src="js/vault.js?v=96"></script>
 </body>
 </html>

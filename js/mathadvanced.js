@@ -1,4 +1,4 @@
-// MK.ai's advanced maths: calculus with any functions (derivatives, integrals,
+// Nova AI's advanced maths: calculus with any functions (derivatives, integrals,
 // limits, tangents, maxima and minima, simple differential equations),
 // complex numbers, systems of 3+ equations, vectors, matrix operations,
 // factorising, partial fractions, expansions, series and sequences, and

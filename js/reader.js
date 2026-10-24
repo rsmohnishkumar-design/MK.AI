@@ -1,4 +1,4 @@
-// MK.ai's own reading: finds the sentences in a text that answer a question,
+// Nova AI's own reading: finds the sentences in a text that answer a question,
 // and summarises a text by picking its most central sentences. No outside AI.
 
 import { keywords } from "./words.js";

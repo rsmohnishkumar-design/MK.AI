@@ -1,10 +1,10 @@
-// MK.ai teaches itself. Its teacher, Gemini, answers what the open sources can't.
+// Nova AI teaches itself. Its teacher, Gemini, answers what the open sources can't.
 // - Questions it couldn't answer go on a shared learning list ("unknown").
-// - Whenever a signed-in MK.ai page sits idle, it researches one of them
+// - Whenever a signed-in Nova AI page sits idle, it researches one of them
 //   (its knowledge base, then Wikipedia) and saves what it finds to memory.
 // - Learning mode (2:00–5:30 at night, or started from the vault) works
 //   through the whole list and keeps the screen awake.
-// A browser has to be open for this: MK.ai has no server of its own.
+// A browser has to be open for this: Nova AI has no server of its own.
 
 import {
   collection,
@@ -132,7 +132,7 @@ export async function researchMore(question) {
 const PERSON = /\b(born|died|actor|actress|singer|player|cricketer|footballer|politician|president|minister|writer|author|poet|rapper|musician|businessman|businesswoman|director|youtuber|athlete|scientist|physicist|chemist|mathematician|philosopher|emperor|king|queen|leader|activist|inventor|painter|composer)\b/i;
 const SKIP_TITLE = /^(Main Page|Special:|Deaths in|List of|Lists of|\d{4} in |Index of|Outline of)/;
 
-// Learns one Wikipedia article as "what is X" / "who is X", unless MK.ai
+// Learns one Wikipedia article as "what is X" / "who is X", unless Nova AI
 // already knows it. Returns the question when it learned something new.
 // Titles already learned (on this device), so the same topic is never saved twice
 const DONE_KEY = "mkai-learned-titles";
@@ -194,7 +194,7 @@ export async function learnTrending(max = 15, onLearned = () => {}, daysAgo = 1)
 }
 
 // The 1,000 most important topics on Wikipedia ("vital articles"): a
-// curriculum MK.ai works through a few at a time. The list and how far it
+// curriculum Nova AI works through a few at a time. The list and how far it
 // has got are kept on this device.
 const CURRICULUM_KEY = "mkai-curriculum";
 async function curriculum() {
@@ -262,7 +262,7 @@ export function isNight(date = new Date()) {
   return m >= NIGHT.from && m < NIGHT.to;
 }
 
-// Gemini, MK.ai's teacher, for what the open sources don't have
+// Gemini, Nova AI's teacher, for what the open sources don't have
 async function askTeacher(question) {
   if (!navigator.onLine) return null;
   const taught = await askGemini(question, [], { good: [], bad: [], docs: [] }).catch(() => null);
@@ -292,7 +292,7 @@ export async function learnFromList(count, onLearned = () => {}) {
   return learned;
 }
 
-// Runs in the background of an open MK.ai page.
+// Runs in the background of an open Nova AI page.
 // canLearn(): whether this account may write to memory right now.
 // onStatus(text): shows what it's doing ("" when quiet).
 export function startAutoLearner({ canLearn, onStatus = () => {}, forceNight = () => false }) {

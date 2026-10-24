@@ -1,4 +1,4 @@
-// MK.ai's conversation engine: how people really talk to an assistant.
+// Nova AI's conversation engine: how people really talk to an assistant.
 // Feelings, small talk, requests (stories, facts, riddles, quotes, games),
 // opinions and comparisons. Many ways of saying each thing, and several
 // different replies for each, so it feels like talking to a person.
@@ -248,7 +248,7 @@ const INTENTS = [
   [/\b(i'?m|i am) (jealous|envious)\b/, () =>
     "Jealousy is a normal feeling: it often shows us what we want for ourselves. 🌱 Instead of comparing, try turning it into a goal: what's one step you could take toward it today?"],
 
-  // Small talk about MK.ai
+  // Small talk about Nova AI
   [/^(what are you doing|what r u doing|wyd|what are you up to)\b/, () => pick(["Just waiting to help you! 😊 What would you like to explore?", "Learning new things and chatting with you. What's on your mind?"])],
   [/^(where do you live|where are you from|where are you)\b/, () => "I live in the cloud and in your browser! ☁️ I was made in Tamil Nadu, India, by Mohnishkumar."],
   [/^(how old are you|what is your age|when were you born)\b/, () => "I'm quite young: I was created in 2026! But I learn something new every day. 🌱"],
@@ -264,7 +264,7 @@ const INTENTS = [
   [/^(i don'?t understand|i didn'?t understand|explain again|i don'?t get it|what do you mean)\b/, () =>
     "No problem! Tap **Simpler** under my answer for an easier version, or **More detail** for a step-by-step one. You can also ask me the same thing in different words."],
   [/^(are you smarter than|are you better than|is chat ?gpt better|are you like) (chat ?gpt|gemini|google|siri|alexa|claude)\b/, () =>
-    "I'm Alpaca 🦙, MK.ai's model. Simple things (maths, conversions, facts I know) I answer instantly right in your browser, and for harder questions I use big language models like Google Gemini, with web search for the latest news. I'm free, I'm especially good with school subjects, coding, and India and Tamil Nadu, and I learn from every answer I look up!"],
+    "I'm Alpaca 🦙, Nova AI's model. Simple things (maths, conversions, facts I know) I answer instantly right in your browser, and for harder questions I use big language models like Google Gemini, with web search for the latest news. I'm free, I'm especially good with school subjects, coding, and India and Tamil Nadu, and I learn from every answer I look up!"],
   [/^(can you learn|do you learn|how do you learn)\b/, () =>
     "Yes! 📚 When I don't know something, I research it on Wikipedia and remember the answer. People can teach me directly too, and every night I study popular and important topics by myself."],
   [/^(good morning)\b/, () => pick(["Good morning! ☀️ Ready to learn something new today?", "Good morning! ☀️ What's the plan for today?"])],

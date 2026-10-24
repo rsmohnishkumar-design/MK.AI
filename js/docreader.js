@@ -1,5 +1,5 @@
 // Reads documents without any outside AI: PDF text comes out with PDF.js
-// (Mozilla's reader, hosted with MK.ai), and questions and answers are made
+// (Mozilla's reader, hosted with Nova AI), and questions and answers are made
 // from the document's own definition sentences.
 
 let pdfjs = null;

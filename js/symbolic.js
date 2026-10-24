@@ -1,4 +1,4 @@
-// MK.ai's symbolic maths core: reads expressions like "x² sin x" or
+// Nova AI's symbolic maths core: reads expressions like "x² sin x" or
 // "e^(2x)/(1 + x)" into a tree, and can simplify, print, evaluate,
 // differentiate and integrate them, and turn polynomials into coefficient
 // lists. Everything runs here in the browser; mathadvanced.js uses it to

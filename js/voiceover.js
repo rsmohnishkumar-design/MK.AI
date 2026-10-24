@@ -1,5 +1,5 @@
-// MK.ai Voiceover: "make a voiceover: Welcome to our school annual day…" or
-// "make a voiceover about the water cycle". MK.ai writes the script (or uses
+// Nova AI Voiceover: "make a voiceover: Welcome to our school annual day…" or
+// "make a voiceover about the water cycle". Nova AI writes the script (or uses
 // yours), then reads it aloud with the voices built into the device, with a
 // choice of voice, style, speed and pitch. On a computer the narration can
 // also be recorded to an audio file by sharing the tab's sound. No outside AI.

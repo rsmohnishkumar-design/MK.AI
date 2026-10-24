@@ -1,7 +1,7 @@
-// Creator mode: when someone says they created MK.ai, it asks for the secret
+// Creator mode: when someone says they created Nova AI, it asks for the secret
 // code. The code lives only in the Firestore security rules (never in this
 // public code): the rules accept the "creator" mark on a profile only with the
-// right code. Once verified, MK.ai greets its creator warmly on every device
+// right code. Once verified, Nova AI greets its creator warmly on every device
 // and shows its full details when asked.
 
 import {
@@ -41,7 +41,7 @@ export function claimsCreator(text) {
 // "show your details", "your stats", "status report"…
 export function asksForDetails(text) {
   const q = normalize(text);
-  return /^(show|give|tell|list|display|send)?\s*(me )?(all )?(of )?(your|ur|its|the|my|mk ai'?s?|mkai'?s?)?\s*(full |complete |all )?(details|detail|stats|statistics|status|report|info|information|everything about you)( about you)?( please| pls)?$/.test(q);
+  return /^(show|give|tell|list|display|send)?\s*(me )?(all )?(of )?(your|ur|its|the|my|nova( ai)?'?s?|mk ai'?s?|mkai'?s?)?\s*(full |complete |all )?(details|detail|stats|statistics|status|report|info|information|everything about you)( about you)?( please| pls)?$/.test(q);
 }
 
 // A reply to "what's the secret code?" is a single short word or number.
@@ -150,7 +150,7 @@ export async function detailsReport({ user, profile, chats }) {
     `Here's everything about me, ${firstName()} 👑`,
     "",
     "🤖 About me",
-    `- Name: MK.ai`,
+    `- Name: Nova AI`,
     `- Model: ${MODEL_NAME} 🦙 (maths engine + ${knowledgeSize() ? knowledgeSize().toLocaleString("en-IN") + " built-in answers" : "built-in knowledge base"} + coding help + memory)`,
     `- Creator: ${CREATOR_NAME}`,
     `- Modes: Instant (maths, conversions, built-in knowledge, memory) · Pro (writing, explaining, code, office files) · Live (news, with Google Search) · Deep (step by step)`,

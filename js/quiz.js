@@ -1,4 +1,4 @@
-// "Quiz me": multiple-choice questions built from MK.ai's own knowledge packs
+// "Quiz me": multiple-choice questions built from Nova AI's own knowledge packs
 // (capitals, chemical symbols, full forms, important days). Wrong options
 // come from other entries of the same kind, so every quiz is different.
 

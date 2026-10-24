@@ -1,16 +1,16 @@
-# MK.ai — an AI assistant that learns from every conversation
+# Nova AI — an AI assistant that learns from every conversation
 
 An installable web app (PWA) that runs entirely on free services, no card
 needed: the site is hosted on **GitHub Pages**, and **Firebase** (free Spark
 plan) handles logins and the database.
 
-**MK.ai answers everything itself.** People never talk to an outside AI:
-answers come only from what MK.ai knows and can read. Outside AI services
+**Nova AI answers everything itself.** People never talk to an outside AI:
+answers come only from what Nova AI knows and can read. Outside AI services
 (Gemini, and Groq, Cerebras, OpenRouter or GitHub Models if you add a key)
 are used only in the admin **Training room**, as a helper that drafts
 answers for you to approve.
 
-People sign up with an email and password and ask anything. MK.ai
+People sign up with an email and password and ask anything. Nova AI
 answers in this order, stopping at the first that works:
 
 1. **Curated answers** in the vault (taught and approved in the Training room).
@@ -48,7 +48,7 @@ answers in this order, stopping at the first that works:
 3. **Its app builder**: ask "make a calculator app", "create a snake game"
    or "rock paper scissors in python" and it writes a complete, tested
    program. Web apps get a **▶ run** button (they run in a sealed-off frame
-   that can't touch MK.ai's data) and **⬇ download** saves any code as a file.
+   that can't touch Nova AI's data) and **⬇ download** saves any code as a file.
    Asked for an app it has no template for ("make a hospital management
    app"), it looks the subject up and builds a titled starter app instead.
 4. **Its knowledge base** (`data/kb/`): thousands of checked answers that ship
@@ -61,7 +61,7 @@ answers in this order, stopping at the first that works:
    reading the best article and picking out the answering sentences.
 7. Otherwise it says it doesn't know yet, puts the question on its
    **learning list** (Training room → Learn from users), and shows a
-   **"Teach MK.ai"** box. Whatever someone teaches it is remembered for everyone.
+   **"Teach Nova AI"** box. Whatever someone teaches it is remembered for everyone.
 
 **Alpaca Vision (pictures and videos).** A model menu under the message
 box switches between **🦙 Alpaca** (answers) and **🎨 Alpaca Vision**;
@@ -86,7 +86,7 @@ or "logo for …" also goes to it.
 Only a small plan of the picture is saved with the chat, and it's recreated
 when shown. (`js/vision.js`)
 
-**Normal and Deep think.** A switch under the message box picks how MK.ai
+**Normal and Deep think.** A switch under the message box picks how Nova AI
 answers. **⚡ Normal** gives the first good answer instantly. **🧠 Deep think**
 takes more care: it works out what kind of question it is, answers each
 part of a multi-part question separately, double-checks maths a second way
@@ -98,10 +98,10 @@ the device. (`js/deepthink.js`)
 
 Follow-up questions ("what about its population?") are looked up together
 with the topic of the previous question. Text and code files sent with the
-paperclip are read by MK.ai itself (it finds the answering sentences, or
+paperclip are read by Nova AI itself (it finds the answering sentences, or
 summarises the file).
 
-MK.ai gets better the more it's used:
+Nova AI gets better the more it's used:
 
 - **Remembers answers.** Taught and Wikipedia answers are saved. When
   someone asks the same thing again (typos and rewording are fine), it
@@ -184,9 +184,9 @@ services (no card needed) gives it more. The chat never uses them:
 | **OpenRouter** | [openrouter.ai](https://openrouter.ai) → Sign in (GitHub works) → Keys → Create Key. Only its free models are used. |
 | **GitHub Models** | No new account: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) → any name → Permissions → **Models: Read-only** → Generate token |
 
-Then open MK.ai's admin vault (step 7), paste the key into its box under
+Then open Nova AI's admin vault (step 7), paste the key into its box under
 **AI settings** and tap **Save key**. Each key is checked with its service
-before saving, and MK.ai picks the models that service offers you.
+before saving, and Nova AI picks the models that service offers you.
 
 Keys are stored in your database, readable only by signed-in members with
 access — never in the public code (GitHub would detect keys there and the
@@ -202,7 +202,7 @@ using the admin email from step 3. That's it.
 - **Install it:** on Android, tap **Install app** in the header (or the
   browser menu → **Add to Home screen**). On iPhone, Share → **Add to
   Home Screen**.
-- **Open the admin vault:** tap the **MK** logo at the top left 5 times and enter the vault password
+- **Open the admin vault:** tap the logo at the top left 5 times and enter the vault password
   quickly, and log in with the admin account. The account verified as the
   creator (see "Creator mode") is an admin too.
 
@@ -216,36 +216,36 @@ using the admin email from step 3. That's it.
 
 ## About, privacy and terms
 
-`about.html` describes MK.ai and its models (Alpaca, Alpaca Vision) and holds the privacy policy and terms of use. The chat links to it from the sidebar (**about**) and the note under the message box; asking MK.ai "is my data safe" also points there.
+`about.html` describes Nova AI and its models (Alpaca, Alpaca Vision) and holds the privacy policy and terms of use. The chat links to it from the sidebar (**about**) and the note under the message box; asking Nova AI "is my data safe" also points there.
 
 ## Access levels
 
 - **Free-plan accounts** chat with Alpaca within their token limits. **Alpaca Vision** and the
   **Code School** are for unlimited members; trial users see a message
-  inviting them to help train MK.ai, since the admin gives unlimited access
+  inviting them to help train Nova AI, since the admin gives unlimited access
   to people who help.
 - An access code can be entered at login ("Have an access code?") or later
   in the chat (**🔑 enter access code** under the email).
 
 ## Self-learning (no outside AI, no keys)
 
-- A question MK.ai can't answer goes on a shared **learning list**
+- A question Nova AI can't answer goes on a shared **learning list**
   (Firestore `unknown`; keyboard mashing and bare numbers are skipped).
-- Any open MK.ai page that has been quiet for 90 seconds researches one of
+- Any open Nova AI page that has been quiet for 90 seconds researches one of
   them (knowledge base, then Wikipedia) and saves the answer to memory,
-  which MK.ai uses straight away. No approval step.
-- **Learning mode** runs from 2:00 to 5:30 at night in any open MK.ai page,
+  which Nova AI uses straight away. No approval step.
+- **Learning mode** runs from 2:00 to 5:30 at night in any open Nova AI page,
   working through the whole list and keeping the screen on. The vault's
-  **🌙 Start learning mode** button runs it any time. MK.ai has no server,
+  **🌙 Start learning mode** button runs it any time. Nova AI has no server,
   so a device has to stay open (a tablet on charge works).
 - More open sources: Wiktionary (word meanings), Tamil Wikipedia (questions in Tamil) and Simple English Wikipedia. Learning mode also learns Wikipedia's most-read topics each night; the vault's **📰 Learn today's top topics** does it on demand. YouTube, Instagram and Google search block this kind of reading, so they aren't used.
-- **Documents** are read by MK.ai itself: PDF text with PDF.js (Mozilla's reader, in `lib/pdfjs`, Apache 2.0), and **Make Q&A** turns the document's definition sentences ("X is …") into questions for review. Scanned PDFs (pictures of pages) have no text inside, so paste their text instead.
+- **Documents** are read by Nova AI itself: PDF text with PDF.js (Mozilla's reader, in `lib/pdfjs`, Apache 2.0), and **Make Q&A** turns the document's definition sentences ("X is …") into questions for review. Scanned PDFs (pictures of pages) have no text inside, so paste their text instead.
 - The vault's **Research & learn** button researches the ticked questions
   the same way and saves them straight into the vault.
 
 ## The admin vault
 
-- **Curated answers:** add question/answer pairs. MK.ai answers from
+- **Curated answers:** add question/answer pairs. Nova AI answers from
   these first, and follows them when writing related answers.
 - **Self-taught memory:** everything it has learned, with how often each
   answer was reused and how people voted. Promote good answers to the
@@ -255,9 +255,9 @@ using the admin email from step 3. That's it.
 
 ## Training room (admin vault)
 
-MK.ai learns by analysing what people give it. At the top of the admin vault:
+Nova AI learns by analysing what people give it. At the top of the admin vault:
 
-- **Learn from users.** MK.ai analyses the last 1,000 questions people
+- **Learn from users.** Nova AI analyses the last 1,000 questions people
   asked: how many it answered by itself, what people ask about most, and a
   list of questions it should learn (the ones it couldn't answer first,
   then the ones asked again and again, grouped however they were worded).
@@ -268,7 +268,7 @@ MK.ai learns by analysing what people give it. At the top of the admin vault:
   spreadsheet.
 - **Learn from documents.** Paste text or upload a .txt, .md or .pdf (notes,
   a chapter, a handbook). **Learn this document** stores it in passages
-  (`knowledge` collection). MK.ai finds the passages that match a question
+  (`knowledge` collection). Nova AI finds the passages that match a question
   and answers from them; with no AI free, it quotes the passage. **Make Q&A
   with AI** turns the document into question/answer pairs.
 
@@ -309,24 +309,24 @@ isn't stored in the chat history (only its name).
 ## Code School
 
 `learn.html` (the **Learn to code** button in the sidebar) teaches coding
-fundamentals in 11 short lessons, explained through how MK.ai itself works:
+fundamentals in 11 short lessons, explained through how Nova AI itself works:
 code you can edit and run, live demos and a quiz per lesson. Signed-in
 people's progress is saved to their account (`users/<uid>/progress/learn`).
 
-MK.ai's own brain also answers coding questions instantly, like "what is a
+Nova AI's own brain also answers coding questions instantly, like "what is a
 variable?", "explain loops" or "what is git?", with a small example and a
 link to the matching lesson (`js/knowledge.js`).
 
 ## Creator mode
 
-Say **"I created you"** (or "I'm your creator") in the chat and MK.ai asks
+Say **"I created you"** (or "I'm your creator") in the chat and Nova AI asks
 for the secret creator code. The code is checked by the database rules, so
 it never appears in the public code; what you type is hidden as dots and
 never saved or logged. Three wrong tries lock the check for 15 minutes on
 that device.
 
 Once verified, the account is marked as the creator on every device:
-MK.ai greets you by name (`CREATOR_NAME`), the badge shows 👑, and
+Nova AI greets you by name (`CREATOR_NAME`), the badge shows 👑, and
 **"show your details"** gives a full report: what it has learned (and from
 where), curated answers, saved AI services, and your account.
 
@@ -344,7 +344,7 @@ vault shows them.
 | --- | --- |
 | `index.html`, `style.css`, `js/app.js` | The chat app |
 | `js/brain.js` | Memory: matching questions, learning, votes |
-| `js/local.js` | MK.ai's own brain: greetings, small talk, time, maths, conversions |
+| `js/local.js` | Nova AI's own brain: greetings, small talk, time, maths, conversions |
 | `js/wiki.js` | Knowledge questions from Wikipedia |
 | `js/mathsolve.js`, `js/mathword.js`, `js/mathplus.js`, `js/mathextra.js` | The maths solver: equations, numbers, word problems and higher maths, step by step |
 | `js/apps.js`, `data/apps.json`, `apps-src/` | The app builder: 32 tested web apps and 13 Python programs it writes on request ("make a snake game"); edit a template in `apps-src/` and run `python3 apps-src/bundle.py` |
@@ -356,8 +356,8 @@ vault shows them.
 | `js/symbolic.js`, `js/mathadvanced.js` | Advanced maths: a symbolic engine (parse, simplify, differentiate, integrate) and calculus, complex numbers, vectors, matrices, series |
 | `js/kb.js`, `data/kb/` | The built-in knowledge base |
 | `js/algebra.js` | Two-number word problems and quadratic equations, step by step |
-| `js/reader.js` | MK.ai's own reading: picking the answering sentences, summaries |
-| `learn.html`, `js/knowledge.js` | Code School, and the coding answers MK.ai knows by itself |
+| `js/reader.js` | Nova AI's own reading: picking the answering sentences, summaries |
+| `learn.html`, `js/knowledge.js` | Code School, and the coding answers Nova AI knows by itself |
 | `js/meaning.js` | Neural (meaning) memory |
 | `js/voice.js` | Voice typing and reading answers aloud |
 | `js/attach.js` | Photos, PDFs and text files sent with a question |
@@ -379,14 +379,14 @@ vault shows them.
   it just isn't instant. Firebase's free AI service has no embedding
   (meaning-matching) feature.
 - **It doesn't retrain the model.** Teaching an AI model itself needs
-  huge datasets and specialised hardware. MK.ai improves the way most
+  huge datasets and specialised hardware. Nova AI improves the way most
   AI products do: by remembering good answers, learning from feedback,
   and feeding what it knows back into the model.
 - **Trials are enforced by the database.** An expired trial account
   can't save anything, and the app locks the chat. App Check stops other
   websites from using your AI, but someone on your own site who knows
   what they're doing could still call the AI directly.
-- **Free-tier limits.** Every free AI service has daily limits. MK.ai
+- **Free-tier limits.** Every free AI service has daily limits. Nova AI
   tries every saved service's models (see `js/providers.js`), then
   Gemini's (`GEMINI_MODELS`),
   and skips any that are used up, retired or overloaded for a while, so

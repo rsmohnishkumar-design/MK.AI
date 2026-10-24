@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Security rules for MK.ai. Paste this whole file into
+// Security rules for Nova AI. Paste this whole file into
 // Firebase console → Firestore Database → Rules, then click Publish.
 
 service cloud.firestore {
@@ -8,7 +8,7 @@ service cloud.firestore {
 
     // ===== EDIT THESE THREE LINES BEFORE PUBLISHING =====
     // Your email, in lowercase: the admin who can open the vault. Sign up in
-    // MK.ai with this email before publishing, so nobody else can claim it
+    // Nova AI with this email before publishing, so nobody else can claim it
     // (Firebase never allows two accounts with the same email).
     function adminEmails() { return ['your-email@example.com']; }
     // The access code that unlocks unlimited use. Keep it secret.
@@ -25,7 +25,7 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
 
-    // The admin: the email above, or the account verified as MK.ai's creator
+    // The admin: the email above, or the account verified as Nova AI's creator
     // (with the creator code) in the chat.
     function isAdmin() {
       return signedIn() && (request.auth.token.email in adminEmails() || isCreator());
@@ -181,7 +181,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // --- Learning list: questions MK.ai couldn't answer yet. Open MK.ai pages
+    // --- Learning list: questions Nova AI couldn't answer yet. Open Nova AI pages
     // research them in the background and delete each one once it's learned. ---
     match /unknown/{id} {
       allow read: if signedIn() && hasAccess();

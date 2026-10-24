@@ -1,4 +1,4 @@
-// Word matching, shared by memory, the knowledge base and MK.ai's reading.
+// Word matching, shared by memory, the knowledge base and Nova AI's reading.
 // Questions are reduced to their meaning-carrying words (no "what/is/the"),
 // with simple plurals folded ("planets" → "planet") and small typos forgiven.
 const STOPWORDS = new Set(

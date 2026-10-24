@@ -1,4 +1,4 @@
-// The Training room (admin vault): MK.ai learns by analysing what people
+// The Training room (admin vault): Nova AI learns by analysing what people
 // give it: the questions they ask, bulk question/answer lists, and documents.
 // Pure helpers here are shared with the chat (documents are used to answer).
 
@@ -88,7 +88,7 @@ export function passageScore(question, passageKeywords) {
 
 const SKIP_MODES = new Set(["local", "creator", "file", "taught", "knowledge", "app", "vision"]);
 
-// Groups the activity log into distinct questions and finds what MK.ai should
+// Groups the activity log into distinct questions and finds what Nova AI should
 // learn: questions it couldn't answer, and questions people ask again and again.
 export function analyseActivity(rows, knownQuestions = []) {
   const known = new Set(knownQuestions.map((q) => keywords(q).sort().join(" ")));

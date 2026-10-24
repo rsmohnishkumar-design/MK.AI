@@ -1,6 +1,6 @@
 // Opens Word (.docx), PowerPoint (.pptx) and Excel (.xlsx) files on the device,
-// so MK.ai can read them and edit them. These files are zip packages of XML;
-// the spreadsheet library MK.ai already ships (SheetJS) can unzip them.
+// so Nova AI can read them and edit them. These files are zip packages of XML;
+// the spreadsheet library Nova AI already ships (SheetJS) can unzip them.
 
 const LIB = new URL("../lib/office/", import.meta.url);
 let xlsxReady = null;

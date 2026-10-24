@@ -62,7 +62,7 @@ function showError(err) {
 }
 
 if (!configured) {
-  loginError.textContent = "MK.ai isn't connected to Firebase yet — fill in firebase-config.js first.";
+  loginError.textContent = "Nova AI isn't connected to Firebase yet — fill in firebase-config.js first.";
   loginForm.classList.add("hidden");
 }
 
@@ -113,7 +113,7 @@ async function isAdmin() {
   }
 }
 
-// Learning report: what MK.ai taught itself in the last day, and overnight
+// Learning report: what Nova AI taught itself in the last day, and overnight
 function renderLearnReport(learned) {
   const now = Date.now();
   const when = (e) => e.createdAt?.toMillis?.() || 0;
@@ -152,7 +152,7 @@ $("gateForm").addEventListener("submit", async (e) => {
     await unlockVault(pass);
     location.reload();
   } catch (err) {
-    $("gateError").textContent = err.code === "wrong" ? "Wrong password." : err.code === "signin" ? "Sign in to MK.ai first." : friendlyError(err);
+    $("gateError").textContent = err.code === "wrong" ? "Wrong password." : err.code === "signin" ? "Sign in to Nova AI first." : friendlyError(err);
   }
 });
 
@@ -374,7 +374,7 @@ async function setTier(id, fields) {
   }
 }
 
-// --- Control centre: the admin's controls for the whole of MK.ai (settings/control) ---
+// --- Control centre: the admin's controls for the whole of Nova AI (settings/control) ---
 const controlRef = () => doc(db, "settings", "control");
 const CONTROL_DEFAULTS = { mode: "auto", instructions: "", announcement: "", vision: true, office: true, voice: true, code: true, maintenance: false, autoPromote: true, windowTokens: 10000, weekTokens: 100000 };
 let control = { ...CONTROL_DEFAULTS };
@@ -424,7 +424,7 @@ $("controlForm")?.addEventListener("submit", async (e) => {
   }
 });
 
-// Everything MK.ai has learned goes into the vault (answers people marked unhelpful stay out)
+// Everything Nova AI has learned goes into the vault (answers people marked unhelpful stay out)
 async function promoteAll(quiet = false) {
   try {
     const snap = await getDocs(query(collection(db, "learned"), limit(400)));
@@ -585,7 +585,7 @@ function providerRow(provider, savedKey) {
       } catch (err2) {
         if (/failed to fetch|network|load failed/i.test(err2.message)) {
           throw new Error(
-            `${provider.name} doesn't allow requests from websites (the browser blocked it), so MK.ai can't use it. Try another service above — OpenRouter works from websites.`
+            `${provider.name} doesn't allow requests from websites (the browser blocked it), so Nova AI can't use it. Try another service above — OpenRouter works from websites.`
           );
         }
         throw err2;
@@ -601,7 +601,7 @@ function providerRow(provider, savedKey) {
     try {
       const models = await test();
       await setDoc(settingsRef(), { [keyField(provider)]: key, updatedAt: serverTimestamp() }, { merge: true });
-      message.textContent = `Saved. The key works — MK.ai will use: ${models.join(", ") || "its default models"}.`;
+      message.textContent = `Saved. The key works — Nova AI will use: ${models.join(", ") || "its default models"}.`;
       row.querySelector(".provider-status").textContent = "· key saved";
     } catch (err) {
       message.textContent = `Not saved: ${err.message || friendlyError(err)}`;
@@ -616,7 +616,7 @@ function providerRow(provider, savedKey) {
     message.textContent = "Testing…";
     try {
       const models = await test();
-      message.textContent = `Works. MK.ai would use: ${models.join(", ") || "its default models"}.`;
+      message.textContent = `Works. Nova AI would use: ${models.join(", ") || "its default models"}.`;
     } catch (err) {
       message.textContent = err.message;
     }
@@ -653,7 +653,7 @@ async function loadGroqKey() {
 }
 
 // ---------------------------------------------------------------------------
-// Training room: MK.ai learns from people's questions, bulk answer lists and
+// Training room: Nova AI learns from people's questions, bulk answer lists and
 // documents. Everything it prepares is reviewed here before it's saved.
 // ---------------------------------------------------------------------------
 const setStatus = (id, text, tone = "") => {
@@ -681,7 +681,7 @@ async function saveInBatches(items, write) {
   }
 }
 
-// --- Review: approve what MK.ai prepared ---
+// --- Review: approve what Nova AI prepared ---
 let reviewItems = [];
 function setReview(pairs, note = "") {
   reviewItems = pairs.map((p) => ({ ...p, keep: true }));
@@ -721,7 +721,7 @@ $("reviewSave").addEventListener("click", async () => {
       batch.set(doc(collection(db, "vault")), { ...vaultFields(item.question.trim(), item.answer.trim()), createdAt: serverTimestamp() })
     );
     setReview([]);
-    setStatus("prepareStatus", `✓ MK.ai learned ${keep.length} answer${keep.length === 1 ? "" : "s"}. It uses them from now on.`, "good");
+    setStatus("prepareStatus", `✓ Nova AI learned ${keep.length} answer${keep.length === 1 ? "" : "s"}. It uses them from now on.`, "good");
     setStatus("bulkStatus", "");
     loadEntries();
     loadTraining();
@@ -750,7 +750,7 @@ async function loadTraining() {
     $("trainStats").innerHTML =
       stat(analysis.total, "questions analysed") +
       stat(analysis.distinct, "different questions") +
-      stat(analysis.total ? `${Math.round((selfAnswered / analysis.total) * 100)}%` : "–", "answered by MK.ai itself") +
+      stat(analysis.total ? `${Math.round((selfAnswered / analysis.total) * 100)}%` : "–", "answered by Nova AI itself") +
       stat(m.unknown || 0, "it didn't know");
     $("trainTopics").innerHTML = analysis.topics.length
       ? `What people ask about most: ${analysis.topics.map(([w, n]) => `<b>${escapeHtml(w)}</b> (${n})`).join(", ")}`
@@ -758,7 +758,7 @@ async function loadTraining() {
     needs = analysis.needs.filter((n) => worthLearning(n.question)).slice(0, 60);
     $("needsCount").textContent = `(${needs.length})`;
     const list = $("needsList");
-    list.innerHTML = needs.length ? "" : `<p class="empty-col-note">Nothing to learn right now. As people ask questions, MK.ai lists what it should learn here.</p>`;
+    list.innerHTML = needs.length ? "" : `<p class="empty-col-note">Nothing to learn right now. As people ask questions, Nova AI lists what it should learn here.</p>`;
     needs.forEach((need, i) => {
       const row = document.createElement("label");
       row.className = "need-row";
@@ -803,7 +803,7 @@ $("prepareBtn").addEventListener("click", async () => {
   $("prepareBtn").disabled = false;
   setStatus(
     "prepareStatus",
-    (learnt.length ? `✓ Learned ${learnt.length}: MK.ai answers ${learnt.length === 1 ? "it" : "them"} now. ` : "") +
+    (learnt.length ? `✓ Learned ${learnt.length}: Nova AI answers ${learnt.length === 1 ? "it" : "them"} now. ` : "") +
       (missing.length ? `Couldn't find ${missing.length} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}): teach ${missing.length === 1 ? "it" : "those"} yourself under Curated answers.` : ""),
     learnt.length ? "good" : "bad"
   );
@@ -823,7 +823,7 @@ $("trendingBtn")?.addEventListener("click", async () => {
     n = await learnTrending(25, (q) => setStatus("prepareStatus", `Learned: ${q}`), day).catch(() => 0);
   }
   $("trendingBtn").disabled = false;
-  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. MK.ai answers them now. Tap again for more.` : "Nothing new: MK.ai already knows the last two weeks' popular topics.", n ? "good" : "");
+  setStatus("prepareStatus", n ? `✓ Learned ${n} popular topics. Nova AI answers them now. Tap again for more.` : "Nothing new: Nova AI already knows the last two weeks' popular topics.", n ? "good" : "");
 });
 
 // Learns 20 of Wikipedia's most important topics right now
@@ -836,7 +836,7 @@ $("vitalBtn")?.addEventListener("click", async () => {
 });
 
 // Learning mode: works through the learning list and keeps the screen on.
-// Leave this page open (tablet on charge) and MK.ai studies by itself.
+// Leave this page open (tablet on charge) and Nova AI studies by itself.
 let stopLearning = null;
 $("learnModeBtn")?.addEventListener("click", async () => {
   const btn = $("learnModeBtn");
@@ -847,7 +847,7 @@ $("learnModeBtn")?.addEventListener("click", async () => {
     return setStatus("prepareStatus", "Learning mode stopped.");
   }
   btn.textContent = "⏹ Stop learning mode";
-  setStatus("prepareStatus", "Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open MK.ai page.");
+  setStatus("prepareStatus", "Learning mode on: keep this page open. It also turns on by itself from 2:00 to 5:30 at night in any open Nova AI page.");
   stopLearning = startAutoLearner({ canLearn: () => true, forceNight: () => true, onStatus: (t) => t && setStatus("prepareStatus", t) });
 });
 
@@ -880,7 +880,7 @@ $("docFile").addEventListener("change", async (e) => {
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
       docPdf = file;
       $("docText").value = "";
-      $("docText").placeholder = `PDF ready: ${file.name}. MK.ai will read it when you tap a button below.`;
+      $("docText").placeholder = `PDF ready: ${file.name}. Nova AI will read it when you tap a button below.`;
       setStatus("docStatus", `PDF ready: ${file.name}`, "good");
     } else {
       docPdf = null;
@@ -895,7 +895,7 @@ $("docText").addEventListener("input", () => {
   if ($("docText").value.trim()) docPdf = null;
 });
 
-// The document's text: typed/pasted, or read out of the PDF by MK.ai itself.
+// The document's text: typed/pasted, or read out of the PDF by Nova AI itself.
 async function documentText() {
   const typed = $("docText").value.trim();
   if (typed) return typed;
@@ -924,10 +924,10 @@ $("docLearnBtn").addEventListener("click", async () => {
         createdAt: serverTimestamp(),
       })
     );
-    setStatus("docStatus", `✓ MK.ai learned "${title}" (${chunks.length} passage${chunks.length === 1 ? "" : "s"}). It answers questions about it from now on.`, "good");
+    setStatus("docStatus", `✓ Nova AI learned "${title}" (${chunks.length} passage${chunks.length === 1 ? "" : "s"}). It answers questions about it from now on.`, "good");
     loadDocuments();
   } catch (err) {
-    setStatus("docStatus", err.friendly || (/permission/i.test(String(err?.code || err)) ? "The database rules need updating before MK.ai can learn documents (see the README)." : "The document couldn't be read. Try pasting its text instead."), "bad");
+    setStatus("docStatus", err.friendly || (/permission/i.test(String(err?.code || err)) ? "The database rules need updating before Nova AI can learn documents (see the README)." : "The document couldn't be read. Try pasting its text instead."), "bad");
   } finally {
     $("docLearnBtn").disabled = false;
   }
@@ -940,7 +940,7 @@ $("docQaBtn").addEventListener("click", async () => {
     const text = await documentText();
     if (!text) return setStatus("docStatus", "Paste some text or upload a file first.", "bad");
     const pairs = makeQA(text, 20);
-    if (!pairs.length) return setStatus("docStatus", "I couldn't find definition sentences (like \"X is …\") to turn into questions. Use \"Learn this document\" instead: MK.ai still answers from it.", "bad");
+    if (!pairs.length) return setStatus("docStatus", "I couldn't find definition sentences (like \"X is …\") to turn into questions. Use \"Learn this document\" instead: Nova AI still answers from it.", "bad");
     setStatus("docStatus", `${pairs.length} questions and answers ready below. Check them, then save.`, "good");
     setReview(pairs);
   } catch (err) {
@@ -972,7 +972,7 @@ async function loadDocuments() {
       row.querySelector("b").textContent = entry.title;
       row.querySelector(".need-meta").textContent = `${entry.ids.length} passage${entry.ids.length === 1 ? "" : "s"} · ${formatTime(entry.createdAt)}`;
       row.querySelector("button").addEventListener("click", async () => {
-        if (!confirm(`Make MK.ai forget "${entry.title}"?`)) return;
+        if (!confirm(`Make Nova AI forget "${entry.title}"?`)) return;
         try {
           await saveInBatches(entry.ids, (batch, id) => batch.delete(doc(db, "knowledge", id)));
           loadDocuments();

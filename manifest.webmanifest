@@ -1,7 +1,7 @@
 {
-  "name": "MK.ai",
-  "short_name": "MK.ai",
-  "description": "MK.ai: a free AI assistant for maths, science, coding and general knowledge, powered by its own model, Alpaca.",
+  "name": "Nova AI",
+  "short_name": "Nova AI",
+  "description": "Nova AI: a free AI assistant for maths, science, coding and general knowledge, powered by its own model, Alpaca.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
