@@ -1100,7 +1100,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 /* Older rule stacked the chat screen vertically; the new layout is a row. */
 #chatScreen.chat-layout { flex-direction: row; }
 
-/* MK logo mark (replaces the old text mark). */
+/* Nova AI logo mark (replaces the old text mark). */
 .logo {
   display: block;
   flex-shrink: 0;
@@ -1276,7 +1276,7 @@ a.side-btn { text-align: center; text-decoration: none; }
 .msg-attach { display: block; max-width: min(260px, 100%); max-height: 260px; border-radius: 10px; margin: 0 0 6px auto; object-fit: contain; }
 
 /* Answers read as open text, like official chat apps: no card, border or
-   stripe, just a small MK mark and name above the words. */
+   stripe, just a small logo mark and name above the words. */
 .msg-bot .card {
   width: 100%;
   max-width: 100%;
@@ -1310,7 +1310,7 @@ a.side-btn { text-align: center; text-decoration: none; }
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2306b6d4'/%3E%3Ctext x='50' y='53' text-anchor='middle' dominant-baseline='central' font-family='Arial,Helvetica,sans-serif' font-weight='800' font-size='46' fill='%23000000' letter-spacing='-3'%3EMK%3C/text%3E%3C/svg%3E") center / contain no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23071426'/%3E%3Cg fill='none' stroke-width='6' stroke-linecap='round'%3E%3Cellipse cx='50' cy='41' rx='11' ry='25' transform='rotate(60 50 41)' stroke='%232563eb'/%3E%3Cellipse cx='50' cy='41' rx='11' ry='25' transform='rotate(120 50 50) rotate(60 50 41)' stroke='%230ea5e9'/%3E%3Cellipse cx='50' cy='41' rx='11' ry='25' transform='rotate(240 50 50) rotate(60 50 41)' stroke='%2338bdf8'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
 }
 .msg-bot .msg-body {
   font-size: 15.5px;
