@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nova AI — Demo</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<style>
+:root{--bg:#0b0d12;--panel:#151922;--line:#262c3a;--ink:#e6e9f2;--mute:#8a93a8;--accent:#22d3ee}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f5f7fb;--panel:#fff;--line:#dfe4ee;--ink:#141a26;--mute:#5b6478;--accent:#0891b2}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+header img{width:32px;height:32px;border-radius:9px}
+header b{font-size:18px}
+header span{margin-left:auto;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.msg{max-width:85%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.me{align-self:flex-end;background:var(--accent);color:#04101f}
+.bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}
+form{display:flex;gap:8px;width:100%;max-width:760px;margin:0 auto;padding:12px 16px 18px}
+input{flex:1;min-width:0;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit}
+input:focus{outline:none;border-color:var(--accent)}
+button{padding:0 18px;border-radius:12px;border:0;background:var(--accent);color:#04101f;font:inherit;font-weight:600;cursor:pointer;min-height:46px}
+small{display:block;text-align:center;color:var(--mute);font-size:12px;padding:0 16px 14px}
+</style>
+</head>
+<body>
+<header><img src="icons/logo.png" alt=""><b>Nova AI</b><span>Demo</span></header>
+<main id="log" aria-live="polite">
+  <div class="msg bot">Hi! I'm a demo of Nova AI. I can only say a few things here.</div>
+</main>
+<form id="f">
+  <input id="q" placeholder="Say something…" autocomplete="off" aria-label="Message" maxlength="300">
+  <button type="submit">Send</button>
+</form>
+<small>This is a preview page, not the real assistant.</small>
+<script>
+// A dummy chat: canned replies only. No sign-in, no AI, no data.
+const REPLIES = [
+  "That's interesting! This is only a demo, so I can't really answer.",
+  "I'm a demo version of Nova AI, so I can't help with that here.",
+  "Nice question! The demo doesn't have a brain, though. 🙂",
+  "I'm just a preview. Real answers aren't available on this page.",
+  "Hmm, I can't do that in the demo.",
+];
+const log = document.getElementById("log"), q = document.getElementById("q");
+let n = 0;
+function add(text, who) {
+  const d = document.createElement("div");
+  d.className = "msg " + who;
+  d.textContent = text;
+  log.append(d);
+  log.scrollTop = log.scrollHeight;
+}
+document.getElementById("f").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = q.value.trim();
+  if (!t) return;
+  add(t, "me");
+  q.value = "";
+  const reply = /^(hi|hello|hey|vanakkam)\b/i.test(t) ? "Hello! 👋 This is just a demo of Nova AI." : REPLIES[n++ % REPLIES.length];
+  setTimeout(() => add(reply, "bot"), 500);
+});
+</script>
+</body>
+</html>
