@@ -10,6 +10,7 @@
       "**/node_modules/**",
       "kb-src/**",
       "apps-src/**",
+      "robot/**",
       "README.md",
       "firestore.rules"
     ],

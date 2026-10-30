@@ -39,6 +39,7 @@ import { noteUnknown, startAutoLearner, researchMore, worthLearning, research } 
 import { personalAnswer, aboutMe } from "./personal.js";
 import { wantsQuiz, quizAnswer, mountQuiz } from "./quiz.js";
 import { converse, needsCare } from "./converse.js";
+import { openAvatar, avatarOpen } from "./avatar.js";
 import { LIMITS, tokensFor, addUsage, usageSummary, limitReached, resetText, setLimits } from "./limits.js";
 import { officeKind, officeAnswer, mountOffice, DOC_EDIT, editOfficeFile } from "./office.js";
 import { isVoiceoverRequest, voiceoverAnswer, mountVoiceover } from "./voiceover.js";
@@ -1137,6 +1138,7 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
   const items = id && store.chats.some((c) => c.id === id) ? [...chatMenu(id).slice(0, 4), "-"] : [];
   items.push(
     { label: "New chat", run: newChat },
+    { label: "Talk to Nova (avatar)", run: startAvatar },
     ...(voice.canListen && voice.canSpeak ? [{ label: voiceChat ? "End voice chat" : "Voice chat (hands-free)", run: () => setVoiceChat(!voiceChat) }] : []),
     {
       label: `Personality: ${PERSONAS[persona].label.replace(" (default)", "")}`,
@@ -1216,6 +1218,9 @@ const SLASH = [
   { cmd: "image", hint: "Make a picture", text: "Draw a picture of " },
   { cmd: "deep", hint: "Deep thinking for the next question", run: () => { deepOnce = true; toast("Deep thinking is on for your next question."); } },
   { cmd: "folder", hint: "Open a folder and work on its files", run: () => startWorkspace({ onError: (m) => addErrorMessage(m) }) },
+  { cmd: "talk", hint: "Talk to Nova, the speaking avatar", run: () => startAvatar() },
+  { cmd: "wellbeing", hint: "Wellbeing support: talk it through", run: () => { setPersona("wellbeing"); toast("Wellbeing support is on. I'm here to listen."); } },
+  { cmd: "money", hint: "Money help: budgets, debt, scams", run: () => { setPersona("money"); toast("Money help is on."); } },
   { cmd: "new", hint: "Start a new chat", run: () => newChat() },
 ];
 let slashMenu = null;
@@ -1230,6 +1235,7 @@ function useSlash(item) {
   questionInput.value = item.run ? "" : item.text;
   if (item.run) item.run();
   fitQuestion();
+  if (avatarOpen()) return;
   questionInput.focus();
   questionInput.setSelectionRange(questionInput.value.length, questionInput.value.length);
 }
@@ -1634,6 +1640,27 @@ function personalNote() {
   return bits.length ? `About the person you're talking to (use this naturally when it helps; don't repeat it back): ${bits.join("; ")}.` : "";
 }
 
+// Wellbeing support: a caring listener with evidence-based coping skills, who
+// knows its limits and puts safety first.
+const WELLBEING_NOTE = `Mode: Wellbeing support. You are a warm, calm, non-judgemental listener who uses evidence-based support skills (active listening, validation, CBT-style reframing, problem-solving, behavioural activation, grounding and breathing). Rules:
+- Listen first: reflect what they feel in your own words and validate it before offering ideas. Ask one gentle, open question at a time. Keep replies short (about 60 to 150 words) and conversational; no long lists unless they ask.
+- Offer one or two small, practical steps they can try today (a short walk, water and food, texting one person, 5-4-3-2-1 grounding, slow breathing in for 4 and out for 6, writing worries down, a regular sleep time).
+- Encourage connection with trusted family, friends or teachers, and professional help (a doctor, counsellor or psychologist) when low mood lasts more than two weeks, gets worse, or affects sleep, eating, studies or work. In India, Tele-MANAS (call 14416 or 1-800-891-4416) is free, 24x7 and in many languages.
+- You are an AI, not a therapist or doctor: never diagnose, never advise on medicines or doses, and say so kindly if asked. Never promise secrecy.
+- If there is any sign of suicide, self-harm, abuse or danger: put their safety first, thank them for telling you, give Tele-MANAS 14416 and emergency 112 (Childline 1098 for anyone under 18), urge them to contact one of these or a trusted person right now, and keep gently talking with them.
+- Never shame, lecture or brush feelings off ("just be positive"). Respect their culture, faith and family situation.`;
+
+// Money help: practical, honest personal finance for India; no stock tips.
+const MONEY_NOTE = `Mode: Money help. You are a practical, honest personal-finance guide for people in India (students, families, workers, small shop owners). Rules:
+- Understand their situation first (income, essential costs, debts, goals) with at most two short questions, then give a clear plan in simple steps with example numbers in rupees.
+- Core tools: a simple budget (needs, wants, savings, such as 50/30/20 adjusted to their life), tracking spending for a month, an emergency fund of 3 to 6 months of essentials, paying off costly debt first (credit cards, personal and app loans) by highest interest or smallest balance, and avoiding new high-interest debt.
+- Debt stress: suggest asking the lender for a restructured EMI plan, and the bank's grievance officer or the RBI Ombudsman (cms.rbi.org.in) for complaints. Illegal loan apps that threaten or harass: don't pay extra under threats, save the evidence, report on sachet.rbi.org.in or cybercrime.gov.in (or call 1930), and tell the police.
+- Scams: warn about guaranteed returns, "task" or investment groups on WhatsApp or Telegram, fake KYC calls, sharing OTPs and fake trading apps.
+- Investing: explain basics neutrally (FD, RD, PPF, index mutual funds by SIP, health and term insurance before investing). Never recommend specific stocks or promise returns; for big decisions suggest a SEBI-registered investment adviser.
+- Government help and scholarships: point to official sites (myscheme.gov.in, scholarships.gov.in) instead of guessing details or eligibility.
+- Be kind: money worries are stressful. If they mention hopelessness, wanting to die or self-harm, put their safety first and share Tele-MANAS 14416 and emergency 112.
+- You are not a licensed financial adviser: say so when the stakes are high, and label numbers as examples.`;
+
 // Alpaca personalities: how Pro answers are written (chosen in the ⋯ menu)
 const PERSONAS = {
   assistant: { label: "Assistant (default)", note: "" },
@@ -1642,7 +1669,11 @@ const PERSONAS = {
   writer: { label: "Writer", note: "Personality: a skilled writer and editor. Write polished, natural, well-structured text in the right format and tone (letters, emails, essays, posts, speeches), and offer a short improved alternative when useful." },
   career: { label: "Career guide", note: "Personality: a practical career counsellor for Indian students and job seekers. Give realistic paths, courses, entrance exams, skills, salaries in ₹ and next steps." },
   friend: { label: "Friend", note: "Personality: a warm, supportive friend. Be kind, casual and encouraging, keep answers short and conversational." },
+  wellbeing: { label: "Wellbeing support", note: WELLBEING_NOTE },
+  money: { label: "Money help", note: MONEY_NOTE },
 };
+// Support modes: everyday questions in these go to Alpaca (not quick replies)
+const SUPPORT_MODES = new Set(["wellbeing", "money"]);
 const PERSONA_KEY = "mkai-persona";
 let persona = (() => {
   try {
@@ -1992,7 +2023,7 @@ async function answer(question, onText, attachment = null, think = () => {}, opt
   // Quick small talk ("hi", "thanks", "good night") is answered instantly; anything
   // longer (stories, advice, jokes, feelings) is Alpaca's.
   const aiFirst = navigator.onLine && routeMode() !== "instant";
-  const quickChat = !aiFirst || question.trim().split(/\s+/).length <= 4;
+  const quickChat = !aiFirst || (!SUPPORT_MODES.has(persona) && question.trim().split(/\s+/).length <= 4);
   const chat = quickChat && !attachment && (!isCreator() || !localAnswer(question, { creator: true })) && converse(question);
   if (chat) {
     think("Talking with you like a friend");
@@ -2429,6 +2460,7 @@ composer.addEventListener("submit", async (e) => {
   if (!question) question = attach.defaultQuestion(attachment);
   if (!hasAccess() || outOfTokens()) {
     renderTier();
+    announceAnswer({ question, blocked: true });
     return;
   }
 
@@ -2519,7 +2551,8 @@ composer.addEventListener("submit", async (e) => {
     msg.finish(result.answer, result.searchSuggestions);
     spendTokens(question, result.answer);
     if (result.thoughts) msg.setThoughts(result.thoughts, result.thoughtMs);
-    if (spoken && stillHere()) msg.speakNow(result.answer);
+    if (spoken && stillHere() && !avatarOpen()) msg.speakNow(result.answer);
+    announceAnswer({ question, answer: result.answer, source: result.source });
     if (result.credit) msg.setCredit(result.credit);
     if (result.source === "knowledge" && !deepNow) {
       const asked = question.trim().toLowerCase().replace(/[?.!]+$/, "");
@@ -2555,16 +2588,44 @@ composer.addEventListener("submit", async (e) => {
     console.error(err);
     loading.remove();
     if (stillHere()) addErrorMessage("Something went wrong while answering. Please try again.");
+    announceAnswer({ question, answer: "" });
   } finally {
     stopCurrent = null;
     if (globalThis.mkaiStop === stopCtrl.signal) globalThis.mkaiStop = null;
     setStopMode(false);
     answering = false;
     sendBtn.disabled = !hasAccess();
-    questionInput.focus();
+    if (!avatarOpen()) questionInput.focus();
     scrollToBottom();
   }
 });
+
+// The talking avatar (and anything else) hears when an answer is ready
+function announceAnswer(detail) {
+  document.dispatchEvent(new CustomEvent("mkai-answer", { detail }));
+}
+
+// --- Talk to Nova: the talking avatar ---
+function startAvatar() {
+  setVoiceChat(false);
+  voice.stopSpeaking();
+  resetSpeakingBtn();
+  openAvatar({
+    ask: (text) => {
+      if (answering || !hasAccess()) return false;
+      questionInput.value = text;
+      composer.requestSubmit();
+      return true;
+    },
+    stop: () => stopCurrent?.(),
+    isBusy: () => answering,
+    personas: Object.entries(PERSONAS).map(([key, p]) => ({ key, label: p.label.replace(" (default)", "") })),
+    getPersona: () => persona,
+    setPersona: (k) => setPersona(k),
+    onClose: () => questionInput.focus(),
+  });
+}
+$("avatarBtn")?.addEventListener("click", startAvatar);
 
 // --- Stop button ---
 let stopCurrent = null;
