@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whether — Live Weather</title>
+<meta name="description" content="Accurate live weather, hourly and 7-day forecast, air quality and more. Free, no tracking.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛅</text></svg>">
+<style>
+:root{--bg:#eef3fb;--card:#fff;--ink:#14213d;--mute:#5d6b86;--line:#dde5f2;--accent:#2f6fed;--hero1:#4c8dff;--hero2:#7fb5ff}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1424;--card:#16203a;--ink:#e8eefc;--mute:#93a1c2;--line:#26335a;--accent:#6ea2ff;--hero1:#1f3b7a;--hero2:#2e5aa8}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding:16px}
+.bar{display:flex;gap:8px;position:relative}
+input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+button{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+button:hover{border-color:var(--accent)}
+#sug{position:absolute;top:50px;left:0;right:110px;background:var(--card);border:1px solid var(--line);border-radius:12px;z-index:5;overflow:hidden;box-shadow:0 8px 24px #0003}
+#sug div{padding:10px 14px;cursor:pointer}#sug div:hover{background:var(--bg)}
+.hero{margin-top:14px;padding:24px;border-radius:20px;color:#fff;background:linear-gradient(135deg,var(--hero1),var(--hero2))}
+.hero h1{margin:0;font-size:1.3rem;font-weight:600}
+.big{display:flex;align-items:center;gap:12px;margin-top:6px}
+.big .t{font-size:4.5rem;font-weight:300;line-height:1}
+.big .i{font-size:4rem}
+.sub{opacity:.92}
+.unit{float:right}
+.unit button{background:#ffffff26;color:#fff;border-color:#fff4}
+h2{font-size:1rem;color:var(--mute);margin:22px 0 8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.h{min-width:68px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.h b{display:block}.h small{color:var(--mute)}
+.day{display:grid;grid-template-columns:90px 36px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:6px}
+.bar2{height:6px;border-radius:3px;background:var(--line);position:relative}
+.bar2 i{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#4cc3ff,#ffb84c)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.tile small{color:var(--mute);display:block}.tile b{font-size:1.25rem}
+#msg{margin-top:14px;padding:12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+footer{margin:28px 0 10px;text-align:center;color:var(--mute);font-size:.8rem}
+a{color:var(--accent)}
+/* Nova AI */
+body{padding-bottom:72px}
+.nova-fab{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:8px;padding:6px 16px 6px 6px;border-radius:999px;background:#0a1a3a;color:#fff;border:1px solid #3b82f666;font-weight:600;box-shadow:0 8px 24px #0005}
+.nova-fab:hover{border-color:#60a5fa}
+.nova-fab[hidden]{display:none}
+.nova-fab img{border-radius:9px;display:block}
+.nova{position:fixed;right:16px;bottom:16px;z-index:30;width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 32px));display:flex;flex-direction:column;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 16px 48px #0006;overflow:hidden}
+.nova[hidden]{display:none}
+.nova-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;border-bottom:1px solid var(--line)}
+.nova-head img{border-radius:10px;display:block}
+.nova-title{flex:1;min-width:0;display:flex;flex-direction:column}
+.nova-title small{color:var(--mute);font-size:.8rem}
+.nova-x{width:40px;height:40px;padding:0;border-radius:10px;font-size:1rem}
+.nova-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.nova-msg{max-width:88%;padding:10px 12px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+.nova-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.nova-msg.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
+.nova-msg.typing{color:var(--mute)}
+.nova-chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px}
+.nova-chips button{flex:none;padding:7px 12px;border-radius:999px;font-size:.85rem}
+.nova-form{display:flex;gap:8px;padding:0 12px}
+.nova-form input{min-width:0}
+.nova-form button{background:var(--accent);color:#fff;border-color:transparent;font-weight:600;min-width:72px}
+.nova-form button.stop{background:var(--ink);color:var(--card)}
+.nova-note{display:block;padding:6px 12px 10px;color:var(--mute);font-size:.72rem;text-align:center}
+@media (max-width:560px){.nova{right:0;left:0;bottom:0;width:auto;height:88vh;height:88dvh;border-radius:18px 18px 0 0}}
+</style>
+</head>
+<body>
+<main>
+ <div class="bar">
+  <input id="q" placeholder="Search city…" autocomplete="off" aria-label="Search city">
+  <button id="loc" title="Use my location">📍 Locate</button>
+  <div id="sug" hidden></div>
+ </div>
+ <div id="msg">Loading weather…</div>
+ <div id="app" hidden>
+  <section class="hero">
+   <span class="unit"><button id="unit">°C</button></span>
+   <h1 id="place"></h1>
+   <div class="big"><span class="i" id="icon"></span><span class="t" id="temp"></span></div>
+   <div class="sub" id="desc"></div>
+   <div class="sub" id="feels"></div>
+  </section>
+  <h2>Next 24 hours</h2><div class="scroll" id="hourly"></div>
+  <h2>7-day forecast</h2><div id="daily"></div>
+  <h2>Details</h2><div class="grid" id="tiles"></div>
+ </div>
+ <footer>Data: <a href="https://open-meteo.com/">Open-Meteo</a> · Free, no tracking</footer>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const WMO={0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],
+51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],56:["Freezing drizzle","🌧️"],57:["Freezing drizzle","🌧️"],
+61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],66:["Freezing rain","🌧️"],67:["Freezing rain","🌧️"],
+71:["Light snow","🌨️"],73:["Snow","❄️"],75:["Heavy snow","❄️"],77:["Snow grains","❄️"],
+80:["Rain showers","🌦️"],81:["Rain showers","🌧️"],82:["Violent showers","⛈️"],85:["Snow showers","🌨️"],86:["Snow showers","🌨️"],
+95:["Thunderstorm","⛈️"],96:["Thunderstorm, hail","⛈️"],99:["Thunderstorm, hail","⛈️"]};
+const wmo=c=>WMO[c]||["—","🌡️"];
+let F=false,place=null,data=null;
+try{F=localStorage.getItem("unit")==="F";place=JSON.parse(localStorage.getItem("place"))}catch(e){}
+const T=c=>Math.round(F?c*9/5+32:c)+"°";
+const speed=k=>F?Math.round(k*0.621)+" mph":Math.round(k)+" km/h";
+const compass=d=>["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];
+function uvLabel(u){return u<3?"Low":u<6?"Moderate":u<8?"High":u<11?"Very high":"Extreme"}
+function aqiLabel(a){return a<=50?"Good":a<=100?"Moderate":a<=150?"Unhealthy for some":a<=200?"Unhealthy":a<=300?"Very unhealthy":"Hazardous"}
+const fmtTime=s=>new Date(s).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+
+async function load(p){
+  place=p;try{localStorage.setItem("place",JSON.stringify(p))}catch(e){}
+  $("#msg").hidden=false;$("#msg").textContent="Loading weather…";
+  try{
+    const w=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=7`
+     +`&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,cloud_cover`
+     +`&hourly=temperature_2m,weather_code,precipitation_probability`
+     +`&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max`;
+    const a=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${p.lat}&longitude=${p.lon}&current=us_aqi,pm2_5`;
+    const [r1,r2]=await Promise.all([fetch(w),fetch(a).catch(()=>null)]);
+    if(!r1.ok)throw new Error("Weather service error "+r1.status);
+    data={w:await r1.json(),a:r2&&r2.ok?await r2.json():null};
+    render();
+  }catch(e){$("#msg").textContent="Couldn't load weather: "+e.message+". Check your connection and try again."}
+}
+function render(){
+  const {w,a}=data,c=w.current,d=w.daily,h=w.hourly;
+  $("#msg").hidden=true;$("#app").hidden=false;
+  $("#place").textContent=place.name;
+  const [txt,ico]=wmo(c.weather_code);
+  $("#icon").textContent=c.is_day||c.weather_code>2?ico:(c.weather_code<=1?"🌙":ico);
+  $("#temp").textContent=T(c.temperature_2m);
+  $("#desc").textContent=txt+" · H "+T(d.temperature_2m_max[0])+" L "+T(d.temperature_2m_min[0]);
+  $("#feels").textContent="Feels like "+T(c.apparent_temperature);
+  $("#unit").textContent=F?"°F":"°C";
+  const now=w.current.time,i0=Math.max(0,h.time.findIndex(t=>t>=now.slice(0,13)));
+  $("#hourly").innerHTML=h.time.slice(i0,i0+24).map((t,k)=>{const i=i0+k;
+    return `<div class="h"><small>${k?new Date(t).toLocaleTimeString([], {hour:"numeric"}):"Now"}</small><span>${wmo(h.weather_code[i])[1]}</span><b>${T(h.temperature_2m[i])}</b><small>💧${h.precipitation_probability[i]??0}%</small></div>`}).join("");
+  const lo=Math.min(...d.temperature_2m_min),hi=Math.max(...d.temperature_2m_max),sp=hi-lo||1;
+  $("#daily").innerHTML=d.time.map((t,i)=>{
+    const l=(d.temperature_2m_min[i]-lo)/sp*100,r=(d.temperature_2m_max[i]-lo)/sp*100;
+    return `<div class="day"><b>${i?new Date(t+"T12:00").toLocaleDateString([], {weekday:"short"}):"Today"}</b><span>${wmo(d.weather_code[i])[1]}</span>
+    <div class="bar2"><i style="left:${l}%;width:${Math.max(r-l,4)}%"></i></div><span>${T(d.temperature_2m_min[i])} / <b>${T(d.temperature_2m_max[i])}</b></span></div>`}).join("");
+  const aq=a&&a.current?a.current.us_aqi:null;
+  const tiles=[["Humidity",c.relative_humidity_2m+"%"],["Wind",speed(c.wind_speed_10m)+" "+compass(c.wind_direction_10m),"Gusts "+speed(c.wind_gusts_10m)],
+   ["UV index (max)",Math.round(d.uv_index_max[0]),uvLabel(d.uv_index_max[0])],["Rain chance",(d.precipitation_probability_max[0]??0)+"%","Now: "+c.precipitation+" mm"],
+   ["Pressure",Math.round(c.pressure_msl)+" hPa"],["Cloud cover",c.cloud_cover+"%"],
+   ["Sunrise",fmtTime(d.sunrise[0])],["Sunset",fmtTime(d.sunset[0])]];
+  if(aq!=null)tiles.splice(4,0,["Air quality (US AQI)",Math.round(aq),aqiLabel(aq)+" · PM2.5 "+a.current.pm2_5]);
+  $("#tiles").innerHTML=tiles.map(([k,v,s])=>`<div class="tile"><small>${k}</small><b>${v}</b>${s?`<small>${s}</small>`:""}</div>`).join("");
+  document.title=`${T(c.temperature_2m)} ${place.name} — Whether`;
+}
+$("#unit").onclick=()=>{F=!F;try{localStorage.setItem("unit",F?"F":"C")}catch(e){}if(data)render()};
+let tm;
+$("#q").addEventListener("input",e=>{clearTimeout(tm);const v=e.target.value.trim();
+  if(v.length<2){$("#sug").hidden=true;return}
+  tm=setTimeout(async()=>{try{
+    const r=await(await fetch("https://geocoding-api.open-meteo.com/v1/search?count=6&name="+encodeURIComponent(v))).json();
+    const res=r.results||[];
+    $("#sug").innerHTML=res.length?res.map((x,i)=>`<div data-i="${i}">${x.name}${x.admin1?", "+x.admin1:""}, ${x.country||""}</div>`).join(""):"<div>No matches</div>";
+    $("#sug").hidden=false;
+    $("#sug").onclick=ev=>{const i=ev.target.dataset.i;if(i==null)return;const x=res[i];
+      $("#sug").hidden=true;$("#q").value="";
+      load({name:[x.name,x.admin1].filter(Boolean).join(", "),lat:x.latitude,lon:x.longitude})};
+  }catch(e){}},300)});
+document.addEventListener("click",e=>{if(!e.target.closest(".bar"))$("#sug").hidden=true});
+async function locate(){
+  if(!navigator.geolocation){return load(place||{name:"Chennai, Tamil Nadu",lat:13.0827,lon:80.2707})}
+  $("#msg").hidden=false;$("#msg").textContent="Finding your location…";
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;let name="Your location";
+    try{const g=await(await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=${lat}&lon=${lon}`)).json();
+      const ad=g.address||{};name=[ad.city||ad.town||ad.village||ad.county,ad.state].filter(Boolean).join(", ")||name}catch(e){}
+    load({name,lat,lon});
+  },()=>load(place||{name:"Chennai, Tamil Nadu",lat:13.0827,lon:80.2707}),{timeout:8000,maximumAge:600000});
+}
+$("#loc").onclick=locate;
+place?load(place):locate();
+setInterval(()=>{if(place&&!document.hidden)load(place)},15*60*1000);
+</script>
+<!-- ===== Nova AI: weather assistant ===== -->
+<button id="novaBtn" class="nova-fab" type="button" aria-label="Ask Nova AI"><img src="https://rsmohnishkumar-design.github.io/MK.AI/icons/logo.png" alt="" width="32" height="32">Ask Nova AI</button>
+<section id="nova" class="nova" role="dialog" aria-label="Nova AI" hidden>
+ <div class="nova-head">
+  <img src="https://rsmohnishkumar-design.github.io/MK.AI/icons/logo.png" alt="" width="36" height="36">
+  <div class="nova-title"><b>Nova AI</b><small id="novaWhere">Weather assistant</small></div>
+  <button id="novaClear" type="button" class="nova-x" title="New chat" aria-label="New chat">↺</button>
+  <button id="novaClose" type="button" class="nova-x" title="Close" aria-label="Close">✕</button>
+ </div>
+ <div id="novaLog" class="nova-log" aria-live="polite"></div>
+ <div id="novaChips" class="nova-chips"></div>
+ <form id="novaForm" class="nova-form">
+  <input id="novaIn" placeholder="Ask about the weather…" autocomplete="off" aria-label="Ask Nova AI" maxlength="500">
+  <button id="novaSend" type="submit">Send</button>
+ </form>
+ <small class="nova-note">Weather answers use the live forecast. Nova AI can make mistakes.</small>
+</section>
+<script>
+(() => {
+  // Nova AI's model (Alpaca, on Google Gemini through Firebase AI Logic). These
+  // web settings only identify the project; App Check decides who may use it.
+  const FIREBASE = {
+    apiKey: "AIzaSyAUJbM-8j7CclTFbsw6mTZIDL3NXoZ10Ec",
+    authDomain: "mkai-c042b.firebaseapp.com",
+    projectId: "mkai-c042b",
+    storageBucket: "mkai-c042b.firebasestorage.app",
+    messagingSenderId: "857947772189",
+    appId: "1:857947772189:web:3c92efd564cb149d7b7df4",
+  };
+  const RECAPTCHA_SITE_KEY = "6Ld6B8stAAAAAFa5Ps3LqoSXw3G9P2_1Fpw74xTu";
+  const MODELS = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-flash-lite-latest"];
+  const NOVA_APP = "https://mkai-c042b.web.app/";
+  const SYSTEM =
+    "You are Nova AI, running the Alpaca model, made by Mohnishkumar in Tamil Nadu, India. You are inside Whether, a live weather app. " +
+    "Each question comes with the live forecast for the place the user is viewing: use it for anything about weather, clothing, travel or plans, and never invent numbers that aren't in it. " +
+    "Keep answers short (under 120 words), friendly and practical. Use **bold** for key facts; no tables or headings. " +
+    "Reply in the user's language. If asked who you are, say you are Nova AI, built on models such as Google Gemini.";
+
+  const box = $("#nova"), log = $("#novaLog"), inp = $("#novaIn"), sendBtn = $("#novaSend");
+  let busy = null; // { stop } while answering
+  let history = [];
+
+  // ---------- small helpers ----------
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const hourOf = (t) => new Date(t).toLocaleTimeString([], { hour: "numeric" });
+  const list = (a) => (a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+  const W = () => data && data.w;
+  const dayName = (i) => (i === 0 ? "today" : i === 1 ? "tomorrow" : new Date(W().daily.time[i] + "T12:00").toLocaleDateString([], { weekday: "long" }));
+  const nowIndex = () => { const h = W().hourly, n = W().current.time; return Math.max(0, h.time.findIndex((t) => t >= n.slice(0, 13))); };
+
+  function setText(el, text) {
+    el.replaceChildren();
+    for (const part of String(text).split(/(\*\*[^*\n]+\*\*)/)) {
+      if (/^\*\*[^*\n]+\*\*$/.test(part)) { const b = document.createElement("b"); b.textContent = part.slice(2, -2); el.append(b); }
+      else if (part) el.append(part);
+    }
+  }
+  function bubble(who, text) {
+    const d = document.createElement("div");
+    d.className = "nova-msg " + who;
+    setText(d, text);
+    log.append(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+  }
+  function linkBubble(text, href, label) {
+    const d = bubble("bot", text + " ");
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label;
+    d.append(a);
+    return d;
+  }
+
+  // ---------- answers straight from the live forecast ----------
+  const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  function dayIndex(q) {
+    if (/\b(tomorrow|tmrw|tmr|naalai|nalaiku)\b/.test(q)) return 1;
+    if (/\b(today|tonight|now|right now|this (morning|evening|afternoon))\b/.test(q)) return 0;
+    const t = W().daily.time;
+    for (let i = 0; i < t.length; i++) {
+      const name = DAYS[new Date(t[i] + "T12:00").getDay()];
+      if (q.includes(name)) return i;
+    }
+    return null;
+  }
+  function daySummary(i) {
+    const d = W().daily, [txt, ico] = wmo(d.weather_code[i]);
+    return `${cap(dayName(i))}: **${txt}** ${ico}, ${T(d.temperature_2m_min[i])} to **${T(d.temperature_2m_max[i])}**, ${d.precipitation_probability_max[i] ?? 0}% chance of rain.`;
+  }
+  function nowSummary() {
+    const c = W().current, d = W().daily, [txt, ico] = wmo(c.weather_code);
+    return `Right now in **${place.name}**: ${txt} ${ico}, **${T(c.temperature_2m)}** (feels like ${T(c.apparent_temperature)}). ` +
+      `Today ${T(d.temperature_2m_min[0])} to ${T(d.temperature_2m_max[0])}, ${d.precipitation_probability_max[0] ?? 0}% chance of rain.`;
+  }
+  function rain(q) {
+    const w = W(), di = dayIndex(q);
+    if (di) {
+      const p = w.daily.precipitation_probability_max[di] ?? 0;
+      return `${cap(dayName(di))} has a **${p}%** chance of rain. ` + (p >= 50 ? "Take an umbrella ☂️" : p >= 25 ? "A small umbrella is a safe bet." : "You probably won't need an umbrella.");
+    }
+    if (w.current.precipitation > 0) return `It's raining right now (${w.current.precipitation} mm). **Yes, take an umbrella** ☂️`;
+    const h = w.hourly, i0 = nowIndex();
+    let first = -1, max = 0;
+    for (let k = 0; k < 12 && i0 + k < h.time.length; k++) {
+      const p = h.precipitation_probability[i0 + k] ?? 0;
+      if (p > max) max = p;
+      if (first < 0 && p >= 50) first = i0 + k;
+    }
+    if (first >= 0) return `**Yes, take an umbrella** ☂️ Rain is likely from about **${hourOf(h.time[first])}** (${h.precipitation_probability[first]}% chance).`;
+    if (max >= 25) return `Maybe. The highest rain chance in the next 12 hours is **${max}%**, so a small umbrella is a safe bet.`;
+    return `**No umbrella needed.** The rain chance stays at ${max}% or lower for the next 12 hours.`;
+  }
+  function wear() {
+    const c = W().current, f = c.apparent_temperature, tips = [];
+    if (f >= 32) tips.push("light, loose cotton clothes"); else if (f >= 24) tips.push("a T-shirt and light trousers or shorts");
+    else if (f >= 16) tips.push("long sleeves or a light jacket"); else if (f >= 8) tips.push("a warm jacket"); else tips.push("a heavy coat, gloves and a hat");
+    if ((W().daily.precipitation_probability_max[0] ?? 0) >= 50 || c.precipitation > 0) tips.push("an umbrella or raincoat");
+    if (W().daily.uv_index_max[0] >= 6 && c.is_day) tips.push("sunglasses and sunscreen");
+    if (c.wind_speed_10m >= 30) tips.push("something windproof");
+    return `It feels like **${T(f)}**. Wear ${list(tips)}.` + (f >= 32 ? " Drink plenty of water." : "");
+  }
+  function uv() {
+    const u = W().daily.uv_index_max[0];
+    return `UV today peaks at **${Math.round(u)} (${uvLabel(u)})**. ` +
+      (u >= 6 ? "Use sunscreen and avoid the midday sun, about 11 am to 3 pm." : u >= 3 ? "Sunscreen is a good idea if you're out for long." : "Low risk; no special protection needed.");
+  }
+  function air() {
+    const a = data.a && data.a.current;
+    if (!a || a.us_aqi == null) return "Air quality data isn't available for this place right now.";
+    const v = Math.round(a.us_aqi);
+    return `Air quality is **${aqiLabel(v)}** (US AQI ${v}, PM2.5 ${a.pm2_5}). ` +
+      (v <= 50 ? "Great for outdoor activities." : v <= 100 ? "Fine for most people; sensitive people should take it easy." : v <= 150 ? "Sensitive groups should limit long outdoor exercise." : "Limit time outside and consider a mask.");
+  }
+  function bestTime() {
+    const h = W().hourly, i0 = nowIndex();
+    let best = -1, score = Infinity;
+    for (let k = 0; k < 16 && i0 + k < h.time.length; k++) {
+      const i = i0 + k, hr = Number(h.time[i].slice(11, 13));
+      if (hr < 6 || hr > 20) continue;
+      const s = (h.precipitation_probability[i] ?? 0) * 2 + Math.abs(h.temperature_2m[i] - 22) * 3;
+      if (s < score) { score = s; best = i; }
+    }
+    if (best < 0) return "It's night for the next few hours. " + daySummary(1);
+    let out = `Best time in the next hours: **${hourOf(h.time[best])}**, about ${T(h.temperature_2m[best])} with a ${h.precipitation_probability[best] ?? 0}% chance of rain.`;
+    const a = data.a && data.a.current;
+    if (a && a.us_aqi > 100) out += ` Note: air quality is ${aqiLabel(a.us_aqi).toLowerCase()} (AQI ${Math.round(a.us_aqi)}).`;
+    return out;
+  }
+  function sun() {
+    const d = W().daily;
+    return `Today: sunrise **${fmtTime(d.sunrise[0])}**, sunset **${fmtTime(d.sunset[0])}**.` + (d.sunrise[1] ? ` Tomorrow's sunrise is at ${fmtTime(d.sunrise[1])}.` : "");
+  }
+  function wind() {
+    const c = W().current;
+    return `Wind is **${speed(c.wind_speed_10m)} from the ${compass(c.wind_direction_10m)}**, with gusts up to ${speed(c.wind_gusts_10m)}.` +
+      (c.wind_gusts_10m >= 50 ? " That's strong: be careful outside." : c.wind_speed_10m >= 15 ? " Good for flying a kite! 🪁" : "");
+  }
+  function humidity() {
+    const v = W().current.relative_humidity_2m;
+    return `Humidity is **${v}%**. ` + (v >= 75 ? "It will feel sticky and warmer than it is." : v <= 30 ? "The air is dry; drink water and use moisturiser." : "That's comfortable.");
+  }
+  function week() {
+    const d = W().daily;
+    const wet = d.time.map((_, i) => i).filter((i) => (d.precipitation_probability_max[i] ?? 0) >= 50);
+    const hot = d.temperature_2m_max.indexOf(Math.max(...d.temperature_2m_max));
+    return d.time.map((_, i) => `• ${cap(dayName(i))}: ${wmo(d.weather_code[i])[1]} ${T(d.temperature_2m_min[i])} to ${T(d.temperature_2m_max[i])}, ${d.precipitation_probability_max[i] ?? 0}% rain`).join("\n") +
+      `\n\nWarmest: **${cap(dayName(hot))}**. ` + (wet.length ? `Rain likely: **${list(wet.map((i) => cap(dayName(i))))}**.` : "No day looks very rainy.");
+  }
+
+  function localAnswer(q) {
+    if (/umbrella|rain|raining|shower|drizzle|storm|thunder|wet|mazhai|baarish/.test(q)) return rain(q);
+    if (/wear|clothes|clothing|jacket|sweater|coat|dress|outfit/.test(q)) return wear();
+    if (/\buv\b|sunscreen|sunburn|sun block|sunblock/.test(q)) return uv();
+    if (/air quality|\baqi\b|pollution|pm2|smog|mask|breathe/.test(q)) return air();
+    if (/walk|run|jog|exercise|cycle|cycling|picnic|go out|outside|outdoor|best time|play/.test(q)) return bestTime();
+    if (/sunrise|sunset|sun rise|sun set|dawn|dusk/.test(q)) return sun();
+    if (/wind|windy|kite|gust|breeze/.test(q)) return wind();
+    if (/humid|humidity|sticky|muggy/.test(q)) return humidity();
+    if (/week|7.day|seven day|forecast|weekend|next few days/.test(q)) return week();
+    const di = dayIndex(q);
+    if (di) return daySummary(di);
+    if (/weather|temperature|\btemp\b|hot|cold|warm|cool|degrees|sunny|cloudy|climate|how is it|outside now/.test(q) || di === 0) return nowSummary();
+    return null;
+  }
+
+  // "weather in London", "rain in Delhi tomorrow": switch the app to that city first
+  const NOT_PLACES = /^(the|a|an|my|our|this|that|here|there|morning|evening|afternoon|night|tonight|today|tomorrow|week|weekend|rain|sun|shade|summer|winter|general|celsius|fahrenheit|hours?|minutes?)\b/;
+  async function maybeSwitchCity(raw) {
+    const m = raw.match(/\b(?:in|at|for)\s+([A-Za-zÀ-ɏ][A-Za-zÀ-ɏ .'-]{1,40}?)(?:\s+(?:today|tomorrow|tonight|now|this week|next week|on \w+))?\s*[?.!]*$/i);
+    if (!m) return;
+    const name = m[1].trim(), low = name.toLowerCase();
+    if (NOT_PLACES.test(low) || (place && place.name.toLowerCase().startsWith(low))) return;
+    try {
+      const r = await (await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(name))).json();
+      const x = r.results && r.results[0];
+      if (!x || !x.name.toLowerCase().startsWith(low.split(" ")[0])) return;
+      await load({ name: [x.name, x.admin1].filter(Boolean).join(", "), lat: x.latitude, lon: x.longitude });
+    } catch (e) {}
+  }
+
+  // ---------- Nova AI's model, for everything else ----------
+  let aiReady = null;
+  function backend() {
+    if (window.NOVA_BACKEND) return Promise.resolve(window.NOVA_BACKEND); // tests
+    return (aiReady ??= (async () => {
+      const V = "https://www.gstatic.com/firebasejs/12.19.0/";
+      const [{ initializeApp }, { getAI, getGenerativeModel, GoogleAIBackend }, { initializeAppCheck, ReCaptchaEnterpriseProvider }] =
+        await Promise.all(["firebase-app.js", "firebase-ai.js", "firebase-app-check.js"].map((f) => import(V + f)));
+      const app = initializeApp(FIREBASE, "nova-weather");
+      initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true });
+      const ai = getAI(app, { backend: new GoogleAIBackend() });
+      return {
+        async generate({ system, contents, onText, signal }) {
+          let lastErr;
+          for (const model of MODELS) {
+            if (signal.aborted) break;
+            try {
+              const m = getGenerativeModel(ai, { model, systemInstruction: system, generationConfig: { temperature: 0.6, maxOutputTokens: 700 } });
+              const res = await m.generateContentStream({ contents }, { timeout: 30000 });
+              res.response.catch(() => {});
+              let text = "";
+              for await (const chunk of res.stream) {
+                if (signal.aborted) return text;
+                try { text += chunk.text() || ""; } catch (e) {}
+                if (text) onText(text);
+              }
+              if (text.trim()) return text;
+            } catch (e) { lastErr = e; }
+          }
+          if (signal.aborted) return "";
+          throw lastErr || new Error("No answer");
+        },
+      };
+    })().catch((e) => { aiReady = null; throw e; }));
+  }
+  function weatherContext() {
+    if (!W()) return "No weather loaded yet.";
+    const w = W(), c = w.current, d = w.daily, h = w.hourly, i0 = nowIndex(), a = data.a && data.a.current;
+    const hours = h.time.slice(i0, i0 + 12).map((t, k) => `${hourOf(t)} ${T(h.temperature_2m[i0 + k])} ${wmo(h.weather_code[i0 + k])[0]} rain ${h.precipitation_probability[i0 + k] ?? 0}%`).join("; ");
+    const days = d.time.map((t, i) => `${cap(dayName(i))}: ${wmo(d.weather_code[i])[0]}, ${T(d.temperature_2m_min[i])} to ${T(d.temperature_2m_max[i])}, rain ${d.precipitation_probability_max[i] ?? 0}%, UV ${Math.round(d.uv_index_max[i])}`).join("; ");
+    return `Place: ${place.name}. Local time: ${c.time.replace("T", " ")}. Units: ${F ? "Fahrenheit, mph" : "Celsius, km/h"}.\n` +
+      `Now: ${wmo(c.weather_code)[0]}, ${T(c.temperature_2m)} (feels ${T(c.apparent_temperature)}), humidity ${c.relative_humidity_2m}%, wind ${speed(c.wind_speed_10m)} ${compass(c.wind_direction_10m)} gusts ${speed(c.wind_gusts_10m)}, cloud ${c.cloud_cover}%, precipitation ${c.precipitation} mm, ${c.is_day ? "day" : "night"}.\n` +
+      (a && a.us_aqi != null ? `Air quality: US AQI ${Math.round(a.us_aqi)} (${aqiLabel(a.us_aqi)}), PM2.5 ${a.pm2_5}.\n` : "") +
+      `Sunrise ${fmtTime(d.sunrise[0])}, sunset ${fmtTime(d.sunset[0])}.\nNext 12 hours: ${hours}.\nNext 7 days: ${days}.`;
+  }
+
+  // ---------- chat flow ----------
+  function setBusy(on) {
+    sendBtn.textContent = on ? "Stop" : "Send";
+    sendBtn.classList.toggle("stop", on);
+    inp.disabled = on;
+  }
+  async function ask(raw) {
+    const question = raw.trim().slice(0, 500);
+    if (!question || busy) return;
+    bubble("user", question);
+    inp.value = "";
+    const ctrl = new AbortController();
+    busy = { stop: () => ctrl.abort() };
+    setBusy(true);
+    const out = bubble("bot typing", "…");
+    try {
+      await maybeSwitchCity(question);
+      if (!W()) { setText(out, "The weather is still loading. Try again in a moment."); return; }
+      const local = localAnswer(question.toLowerCase());
+      if (local) {
+        setText(out, local);
+        history.push({ q: question, a: local });
+        return;
+      }
+      const ai = await backend();
+      const contents = [];
+      for (const t of history.slice(-4)) contents.push({ role: "user", parts: [{ text: t.q }] }, { role: "model", parts: [{ text: t.a }] });
+      contents.push({ role: "user", parts: [{ text: `Live weather data:\n${weatherContext()}\n\nQuestion: ${question}` }] });
+      const text = await ai.generate({ system: SYSTEM, contents, signal: ctrl.signal, onText: (t) => { setText(out, t); log.scrollTop = log.scrollHeight; } });
+      if (ctrl.signal.aborted) { setText(out, (text || "").trim() ? text + "\n\n(Stopped)" : "Stopped."); return; }
+      setText(out, text.trim());
+      history.push({ q: question, a: text.trim() });
+    } catch (e) {
+      out.remove();
+      linkBubble("Nova AI's brain isn't reachable from here right now. Weather questions still work. For other questions,", NOVA_APP, "open Nova AI");
+    } finally {
+      out.classList.remove("typing");
+      busy = null;
+      setBusy(false);
+      inp.focus();
+    }
+  }
+
+  const CHIPS = ["Do I need an umbrella?", "What should I wear?", "Tomorrow's weather?", "Best time for a walk?", "This week", "Air quality?"];
+  function greet() {
+    bubble("bot", place ? `Hi! I'm **Nova AI**. Ask me anything about the weather in **${place.name}**, or any other city.` : "Hi! I'm **Nova AI**. Ask me anything about the weather.");
+  }
+  const chips = $("#novaChips");
+  for (const c of CHIPS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = c;
+    b.onclick = () => ask(c);
+    chips.append(b);
+  }
+  function open() {
+    box.hidden = false;
+    $("#novaBtn").hidden = true;
+    if (!log.children.length) greet();
+    inp.focus();
+  }
+  function close() {
+    box.hidden = true;
+    $("#novaBtn").hidden = false;
+    $("#novaBtn").focus();
+  }
+  $("#novaBtn").onclick = open;
+  $("#novaClose").onclick = close;
+  $("#novaClear").onclick = () => { busy && busy.stop(); history = []; log.replaceChildren(); greet(); };
+  $("#novaForm").onsubmit = (e) => { e.preventDefault(); busy ? busy.stop() : ask(inp.value); };
+  sendBtn.onclick = (e) => { if (busy) { e.preventDefault(); busy.stop(); } };
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.hidden) close(); });
+})();
+</script>
+</body>
+</html>
