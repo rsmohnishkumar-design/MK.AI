@@ -295,6 +295,39 @@ conversation is in Tamil. Code is described ("the code is shown on screen")
 rather than read out. The mic only shows in browsers that support voice
 typing (Chrome, Edge, Safari).
 
+## Talk to Nova (the speaking avatar)
+
+Tap the **face button** next to the mic, choose **Talk to Nova** in the ⋯ menu,
+or type `/talk`. Nova is an animated face that listens, thinks and answers
+aloud: its mouth moves with the words, it blinks, looks at your finger or
+mouse, and its expression follows the answer (happy, caring, curious, sorry).
+It's hands-free: after each answer it listens again. Tap the face to
+interrupt, or type instead of talking. Everything is also saved in the chat.
+⚙ sets the voice and speed.
+
+**Robot body.** In ⚙, connect a robot over **Bluetooth**, **USB** or **Wi-Fi**.
+The robot moves its jaw in time with Nova's voice, shows the mood with its
+eye lights, nods and waves, and can start Nova listening with a button.
+Parts list, wiring, the message format and a ready ESP32 program are in
+[`robot/`](robot/README.md).
+
+## Support modes
+
+Choose a mode in the avatar, the ⋯ menu (**Personality**), or with `/wellbeing`
+and `/money`:
+
+- **Wellbeing support:** a calm listener for low mood, stress and loneliness.
+  It listens first, validates feelings and suggests small, proven steps
+  (grounding, breathing, routine, reaching out), and encourages professional
+  help when it's needed. It never diagnoses or advises on medicines.
+- **Money help:** budgets, saving, getting out of debt, dealing with illegal
+  loan apps, and spotting scams, with Indian examples and official places to
+  get help (RBI Ombudsman, Sachet, 1930). It never tips stocks or promises returns.
+
+In every mode, anyone who mentions suicide, self-harm, abuse or danger gets
+helplines first: Tele-MANAS **14416**, emergency **112**, Childline **1098**.
+Nova AI is a helper, not a doctor, therapist or financial adviser.
+
 ## Photos and files
 
 Tap the **paperclip** (or paste a picture, or drag a file onto the chat on

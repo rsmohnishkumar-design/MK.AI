@@ -60,7 +60,7 @@
 <link rel="modulepreload" href="js/symbolic.js" />
 <link rel="modulepreload" href="js/algebra.js" />
 <link rel="modulepreload" href="js/science.js" />
-<link rel="stylesheet" href="style.css?v=98" />
+<link rel="stylesheet" href="style.css?v=99" />
 </head>
 <body class="chat-page">
   <div class="app" id="appRoot">
@@ -204,6 +204,9 @@
               placeholder="Ask me anything…"
               aria-label="Your question"
             ></textarea>
+            <button type="button" id="avatarBtn" class="mic-btn avatar-btn" title="Talk to Nova (avatar)" aria-label="Talk to Nova, the speaking avatar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="6"/><circle cx="9.5" cy="11" r="1.2"/><circle cx="14.5" cy="11" r="1.2"/><path d="M9 15c1.6 1.3 4.4 1.3 6 0"/></svg>
+            </button>
             <button type="button" id="micBtn" class="mic-btn hidden" title="Speak your question" aria-label="Speak your question" aria-pressed="false">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
             </button>
@@ -303,6 +306,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=98"></script>
+  <script type="module" src="js/app.js?v=99"></script>
 </body>
 </html>

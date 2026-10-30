@@ -1810,3 +1810,56 @@ a.voice-btn { text-decoration: none; display: inline-block; }
   .wsp-files { border-right: none; border-bottom: 1px solid var(--panel-border); }
   .wsp-mode { width: 100%; order: 3; }
 }
+
+/* Talk to Nova: the speaking avatar (full screen, works on phones) */
+body.avatar-on { overflow: hidden; }
+.avatar-overlay {
+  position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column;
+  background: radial-gradient(ellipse at 50% 35%, #12285a 0%, #060b1d 62%, #03060f 100%);
+  color: #e6edf8; font-family: inherit; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.av-top { display: flex; align-items: center; gap: 8px; }
+.av-mode { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9fb0d0; margin-right: auto; }
+.av-mode select, .av-panel select {
+  background: #0f1d40; color: #e6edf8; border: 1px solid #2a3d6e; border-radius: 10px; padding: 8px 10px; font: inherit; max-width: 52vw;
+}
+.av-icon { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2a3d6e; background: #0f1d40; color: #e6edf8; font-size: 18px; cursor: pointer; }
+.av-icon:hover { border-color: #38bdf8; }
+.av-robot-chip { font-size: 12.5px; padding: 6px 10px; border-radius: 999px; background: #0f2f2a; color: #6ee7b7; border: 1px solid #14532d; white-space: nowrap; }
+.av-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+.av-face-btn { background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; }
+.av-face-btn:focus-visible { outline: 3px solid #38bdf8; outline-offset: 6px; }
+.av-face { width: min(62vw, 46vh, 340px); height: auto; display: block; filter: drop-shadow(0 18px 40px rgba(37, 99, 235, 0.35)); }
+.avatar-overlay[data-state="speaking"] .av-light { fill: #a78bfa; }
+.avatar-overlay[data-state="listening"] .av-light { fill: #f87171; }
+.av-state { margin: 0; font-size: 14px; color: #9fb0d0; min-height: 1.4em; }
+.av-captions { width: min(680px, 100%); min-height: 5.5em; }
+.av-you { margin: 0 0 6px; color: #9fb0d0; font-size: 14.5px; }
+.av-you::before { content: "You: "; color: #64748b; }
+.av-says { margin: 0; font-size: clamp(17px, 2.6vw, 21px); line-height: 1.45; color: #f1f5ff; }
+.av-bar { display: flex; gap: 8px; width: min(680px, 100%); margin: 0 auto; }
+.av-bar input { flex: 1; min-width: 0; padding: 12px 14px; border-radius: 14px; border: 1px solid #2a3d6e; background: #0b1630; color: #e6edf8; font: inherit; }
+.av-bar input:focus { outline: none; border-color: #38bdf8; }
+.av-mic, .av-send, .av-stop { min-width: 48px; height: 48px; border-radius: 14px; border: 1px solid #2a3d6e; background: #0f1d40; color: #e6edf8; font: inherit; font-weight: 600; cursor: pointer; padding: 0 14px; }
+.av-send { background: linear-gradient(135deg, #22d3ee, #2563eb); border-color: transparent; color: #04101f; }
+.av-stop { background: #e6edf8; color: #04101f; }
+.av-mic.on { background: #dc2626; border-color: #dc2626; animation: mic-pulse 1.2s ease-in-out infinite; }
+.av-note { margin: 8px auto 0; font-size: 11.5px; color: #64748b; text-align: center; max-width: 680px; }
+.av-panel {
+  position: absolute; top: 64px; right: 16px; width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 90px); overflow-y: auto;
+  background: #0b1630; border: 1px solid #2a3d6e; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); font-size: 14px; text-align: left;
+}
+.av-panel label { display: flex; flex-direction: column; gap: 4px; color: #9fb0d0; }
+.av-panel label.av-check { flex-direction: row; align-items: center; gap: 8px; color: #e6edf8; }
+.av-panel select { max-width: 100%; }
+.av-panel-title { margin: 6px 0 0; font-weight: 700; color: #e6edf8; }
+.av-robot-status { margin: 0; color: #9fb0d0; }
+.av-robot-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-robot-btns button { padding: 9px 12px; border-radius: 10px; border: 1px solid #2a3d6e; background: #0f1d40; color: #e6edf8; font: inherit; cursor: pointer; }
+.av-robot-btns button:disabled { opacity: 0.45; cursor: not-allowed; }
+.av-robot-url { padding: 9px 10px; border-radius: 10px; border: 1px solid #2a3d6e; background: #060d22; color: #e6edf8; font: inherit; }
+.av-robot-help { margin: 0; font-size: 12.5px; color: #64748b; }
+.av-robot-help a { color: #7dd3fc; }
+.avatar-overlay .hidden { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .av-mic.on { animation: none; } }
