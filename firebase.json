@@ -12,7 +12,8 @@
       "apps-src/**",
       "robot/**",
       "README.md",
-      "firestore.rules"
+      "firestore.rules",
+      "CLAUDE.md"
     ],
     "headers": [
       {
