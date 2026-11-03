@@ -1,0 +1,26 @@
+# Publishes Nova AI to Firebase Hosting (mkai-c042b.web.app).
+# Runs only when started by hand: Actions tab → "Deploy to Firebase" → Run workflow.
+# Needs the repo secret FIREBASE_SERVICE_ACCOUNT (the service account .json file contents).
+name: Deploy to Firebase
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: mkai-c042b
+          channelId: live
