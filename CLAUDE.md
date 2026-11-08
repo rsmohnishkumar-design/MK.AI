@@ -44,7 +44,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   `npx firebase-tools deploy --only hosting --project mkai-c042b --non-interactive`, delete the file.
 - Alternative: GitHub Actions workflow "Deploy to Firebase" (.github/workflows/firebase-deploy.yml,
   manual run) using the repo secret `FIREBASE_SERVICE_ACCOUNT`.
-- As of the last chat, Firebase still served v92; main had v100 waiting to go live.
+- Firebase now serves v100 (deployed 2026-11-08 with the FIREBASE_SERVICE_ACCOUNT env var, raw JSON).
 
 ## Ideas mentioned but not done
 - Making the GitHub repo private (only the owner can: Settings → Change visibility).
