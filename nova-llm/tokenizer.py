@@ -16,12 +16,14 @@ import sys
 from collections import Counter
 
 # Split text into chunks before BPE so merges never cross word or script boundaries.
-PRETOKEN = re.compile(r"\s?[^\W\d_]+|\s?\d{1,3}|\s?[^\s\w]+|\s+", re.UNICODE)
+PRETOKEN = re.compile(r"\s?[^\W\d_]+|\s?\d{1,3}|\s?[^\s\w]+|\s+|_+|.", re.UNICODE | re.DOTALL)
 SPECIAL = ["<|pad|>", "<|bos|>", "<|eos|>", "<|user|>", "<|assistant|>"]
 
 
 def chunks(text):
-    return [m.group(0).encode("utf-8") for m in PRETOKEN.finditer(text)]
+    parts = [m.group(0) for m in PRETOKEN.finditer(text)]
+    assert "".join(parts) == text, "pre-tokenizer dropped characters"
+    return [p.encode("utf-8") for p in parts]
 
 
 def merge(ids, pair, new_id):

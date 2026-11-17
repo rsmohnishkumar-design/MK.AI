@@ -27,6 +27,12 @@ def main():
     ap.add_argument("--lr", type=float, default=6e-4)
     ap.add_argument("--save-every", type=int, default=1000)
     ap.add_argument("--small", action="store_true", help="tiny model for a CPU smoke test")
+    ap.add_argument("--layers", type=int)
+    ap.add_argument("--width", type=int)
+    ap.add_argument("--heads", type=int)
+    ap.add_argument("--context", type=int)
+    ap.add_argument("--dropout", type=float, default=0.0)
+    ap.add_argument("--eval-batches", type=int, default=20)
     a = ap.parse_args()
 
     tok = Tokenizer.load(a.tokenizer)
@@ -39,6 +45,11 @@ def main():
     split = int(len(ids) * 0.98)
     train, val = ids[:split], ids[split:]
     cfg = Config(vocab_size=tok.vocab_size, layers=2, width=128, heads=4, context=128) if a.small else Config(vocab_size=tok.vocab_size)
+    for k in ("layers", "width", "heads", "context"):
+        if getattr(a, k):
+            setattr(cfg, k, getattr(a, k))
+    cfg.dropout = a.dropout
+    torch.manual_seed(1337)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     model = NovaLM(cfg).to(dev)
     print(f"parameters: {model.params() / 1e6:.1f}M  tokens: {len(ids) / 1e6:.1f}M  device: {dev}")
@@ -85,11 +96,15 @@ def main():
         if step and step % a.save_every == 0:
             model.eval()
             with torch.no_grad():
-                vl = sum(model(*batch(val))[1].item() for _ in range(20)) / 20
+                vl = sum(model(*batch(val))[1].item() for _ in range(a.eval_batches)) / a.eval_batches
             model.train()
             print(f"val loss {vl:.3f}  perplexity {math.exp(vl):.1f}")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "step": step, "config": cfg.__dict__}, last)
-    torch.save({"model": model.state_dict(), "step": a.steps, "config": cfg.__dict__}, os.path.join(a.out, "final.pt"))
+    model.eval()
+    with torch.no_grad():
+        vl = sum(model(*batch(val))[1].item() for _ in range(a.eval_batches)) / a.eval_batches
+    print(f"final val loss {vl:.3f}  perplexity {math.exp(vl):.1f}  train time {time.time() - t0:.0f}s")
+    torch.save({"model": model.state_dict(), "step": a.steps, "config": cfg.__dict__, "val_loss": vl}, os.path.join(a.out, "final.pt"))
 
 
 if __name__ == "__main__":

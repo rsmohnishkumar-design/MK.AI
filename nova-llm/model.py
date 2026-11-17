@@ -116,7 +116,7 @@ class NovaLM(nn.Module):
         for b in self.blocks:
             x = b(x, self.cos, self.sin)
         logits = self.head(self.norm(x))
-        loss = None if targets is None else F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
+        loss = None if targets is None else F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), ignore_index=-1)
         return logits, loss
 
     @torch.no_grad()

@@ -17,7 +17,8 @@
       "tests/**",
       "gateway/**",
       "nova-llm/**",
-      "docs/**"
+      "docs/**",
+      "nova-gen/**"
     ],
     "headers": [
       {

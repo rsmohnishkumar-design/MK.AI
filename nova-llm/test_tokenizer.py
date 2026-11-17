@@ -24,7 +24,7 @@ def check(name, cond):
 
 tok = Tokenizer.train(CORPUS, vocab_size=600)
 check("learns merges from our own text", len(tok.merges) > 50)
-for sample in ["Nova AI explains maths.", "வணக்கம்! தமிழ் மொழி.", "नमस्ते नोवा", "def add(a, b): return a + b", "unseen wörds ✓ 😀 123456"]:
+for sample in ["def __init__(self, x_1): return self.x_1", "a\u00a0b\tc\r\nd", "Nova AI explains maths.", "வணக்கம்! தமிழ் மொழி.", "नमस्ते नोवा", "def add(a, b): return a + b", "unseen wörds ✓ 😀 123456"]:
     check(f"round-trips exactly: {sample!r}", tok.decode(tok.encode(sample)) == sample)
 english = "Nova AI explains science and maths."
 check("compresses trained text (fewer tokens than bytes)", len(tok.encode(english)) < len(english.encode("utf-8")) / 2)

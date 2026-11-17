@@ -6,6 +6,7 @@ import { PROVIDERS, providerById, keyField, listModels, chooseModels, streamChat
 import { geminiStream } from "./gemini-rest.js";
 import { needsVision, withFileText } from "./attach.js";
 import { gatewayOn, GATEWAY_PROVIDER, idToken, gatewayResearch } from "./gateway.js";
+import { independent, INDEPENDENT_NOTE } from "./independent.js";
 
 // Answers come from the free AI services whose keys the admin saved in the
 // vault (Groq, Cerebras, OpenRouter, GitHub Models), then from Gemini through
@@ -387,6 +388,8 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   // can never cancel (or be confused with) the next one.
   const stop = signal || globalThis.mkaiStop || null;
   if (stop?.aborted) throw httpError(499, "stopped");
+  // Independent mode: no outside AI service is called, and nothing falls back to one.
+  if (independent()) return novaAnswer(question, onText, stop);
   const ctx = {
     stop,
     contents: [
@@ -428,6 +431,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
 }
 
 export function aiErrorMessage(err) {
+  if (err?.independent) return INDEPENDENT_NOTE;
   const status = statusOf(err);
   const text = errorText(err);
   // The provider's own wording, shortened, so problems can be diagnosed from a screenshot.
@@ -460,8 +464,29 @@ export function aiErrorMessage(err) {
 // Nova AI's name for it: every answer comes from Alpaca
 export const askAlpaca = askGemini;
 
+// Independent mode: NOVA's own model (models/nova-mini) answers, in the browser.
+// It is small and often wrong, so every answer says so. No outside AI is called.
+export const NOVA_LABEL = "\n\n— NOVA Mini (experimental): Nova's own small model, trained by this project and running on your device. It is often wrong; check anything important.";
+async function novaAnswer(question, onText, stop) {
+  let novaChat;
+  try {
+    ({ novaChat } = await import("./nova/llm.js"));
+  } catch {
+    throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });
+  }
+  try {
+    const text = await novaChat(question, { maxNew: 160, temperature: 0.6, signal: stop, onText });
+    if (!text) throw new Error("empty");
+    return { answer: text + NOVA_LABEL, searchSuggestions: null, by: "nova-mini" };
+  } catch (err) {
+    if (stop?.aborted) throw httpError(499, "stopped");
+    throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });
+  }
+}
+
 // For the voice and picture features: the saved Gemini key, if any
 export async function geminiKey() {
+  if (independent()) return null;
   return (await savedKeys()).gemini || null;
 }
 

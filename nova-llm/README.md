@@ -7,10 +7,13 @@ training run and weights. It is not Gemini or any other provider's model renamed
 
 | Part | File | Status |
 | --- | --- | --- |
-| Byte-level BPE tokenizer (English, Tamil, Hindi, code) | tokenizer.py | Implemented and tested (`python -I test_tokenizer.py`, 10/10) |
-| Transformer (RoPE, RMSNorm, SwiGLU, tied embeddings, ~27M params by default) | model.py | Written, NOT run yet (no PyTorch in the dev container) |
-| Pretraining loop (AdamW, cosine LR, fp16, resumable checkpoints) | train.py | Written, NOT run yet |
-| Instruction tuning, evaluation, quantisation, browser export | — | Planned (below) |
+| Byte-level BPE tokenizer (English, Tamil, Hindi, code) | tokenizer.py | Tested (`python test_tokenizer.py`, 12/12); same tokens as the browser version |
+| Transformer (RoPE, RMSNorm, SwiGLU, tied embeddings) | model.py | Tested with PyTorch on CPU (`test_model.py`, 6/6) |
+| Training loop (AdamW, cosine LR, resumable checkpoints) | train.py | Used to train NOVA Mini on CPU |
+| Training data with provenance | prepare_data.py, data/MANIFEST.json | Nova's own knowledge base + public-domain Thirukkural |
+| Evaluation (held-out perplexity vs baseline, held-out Q&A word-F1) | evaluate.py | Run on NOVA Mini |
+| Browser export (float16) + NOVA's own JS inference engine | export_web.py, js/nova/ | Matches PyTorch to ~1e-6 (tests/nova_parity.test.mjs) |
+| Instruction tuning on licensed sets, larger models | — | Needs more data and GPU time |
 
 ## Honest expectations
 

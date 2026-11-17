@@ -47,7 +47,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
 
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v101. New files must be added to the sw.js precache list.
+- Current version: v102. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,

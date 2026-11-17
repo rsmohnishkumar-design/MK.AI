@@ -1,0 +1,17 @@
+{
+  "file": "corpus.txt",
+  "sha256": "25ed1b9da81e143ad52324acdd951e5e1e82d7e437b9fa55a0b7b794581f2d9a",
+  "characters": 1293009,
+  "examples": 7818,
+  "sources": {
+    "data/kb/*.json": {
+      "licence": "Nova AI project content (owned)",
+      "examples": 7764
+    },
+    "js/thirukkural.js": {
+      "licence": "Public domain (Thiruvalluvar); English meanings written for this project",
+      "examples": 54
+    }
+  },
+  "excluded": "No user conversations, no private data, no output of other AI services."
+}
