@@ -21,7 +21,8 @@ class Config:
     width: int = 448
     heads: int = 7
     ffn_mult: float = 8 / 3
-    dropout: float = 0.0
+    dropout: float = 0.0  # attention-weight dropout (used by the step-450 model)
+    resid_dropout: float = 0.0  # dropout on each block's attention/FFN output and on embeddings (added later; 0 = old behaviour)
 
 
 class RMSNorm(nn.Module):
@@ -80,10 +81,11 @@ class Block(nn.Module):
     def __init__(self, c: Config):
         super().__init__()
         self.n1, self.attn, self.n2, self.ffn = RMSNorm(c.width), Attention(c), RMSNorm(c.width), FeedForward(c)
+        self.drop = nn.Dropout(c.resid_dropout)
 
     def forward(self, x, cos, sin):
-        x = x + self.attn(self.n1(x), cos, sin)
-        return x + self.ffn(self.n2(x))
+        x = x + self.drop(self.attn(self.n1(x), cos, sin))
+        return x + self.drop(self.ffn(self.n2(x)))
 
 
 class NovaLM(nn.Module):
@@ -91,6 +93,7 @@ class NovaLM(nn.Module):
         super().__init__()
         self.c = c
         self.embed = nn.Embedding(c.vocab_size, c.width)
+        self.edrop = nn.Dropout(c.resid_dropout)
         self.blocks = nn.ModuleList(Block(c) for _ in range(c.layers))
         self.norm = RMSNorm(c.width)
         self.head = nn.Linear(c.width, c.vocab_size, bias=False)
@@ -112,7 +115,7 @@ class NovaLM(nn.Module):
         return sum(p.numel() for p in self.parameters())
 
     def forward(self, idx, targets=None):
-        x = self.embed(idx)
+        x = self.edrop(self.embed(idx))
         for b in self.blocks:
             x = b(x, self.cos, self.sin)
         logits = self.head(self.norm(x))

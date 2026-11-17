@@ -1,0 +1,218 @@
+<|user|>Sanaa is the capital of which country?<|assistant|>Sanaa is the capital of Yemen.<|eos|>
+<|user|>Which country has Sanaa as its capital?<|assistant|>Sanaa is the capital of Yemen.<|eos|>
+<|user|>Which country's capital is Sanaa?<|assistant|>Sanaa is the capital of Yemen.<|eos|>
+<|user|>What is a tsunami?<|assistant|>A tsunami is a series of huge sea waves caused by an undersea earthquake, volcano or landslide. The 2004 Indian Ocean tsunami hit Tamil Nadu and other coasts. If the sea suddenly pulls back, move to high ground at once.<|eos|>
+<|user|>Tsunami?<|assistant|>A tsunami is a series of huge sea waves caused by an undersea earthquake, volcano or landslide. The 2004 Indian Ocean tsunami hit Tamil Nadu and other coasts. If the sea suddenly pulls back, move to high ground at once.<|eos|>
+<|user|>What causes a tsunami?<|assistant|>A tsunami is a series of huge sea waves caused by an undersea earthquake, volcano or landslide. The 2004 Indian Ocean tsunami hit Tamil Nadu and other coasts. If the sea suddenly pulls back, move to high ground at once.<|eos|>
+<|user|>Who wrote The Alchemist?<|assistant|>The Alchemist (1988) was written by Paulo Coelho of Brazil.<|eos|>
+<|user|>Who wrote the alchemist?<|assistant|>The Alchemist (1988) was written by Paulo Coelho of Brazil.<|eos|>
+<|user|>What is the full form of EMI?<|assistant|>**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.<|eos|>
+<|user|>Full form of emi?<|assistant|>**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.<|eos|>
+<|user|>Emi full form?<|assistant|>**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.<|eos|>
+<|user|>Who was the first Indian in space?<|assistant|>Rakesh Sharma was the first Indian in space, in 1984 aboard Soyuz T-11. He told Indira Gandhi India looked 'Saare Jahan Se Achha'.<|eos|>
+<|user|>First indian astronaut?<|assistant|>Rakesh Sharma was the first Indian in space, in 1984 aboard Soyuz T-11. He told Indira Gandhi India looked 'Saare Jahan Se Achha'.<|eos|>
+<|user|>Rakesh sharma?<|assistant|>Rakesh Sharma was the first Indian in space, in 1984 aboard Soyuz T-11. He told Indira Gandhi India looked 'Saare Jahan Se Achha'.<|eos|>
+<|user|>What is the currency of Portugal?<|assistant|>The currency of Portugal is the euro (€).<|eos|>
+<|user|>Portugal currency?<|assistant|>The currency of Portugal is the euro (€).<|eos|>
+<|user|>Which currency is used in Portugal?<|assistant|>The currency of Portugal is the euro (€).<|eos|>
+<|user|>How many metres are in a kilometre?<|assistant|>1 kilometre = 1000 metres.<|eos|>
+<|user|>Metres in a km?<|assistant|>1 kilometre = 1000 metres.<|eos|>
+<|user|>How many m in 1 km?<|assistant|>1 kilometre = 1000 metres.<|eos|>
+<|user|>What is the capital of Honduras?<|assistant|>The capital of Honduras is Tegucigalpa.<|eos|>
+<|user|>Honduras capital?<|assistant|>The capital of Honduras is Tegucigalpa.<|eos|>
+<|user|>Capital city of Honduras?<|assistant|>The capital of Honduras is Tegucigalpa.<|eos|>
+<|user|>What is the full form of LAN?<|assistant|>**LAN** stands for **Local Area Network**: a network in one building or campus.<|eos|>
+<|user|>Full form of lan?<|assistant|>**LAN** stands for **Local Area Network**: a network in one building or campus.<|eos|>
+<|user|>Lan full form?<|assistant|>**LAN** stands for **Local Area Network**: a network in one building or campus.<|eos|>
+<|user|>What is the atomic number of Indium?<|assistant|>The atomic number of Indium (In) is 49: it has 49 protons.<|eos|>
+<|user|>Atomic number of Indium?<|assistant|>The atomic number of Indium (In) is 49: it has 49 protons.<|eos|>
+<|user|>Indium atomic number?<|assistant|>The atomic number of Indium (In) is 49: it has 49 protons.<|eos|>
+<|user|>What is the chemical symbol of Zirconium?<|assistant|>The chemical symbol of Zirconium is Zr.<|eos|>
+<|user|>Symbol of Zirconium?<|assistant|>The chemical symbol of Zirconium is Zr.<|eos|>
+<|user|>Zirconium symbol?<|assistant|>The chemical symbol of Zirconium is Zr.<|eos|>
+<|user|>What are vowels?<|assistant|>The vowels in English are A, E, I, O and U; the other 21 letters are consonants (Y can act as either).<|eos|>
+<|user|>Vowels in english?<|assistant|>The vowels in English are A, E, I, O and U; the other 21 letters are consonants (Y can act as either).<|eos|>
+<|user|>How many vowels?<|assistant|>The vowels in English are A, E, I, O and U; the other 21 letters are consonants (Y can act as either).<|eos|>
+<|user|>Which continent is Chad in?<|assistant|>Chad is in Africa.<|eos|>
+<|user|>Chad is in which continent?<|assistant|>Chad is in Africa.<|eos|>
+<|user|>Continent of Chad?<|assistant|>Chad is in Africa.<|eos|>
+<|user|>Which continent is Argentina in?<|assistant|>Argentina is in South America.<|eos|>
+<|user|>Argentina is in which continent?<|assistant|>Argentina is in South America.<|eos|>
+<|user|>Continent of Argentina?<|assistant|>Argentina is in South America.<|eos|>
+<|user|>What is the Param Vir Chakra?<|assistant|>The Param Vir Chakra is India's highest military award for bravery in war.<|eos|>
+<|user|>Highest military award in india?<|assistant|>The Param Vir Chakra is India's highest military award for bravery in war.<|eos|>
+<|user|>Param vir chakra?<|assistant|>The Param Vir Chakra is India's highest military award for bravery in war.<|eos|>
+<|user|>What is a drone?<|assistant|>A drone is an aircraft with no pilot on board, flown by remote control or by computer. Drones are used for photography, farming (spraying crops), deliveries, mapping and rescue.<|eos|>
+<|user|>Drone?<|assistant|>A drone is an aircraft with no pilot on board, flown by remote control or by computer. Drones are used for photography, farming (spraying crops), deliveries, mapping and rescue.<|eos|>
+<|user|>Drones?<|assistant|>A drone is an aircraft with no pilot on board, flown by remote control or by computer. Drones are used for photography, farming (spraying crops), deliveries, mapping and rescue.<|eos|>
+<|user|>What is an adjective?<|assistant|>An adjective describes a noun or pronoun, e.g. a tall tree, a red ball, three books.<|eos|>
+<|user|>Define adjective?<|assistant|>An adjective describes a noun or pronoun, e.g. a tall tree, a red ball, three books.<|eos|>
+<|user|>Examples of adjectives?<|assistant|>An adjective describes a noun or pronoun, e.g. a tall tree, a red ball, three books.<|eos|>
+<|user|>What is a lambda function in Python?<|assistant|>A small one-line function without a name:
+```python
+square = lambda x: x * x
+print(square(6))                                  # 36
+nums = [1, 2, 3, 4]
+print(list(map(lambda x: x * 10, nums)))          # [10, 20, 30, 40]
+print(list(filter(lambda x: x % 2 == 0, nums)))   # [2, 4]
+```<|eos|>
+<|user|>Lambda in python?<|assistant|>A small one-line function without a name:
+```python
+square = lambda x: x * x
+print(square(6))                                  # 36
+nums = [1, 2, 3, 4]
+print(list(map(lambda x: x * 10, nums)))          # [10, 20, 30, 40]
+print(list(filter(lambda x: x % 2 == 0, nums)))   # [2, 4]
+```<|eos|>
+<|user|>Python lambda?<|assistant|>A small one-line function without a name:
+```python
+square = lambda x: x * x
+print(square(6))                                  # 36
+nums = [1, 2, 3, 4]
+print(list(map(lambda x: x * 10, nums)))          # [10, 20, 30, 40]
+print(list(filter(lambda x: x % 2 == 0, nums)))   # [2, 4]
+```<|eos|>
+<|user|>Who was Kambar?<|assistant|>Kambar (12th century) wrote Kamba Ramayanam, the Tamil version of the Ramayana, one of the finest works of Tamil poetry.<|eos|>
+<|user|>Kambar?<|assistant|>Kambar (12th century) wrote Kamba Ramayanam, the Tamil version of the Ramayana, one of the finest works of Tamil poetry.<|eos|>
+<|user|>Kamba ramayanam?<|assistant|>Kambar (12th century) wrote Kamba Ramayanam, the Tamil version of the Ramayana, one of the finest works of Tamil poetry.<|eos|>
+<|user|>Who wrote the Mahabharata?<|assistant|>The Mahabharata is traditionally credited to the sage Vyasa. It includes the Bhagavad Gita.<|eos|>
+<|user|>Mahabharata author?<|assistant|>The Mahabharata is traditionally credited to the sage Vyasa. It includes the Bhagavad Gita.<|eos|>
+<|user|>Vyasa?<|assistant|>The Mahabharata is traditionally credited to the sage Vyasa. It includes the Bhagavad Gita.<|eos|>
+<|user|>What are the Sangam literature works?<|assistant|>Sangam literature is the oldest Tamil literature (about 300 BCE – 300 CE), grouped into Ettuthogai (eight anthologies, such as Purananuru and Akananuru) and Pathupattu (ten idylls). The poems are about love (akam) and war and public life (puram).<|eos|>
+<|user|>Sangam literature?<|assistant|>Sangam literature is the oldest Tamil literature (about 300 BCE – 300 CE), grouped into Ettuthogai (eight anthologies, such as Purananuru and Akananuru) and Pathupattu (ten idylls). The poems are about love (akam) and war and public life (puram).<|eos|>
+<|user|>Sangam age?<|assistant|>Sangam literature is the oldest Tamil literature (about 300 BCE – 300 CE), grouped into Ettuthogai (eight anthologies, such as Purananuru and Akananuru) and Pathupattu (ten idylls). The poems are about love (akam) and war and public life (puram).<|eos|>
+<|user|>What does SyntaxError mean?<|assistant|>A SyntaxError means the code breaks the language's grammar: a missing bracket, quote, colon or comma, or a misspelt keyword. Look at the line shown and the one just before it.<|eos|>
+<|user|>Syntaxerror?<|assistant|>A SyntaxError means the code breaks the language's grammar: a missing bracket, quote, colon or comma, or a misspelt keyword. Look at the line shown and the one just before it.<|eos|>
+<|user|>Syntax error?<|assistant|>A SyntaxError means the code breaks the language's grammar: a missing bracket, quote, colon or comma, or a misspelt keyword. Look at the line shown and the one just before it.<|eos|>
+<|user|>Which element has atomic number 79?<|assistant|>Element number 79 is Gold (Au).<|eos|>
+<|user|>Element with atomic number 79?<|assistant|>Element number 79 is Gold (Au).<|eos|>
+<|user|>Atomic number 79 element?<|assistant|>Element number 79 is Gold (Au).<|eos|>
+<|user|>What are the gas laws?<|assistant|>Gas laws: Boyle's law PV = constant (fixed temperature); Charles's law V/T = constant (fixed pressure); Gay-Lussac's law P/T = constant; Avogadro's law V ∝ n. Together: ideal gas law PV = nRT, with R = 8.314 J/(mol·K).<|eos|>
+<|user|>Boyles law?<|assistant|>Gas laws: Boyle's law PV = constant (fixed temperature); Charles's law V/T = constant (fixed pressure); Gay-Lussac's law P/T = constant; Avogadro's law V ∝ n. Together: ideal gas law PV = nRT, with R = 8.314 J/(mol·K).<|eos|>
+<|user|>Charles law?<|assistant|>Gas laws: Boyle's law PV = constant (fixed temperature); Charles's law V/T = constant (fixed pressure); Gay-Lussac's law P/T = constant; Avogadro's law V ∝ n. Together: ideal gas law PV = nRT, with R = 8.314 J/(mol·K).<|eos|>
+<|user|>Which element has atomic number 11?<|assistant|>Element number 11 is Sodium (Na).<|eos|>
+<|user|>Element with atomic number 11?<|assistant|>Element number 11 is Sodium (Na).<|eos|>
+<|user|>Atomic number 11 element?<|assistant|>Element number 11 is Sodium (Na).<|eos|>
+<|user|>How many sides does a nonagon have?<|assistant|>A nonagon has 9 sides.<|eos|>
+<|user|>Nonagon sides?<|assistant|>A nonagon has 9 sides.<|eos|>
+<|user|>What is the full form of ISP?<|assistant|>**ISP** stands for **Internet Service Provider**: the company that gives you internet, like Jio or Airtel.<|eos|>
+<|user|>Full form of isp?<|assistant|>**ISP** stands for **Internet Service Provider**: the company that gives you internet, like Jio or Airtel.<|eos|>
+<|user|>Isp full form?<|assistant|>**ISP** stands for **Internet Service Provider**: the company that gives you internet, like Jio or Airtel.<|eos|>
+<|user|>What is the currency of Oman?<|assistant|>The currency of Oman is the Omani rial.<|eos|>
+<|user|>Oman currency?<|assistant|>The currency of Oman is the Omani rial.<|eos|>
+<|user|>Which currency is used in Oman?<|assistant|>The currency of Oman is the Omani rial.<|eos|>
+<|user|>How to become a chartered accountant?<|assistant|>To become a Chartered Accountant (CA): register with ICAI after class 12, clear CA Foundation, then CA Intermediate, complete 2 to 3 years of articleship training, and clear CA Final.<|eos|>
+<|user|>How to become a ca?<|assistant|>To become a Chartered Accountant (CA): register with ICAI after class 12, clear CA Foundation, then CA Intermediate, complete 2 to 3 years of articleship training, and clear CA Final.<|eos|>
+<|user|>Chartered accountant?<|assistant|>To become a Chartered Accountant (CA): register with ICAI after class 12, clear CA Foundation, then CA Intermediate, complete 2 to 3 years of articleship training, and clear CA Final.<|eos|>
+<|user|>What is the full form of UPSC?<|assistant|>**UPSC** stands for **Union Public Service Commission**: the body that conducts the civil services exam.<|eos|>
+<|user|>Full form of upsc?<|assistant|>**UPSC** stands for **Union Public Service Commission**: the body that conducts the civil services exam.<|eos|>
+<|user|>Upsc full form?<|assistant|>**UPSC** stands for **Union Public Service Commission**: the body that conducts the civil services exam.<|eos|>
+<|user|>Thirukkural 621<|assistant|>இடுக்கண் வருங்கால் நகுக அதனை
+அடுத்தூர்வது அஃதொப்ப தில்
+Meaning: When trouble comes, laugh at it; nothing defeats trouble like that.<|eos|>
+<|user|>What is the Bharat Ratna?<|assistant|>The Bharat Ratna is India's highest civilian award, started in 1954. Next are the Padma Vibhushan, Padma Bhushan and Padma Shri.<|eos|>
+<|user|>Highest civilian award in india?<|assistant|>The Bharat Ratna is India's highest civilian award, started in 1954. Next are the Padma Vibhushan, Padma Bhushan and Padma Shri.<|eos|>
+<|user|>Bharat ratna?<|assistant|>The Bharat Ratna is India's highest civilian award, started in 1954. Next are the Padma Vibhushan, Padma Bhushan and Padma Shri.<|eos|>
+<|user|>What is the currency of Switzerland?<|assistant|>The currency of Switzerland is the Swiss franc.<|eos|>
+<|user|>Switzerland currency?<|assistant|>The currency of Switzerland is the Swiss franc.<|eos|>
+<|user|>Which currency is used in Switzerland?<|assistant|>The currency of Switzerland is the Swiss franc.<|eos|>
+<|user|>What is the atomic number of Astatine?<|assistant|>The atomic number of Astatine (At) is 85: it has 85 protons.<|eos|>
+<|user|>Atomic number of Astatine?<|assistant|>The atomic number of Astatine (At) is 85: it has 85 protons.<|eos|>
+<|user|>Astatine atomic number?<|assistant|>The atomic number of Astatine (At) is 85: it has 85 protons.<|eos|>
+<|user|>How many planets are there in the solar system?<|assistant|>There are 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Pluto was reclassified as a dwarf planet in 2006.<|eos|>
+<|user|>How many planets?<|assistant|>There are 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Pluto was reclassified as a dwarf planet in 2006.<|eos|>
+<|user|>Planets?<|assistant|>There are 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Pluto was reclassified as a dwarf planet in 2006.<|eos|>
+<|user|>Who was Jagadish Chandra Bose?<|assistant|>Sir Jagadish Chandra Bose (1858–1937) was an Indian scientist who pioneered radio and microwave research and showed that plants respond to stimuli, using his crescograph.<|eos|>
+<|user|>Jagadish chandra bose?<|assistant|>Sir Jagadish Chandra Bose (1858–1937) was an Indian scientist who pioneered radio and microwave research and showed that plants respond to stimuli, using his crescograph.<|eos|>
+<|user|>J c bose?<|assistant|>Sir Jagadish Chandra Bose (1858–1937) was an Indian scientist who pioneered radio and microwave research and showed that plants respond to stimuli, using his crescograph.<|eos|>
+<|user|>What is the capital of Slovakia?<|assistant|>The capital of Slovakia is Bratislava.<|eos|>
+<|user|>Slovakia capital?<|assistant|>The capital of Slovakia is Bratislava.<|eos|>
+<|user|>Capital city of Slovakia?<|assistant|>The capital of Slovakia is Bratislava.<|eos|>
+<|user|>Which continent is Slovenia in?<|assistant|>Slovenia is in Europe.<|eos|>
+<|user|>Slovenia is in which continent?<|assistant|>Slovenia is in Europe.<|eos|>
+<|user|>Continent of Slovenia?<|assistant|>Slovenia is in Europe.<|eos|>
+<|user|>What is a hash table?<|assistant|>A hash table (Python dict, JavaScript object/Map) stores key–value pairs, using a hash function to jump straight to a key's slot, so lookups are O(1) on average.<|eos|>
+<|user|>Hash table?<|assistant|>A hash table (Python dict, JavaScript object/Map) stores key–value pairs, using a hash function to jump straight to a key's slot, so lookups are O(1) on average.<|eos|>
+<|user|>Hashmap?<|assistant|>A hash table (Python dict, JavaScript object/Map) stores key–value pairs, using a hash function to jump straight to a key's slot, so lookups are O(1) on average.<|eos|>
+<|user|>Asmara is the capital of which country?<|assistant|>Asmara is the capital of Eritrea.<|eos|>
+<|user|>Which country has Asmara as its capital?<|assistant|>Asmara is the capital of Eritrea.<|eos|>
+<|user|>Which country's capital is Asmara?<|assistant|>Asmara is the capital of Eritrea.<|eos|>
+<|user|>What is digital marketing?<|assistant|>Digital marketing promotes products online: search engine optimisation (SEO), social media marketing, content marketing, email marketing and paid ads (Google Ads, Meta Ads).<|eos|>
+<|user|>Digital marketing?<|assistant|>Digital marketing promotes products online: search engine optimisation (SEO), social media marketing, content marketing, email marketing and paid ads (Google Ads, Meta Ads).<|eos|>
+<|user|>Seo?<|assistant|>Digital marketing promotes products online: search engine optimisation (SEO), social media marketing, content marketing, email marketing and paid ads (Google Ads, Meta Ads).<|eos|>
+<|user|>What is ROM?<|assistant|>ROM (Read Only Memory) is permanent memory holding start-up instructions; it keeps its data without power (non-volatile).<|eos|>
+<|user|>Read only memory?<|assistant|>ROM (Read Only Memory) is permanent memory holding start-up instructions; it keeps its data without power (non-volatile).<|eos|>
+<|user|>Full form of rom?<|assistant|>ROM (Read Only Memory) is permanent memory holding start-up instructions; it keeps its data without power (non-volatile).<|eos|>
+<|user|>Which element has the symbol Db?<|assistant|>Db is the symbol of Dubnium (atomic number 105).<|eos|>
+<|user|>Db element?<|assistant|>Db is the symbol of Dubnium (atomic number 105).<|eos|>
+<|user|>Element Db?<|assistant|>Db is the symbol of Dubnium (atomic number 105).<|eos|>
+<|user|>What is the atomic number of Darmstadtium?<|assistant|>The atomic number of Darmstadtium (Ds) is 110: it has 110 protons.<|eos|>
+<|user|>Atomic number of Darmstadtium?<|assistant|>The atomic number of Darmstadtium (Ds) is 110: it has 110 protons.<|eos|>
+<|user|>Darmstadtium atomic number?<|assistant|>The atomic number of Darmstadtium (Ds) is 110: it has 110 protons.<|eos|>
+<|user|>What is wet and dry waste?<|assistant|>Wet waste is kitchen waste that rots, like food and peels: it can be composted. Dry waste is paper, plastic, metal and glass: it can be recycled. Keep them in separate bins (green for wet, blue for dry).<|eos|>
+<|user|>Wet waste?<|assistant|>Wet waste is kitchen waste that rots, like food and peels: it can be composted. Dry waste is paper, plastic, metal and glass: it can be recycled. Keep them in separate bins (green for wet, blue for dry).<|eos|>
+<|user|>Dry waste?<|assistant|>Wet waste is kitchen waste that rots, like food and peels: it can be composted. Dry waste is paper, plastic, metal and glass: it can be recycled. Keep them in separate bins (green for wet, blue for dry).<|eos|>
+<|user|>What is budgeting?<|assistant|>Budgeting is planning how to use your money. A simple rule is 50/30/20: 50% for needs, 30% for wants and 20% for savings. Track spending, build an emergency fund of 3–6 months' expenses, and avoid high-interest debt.<|eos|>
+<|user|>How to save money?<|assistant|>Budgeting is planning how to use your money. A simple rule is 50/30/20: 50% for needs, 30% for wants and 20% for savings. Track spending, build an emergency fund of 3–6 months' expenses, and avoid high-interest debt.<|eos|>
+<|user|>50 30 20 rule?<|assistant|>Budgeting is planning how to use your money. A simple rule is 50/30/20: 50% for needs, 30% for wants and 20% for savings. Track spending, build an emergency fund of 3–6 months' expenses, and avoid high-interest debt.<|eos|>
+<|user|>What is the currency of Japan?<|assistant|>The currency of Japan is the yen (¥).<|eos|>
+<|user|>Japan currency?<|assistant|>The currency of Japan is the yen (¥).<|eos|>
+<|user|>Which currency is used in Japan?<|assistant|>The currency of Japan is the yen (¥).<|eos|>
+<|user|>What is the chemical symbol of Molybdenum?<|assistant|>The chemical symbol of Molybdenum is Mo.<|eos|>
+<|user|>Symbol of Molybdenum?<|assistant|>The chemical symbol of Molybdenum is Mo.<|eos|>
+<|user|>Molybdenum symbol?<|assistant|>The chemical symbol of Molybdenum is Mo.<|eos|>
+<|user|>What is the full form of RTGS?<|assistant|>**RTGS** stands for **Real Time Gross Settlement**: instant transfer of large amounts (₹2 lakh or more) between banks.<|eos|>
+<|user|>Full form of rtgs?<|assistant|>**RTGS** stands for **Real Time Gross Settlement**: instant transfer of large amounts (₹2 lakh or more) between banks.<|eos|>
+<|user|>Rtgs full form?<|assistant|>**RTGS** stands for **Real Time Gross Settlement**: instant transfer of large amounts (₹2 lakh or more) between banks.<|eos|>
+<|user|>Who was Verghese Kurien?<|assistant|>Verghese Kurien (1921–2012), the 'Milkman of India', led Operation Flood — the White Revolution — that made India the world's largest milk producer, and built Amul.<|eos|>
+<|user|>Verghese kurien?<|assistant|>Verghese Kurien (1921–2012), the 'Milkman of India', led Operation Flood — the White Revolution — that made India the world's largest milk producer, and built Amul.<|eos|>
+<|user|>Father of white revolution?<|assistant|>Verghese Kurien (1921–2012), the 'Milkman of India', led Operation Flood — the White Revolution — that made India the world's largest milk producer, and built Amul.<|eos|>
+<|user|>Phnom Penh is the capital of which country?<|assistant|>Phnom Penh is the capital of Cambodia.<|eos|>
+<|user|>Which country has Phnom Penh as its capital?<|assistant|>Phnom Penh is the capital of Cambodia.<|eos|>
+<|user|>Which country's capital is Phnom Penh?<|assistant|>Phnom Penh is the capital of Cambodia.<|eos|>
+<|user|>Who wrote Romeo and Juliet?<|assistant|>William Shakespeare wrote Romeo and Juliet. He also wrote Hamlet, Macbeth and Othello.<|eos|>
+<|user|>Shakespeare plays?<|assistant|>William Shakespeare wrote Romeo and Juliet. He also wrote Hamlet, Macbeth and Othello.<|eos|>
+<|user|>Who wrote hamlet?<|assistant|>William Shakespeare wrote Romeo and Juliet. He also wrote Hamlet, Macbeth and Othello.<|eos|>
+<|user|>Which continent is United Kingdom in?<|assistant|>United Kingdom is in Europe.<|eos|>
+<|user|>United Kingdom is in which continent?<|assistant|>United Kingdom is in Europe.<|eos|>
+<|user|>UK is in which continent?<|assistant|>United Kingdom is in Europe.<|eos|>
+<|user|>Who was Bal Gangadhar Tilak?<|assistant|>Bal Gangadhar Tilak (1856–1920) was a freedom fighter called 'Lokmanya', who declared 'Swaraj is my birthright and I shall have it!'<|eos|>
+<|user|>Tilak?<|assistant|>Bal Gangadhar Tilak (1856–1920) was a freedom fighter called 'Lokmanya', who declared 'Swaraj is my birthright and I shall have it!'<|eos|>
+<|user|>Bal gangadhar tilak?<|assistant|>Bal Gangadhar Tilak (1856–1920) was a freedom fighter called 'Lokmanya', who declared 'Swaraj is my birthright and I shall have it!'<|eos|>
+<|user|>What is the chemical symbol of Polonium?<|assistant|>The chemical symbol of Polonium is Po.<|eos|>
+<|user|>Symbol of Polonium?<|assistant|>The chemical symbol of Polonium is Po.<|eos|>
+<|user|>Polonium symbol?<|assistant|>The chemical symbol of Polonium is Po.<|eos|>
+<|user|>Malé is the capital of which country?<|assistant|>Malé is the capital of Maldives.<|eos|>
+<|user|>Which country has Malé as its capital?<|assistant|>Malé is the capital of Maldives.<|eos|>
+<|user|>Which country's capital is Malé?<|assistant|>Malé is the capital of Maldives.<|eos|>
+<|user|>What is the full form of MLA?<|assistant|>**MLA** stands for **Member of the Legislative Assembly**: an elected member of a state's assembly.<|eos|>
+<|user|>Full form of mla?<|assistant|>**MLA** stands for **Member of the Legislative Assembly**: an elected member of a state's assembly.<|eos|>
+<|user|>Mla full form?<|assistant|>**MLA** stands for **Member of the Legislative Assembly**: an elected member of a state's assembly.<|eos|>
+<|user|>Which element has atomic number 81?<|assistant|>Element number 81 is Thallium (Tl).<|eos|>
+<|user|>Element with atomic number 81?<|assistant|>Element number 81 is Thallium (Tl).<|eos|>
+<|user|>Atomic number 81 element?<|assistant|>Element number 81 is Thallium (Tl).<|eos|>
+<|user|>Who was the first woman in space?<|assistant|>Valentina Tereshkova of the Soviet Union was the first woman in space, in 1963.<|eos|>
+<|user|>First woman astronaut?<|assistant|>Valentina Tereshkova of the Soviet Union was the first woman in space, in 1963.<|eos|>
+<|user|>What are output devices?<|assistant|>Output devices show or give results from a computer: monitor, printer, speakers, projector.<|eos|>
+<|user|>Examples of output devices?<|assistant|>Output devices show or give results from a computer: monitor, printer, speakers, projector.<|eos|>
+<|user|>Output device?<|assistant|>Output devices show or give results from a computer: monitor, printer, speakers, projector.<|eos|>
+<|user|>What is the capital of Japan?<|assistant|>The capital of Japan is Tokyo.<|eos|>
+<|user|>Japan capital?<|assistant|>The capital of Japan is Tokyo.<|eos|>
+<|user|>Capital city of Japan?<|assistant|>The capital of Japan is Tokyo.<|eos|>
+<|user|>New Delhi is the capital of which country?<|assistant|>New Delhi is the capital of India.<|eos|>
+<|user|>Which country has New Delhi as its capital?<|assistant|>New Delhi is the capital of India.<|eos|>
+<|user|>Which country's capital is New Delhi?<|assistant|>New Delhi is the capital of India.<|eos|>
+<|user|>What is the national sport of India?<|assistant|>India has no officially declared national sport, though hockey is often called the national game.<|eos|>
+<|user|>National game of india?<|assistant|>India has no officially declared national sport, though hockey is often called the national game.<|eos|>
+<|user|>India national sport?<|assistant|>India has no officially declared national sport, though hockey is often called the national game.<|eos|>
+<|user|>What is a coefficient?<|assistant|>A coefficient is the number multiplying a variable. In 7x², the coefficient is 7.<|eos|>
+<|user|>Define coefficient?<|assistant|>A coefficient is the number multiplying a variable. In 7x², the coefficient is 7.<|eos|>
+<|user|>Which continent is Bosnia and Herzegovina in?<|assistant|>Bosnia and Herzegovina is in Europe.<|eos|>
+<|user|>Bosnia and Herzegovina is in which continent?<|assistant|>Bosnia and Herzegovina is in Europe.<|eos|>
+<|user|>Continent of Bosnia and Herzegovina?<|assistant|>Bosnia and Herzegovina is in Europe.<|eos|>
+<|user|>Which element has the symbol Sn?<|assistant|>Sn is the symbol of Tin (atomic number 50).<|eos|>
+<|user|>Sn element?<|assistant|>Sn is the symbol of Tin (atomic number 50).<|eos|>
+<|user|>Element Sn?<|assistant|>Sn is the symbol of Tin (atomic number 50).<|eos|>
+<|user|>What is the atomic number of Platinum?<|assistant|>The atomic number of Platinum (Pt) is 78: it has 78 protons.<|eos|>
+<|user|>Atomic number of Platinum?<|assistant|>The atomic number of Platinum (Pt) is 78: it has 78 protons.<|eos|>
+<|user|>Platinum atomic number?<|assistant|>The atomic number of Platinum (Pt) is 78: it has 78 protons.<|eos|>

@@ -1,0 +1,198 @@
+{"question": "Who invented the electric motor?", "answer": "Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.", "topic": "inventions"}
+{"question": "Who invented electric motor?", "answer": "Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.", "topic": "inventions"}
+{"question": "Who invented generator?", "answer": "Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.", "topic": "inventions"}
+{"question": "What is insurance?", "answer": "Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.", "topic": "economy"}
+{"question": "Insurance?", "answer": "Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.", "topic": "economy"}
+{"question": "Types of insurance?", "answer": "Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.", "topic": "economy"}
+{"question": "Which continent is Cyprus in?", "answer": "Cyprus is in Europe.", "topic": "countries"}
+{"question": "Cyprus is in which continent?", "answer": "Cyprus is in Europe.", "topic": "countries"}
+{"question": "Continent of Cyprus?", "answer": "Cyprus is in Europe.", "topic": "countries"}
+{"question": "Which continent is New Zealand in?", "answer": "New Zealand is in Oceania.", "topic": "countries"}
+{"question": "New Zealand is in which continent?", "answer": "New Zealand is in Oceania.", "topic": "countries"}
+{"question": "Continent of New Zealand?", "answer": "New Zealand is in Oceania.", "topic": "countries"}
+{"question": "What is the capital of Ukraine?", "answer": "The capital of Ukraine is Kyiv.", "topic": "countries"}
+{"question": "Ukraine capital?", "answer": "The capital of Ukraine is Kyiv.", "topic": "countries"}
+{"question": "Capital city of Ukraine?", "answer": "The capital of Ukraine is Kyiv.", "topic": "countries"}
+{"question": "What is the chemical symbol of Thorium?", "answer": "The chemical symbol of Thorium is Th.", "topic": "elements"}
+{"question": "Symbol of Thorium?", "answer": "The chemical symbol of Thorium is Th.", "topic": "elements"}
+{"question": "Thorium symbol?", "answer": "The chemical symbol of Thorium is Th.", "topic": "elements"}
+{"question": "Muscat is the capital of which country?", "answer": "Muscat is the capital of Oman.", "topic": "countries"}
+{"question": "Which country has Muscat as its capital?", "answer": "Muscat is the capital of Oman.", "topic": "countries"}
+{"question": "Which country's capital is Muscat?", "answer": "Muscat is the capital of Oman.", "topic": "countries"}
+{"question": "What is the atomic number of Phosphorus?", "answer": "The atomic number of Phosphorus (P) is 15: it has 15 protons.", "topic": "elements"}
+{"question": "Atomic number of Phosphorus?", "answer": "The atomic number of Phosphorus (P) is 15: it has 15 protons.", "topic": "elements"}
+{"question": "Phosphorus atomic number?", "answer": "The atomic number of Phosphorus (P) is 15: it has 15 protons.", "topic": "elements"}
+{"question": "What is the stock market?", "answer": "The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.", "topic": "economy"}
+{"question": "Share market?", "answer": "The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.", "topic": "economy"}
+{"question": "What is sensex?", "answer": "The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.", "topic": "economy"}
+{"question": "Monrovia is the capital of which country?", "answer": "Monrovia is the capital of Liberia.", "topic": "countries"}
+{"question": "Which country has Monrovia as its capital?", "answer": "Monrovia is the capital of Liberia.", "topic": "countries"}
+{"question": "Which country's capital is Monrovia?", "answer": "Monrovia is the capital of Liberia.", "topic": "countries"}
+{"question": "Panama City is the capital of which country?", "answer": "Panama City is the capital of Panama.", "topic": "countries"}
+{"question": "Which country has Panama City as its capital?", "answer": "Panama City is the capital of Panama.", "topic": "countries"}
+{"question": "Which country's capital is Panama City?", "answer": "Panama City is the capital of Panama.", "topic": "countries"}
+{"question": "Port Moresby is the capital of which country?", "answer": "Port Moresby is the capital of Papua New Guinea.", "topic": "countries"}
+{"question": "Which country has Port Moresby as its capital?", "answer": "Port Moresby is the capital of Papua New Guinea.", "topic": "countries"}
+{"question": "Which country's capital is Port Moresby?", "answer": "Port Moresby is the capital of Papua New Guinea.", "topic": "countries"}
+{"question": "How do I write an if else in Python?", "answer": "Indentation (4 spaces) shows what's inside the if:\n```python\nmarks = 72\nif marks >= 90:\n    print(\"A+\")\nelif marks >= 60:\n    print(\"Pass with merit\")\nelse:\n    print(\"Keep trying\")\n```", "topic": "coding"}
+{"question": "If else in python?", "answer": "Indentation (4 spaces) shows what's inside the if:\n```python\nmarks = 72\nif marks >= 90:\n    print(\"A+\")\nelif marks >= 60:\n    print(\"Pass with merit\")\nelse:\n    print(\"Keep trying\")\n```", "topic": "coding"}
+{"question": "Python if statement?", "answer": "Indentation (4 spaces) shows what's inside the if:\n```python\nmarks = 72\nif marks >= 90:\n    print(\"A+\")\nelif marks >= 60:\n    print(\"Pass with merit\")\nelse:\n    print(\"Keep trying\")\n```", "topic": "coding"}
+{"question": "What is the capital of Australia?", "answer": "The capital of Australia is Canberra.", "topic": "countries"}
+{"question": "Australia capital?", "answer": "The capital of Australia is Canberra.", "topic": "countries"}
+{"question": "Capital city of Australia?", "answer": "The capital of Australia is Canberra.", "topic": "countries"}
+{"question": "Which continent is Ireland in?", "answer": "Ireland is in Europe.", "topic": "countries"}
+{"question": "Ireland is in which continent?", "answer": "Ireland is in Europe.", "topic": "countries"}
+{"question": "Continent of Ireland?", "answer": "Ireland is in Europe.", "topic": "countries"}
+{"question": "Who invented Linux?", "answer": "Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.", "topic": "inventions"}
+{"question": "Who invented linux?", "answer": "Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.", "topic": "inventions"}
+{"question": "Who created linux?", "answer": "Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.", "topic": "inventions"}
+{"question": "What is the quadratic formula?", "answer": "For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.", "topic": "maths"}
+{"question": "Quadratic formula?", "answer": "For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.", "topic": "maths"}
+{"question": "Formula for quadratic equation?", "answer": "For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.", "topic": "maths"}
+{"question": "Which continent is France in?", "answer": "France is in Europe.", "topic": "countries"}
+{"question": "France is in which continent?", "answer": "France is in Europe.", "topic": "countries"}
+{"question": "Continent of France?", "answer": "France is in Europe.", "topic": "countries"}
+{"question": "What is the difference between heat and temperature?", "answer": "**Heat**\n- the total energy that flows from hot to cold\n- measured in joules (J)\n- depends on the amount of substance\n\n**Temperature**\n- how hot or cold something is (average energy of particles)\n- measured in °C or kelvin\n- doesn't depend on the amount\n\n💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.", "topic": "differences"}
+{"question": "Difference between heat and temperature?", "answer": "**Heat**\n- the total energy that flows from hot to cold\n- measured in joules (J)\n- depends on the amount of substance\n\n**Temperature**\n- how hot or cold something is (average energy of particles)\n- measured in °C or kelvin\n- doesn't depend on the amount\n\n💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.", "topic": "differences"}
+{"question": "Heat vs temperature?", "answer": "**Heat**\n- the total energy that flows from hot to cold\n- measured in joules (J)\n- depends on the amount of substance\n\n**Temperature**\n- how hot or cold something is (average energy of particles)\n- measured in °C or kelvin\n- doesn't depend on the amount\n\n💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.", "topic": "differences"}
+{"question": "Which element has atomic number 29?", "answer": "Element number 29 is Copper (Cu).", "topic": "elements"}
+{"question": "Element with atomic number 29?", "answer": "Element number 29 is Copper (Cu).", "topic": "elements"}
+{"question": "Atomic number 29 element?", "answer": "Element number 29 is Copper (Cu).", "topic": "elements"}
+{"question": "What is photosynthesis?", "answer": "Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).", "topic": "science"}
+{"question": "Define photosynthesis?", "answer": "Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).", "topic": "science"}
+{"question": "Photosynthesis equation?", "answer": "Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).", "topic": "science"}
+{"question": "What is the simple past tense?", "answer": "Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'", "topic": "english"}
+{"question": "Past simple tense?", "answer": "Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'", "topic": "english"}
+{"question": "Simple past tense?", "answer": "Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'", "topic": "english"}
+{"question": "How many players are there in a football team?", "answer": "A football (soccer) team has 11 players on the field, including the goalkeeper.", "topic": "world"}
+{"question": "Players in football team?", "answer": "A football (soccer) team has 11 players on the field, including the goalkeeper.", "topic": "world"}
+{"question": "Soccer team size?", "answer": "A football (soccer) team has 11 players on the field, including the goalkeeper.", "topic": "world"}
+{"question": "Give me a kural about patience", "answer": "Kural 151:\nஅகழ்வாரைத் தாங்கும் நிலம்போலத் தம்மை\nஇகழ்வார்ப் பொறுத்தல் தலை\nMeaning: Like the earth that bears even those who dig into it, the best thing is to bear those who insult you.", "topic": "thirukkural"}
+{"question": "What are the Millennium Prize Problems?", "answer": "The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).", "topic": "mathsadv"}
+{"question": "Millennium prize problems?", "answer": "The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).", "topic": "mathsadv"}
+{"question": "P vs np?", "answer": "The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).", "topic": "mathsadv"}
+{"question": "Which element has atomic number 107?", "answer": "Element number 107 is Bohrium (Bh).", "topic": "elements"}
+{"question": "Element with atomic number 107?", "answer": "Element number 107 is Bohrium (Bh).", "topic": "elements"}
+{"question": "Atomic number 107 element?", "answer": "Element number 107 is Bohrium (Bh).", "topic": "elements"}
+{"question": "What is Oracle RAC?", "answer": "Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.", "topic": "techit"}
+{"question": "Oracle rac?", "answer": "Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.", "topic": "techit"}
+{"question": "Real application clusters?", "answer": "Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.", "topic": "techit"}
+{"question": "Which continent is Philippines in?", "answer": "Philippines is in Asia.", "topic": "countries"}
+{"question": "Philippines is in which continent?", "answer": "Philippines is in Asia.", "topic": "countries"}
+{"question": "Continent of Philippines?", "answer": "Philippines is in Asia.", "topic": "countries"}
+{"question": "When is World Forest Day?", "answer": "**World Forest Day** is on **21 March**. The UN's International Day of Forests.", "topic": "days"}
+{"question": "World forest day?", "answer": "**World Forest Day** is on **21 March**. The UN's International Day of Forests.", "topic": "days"}
+{"question": "When is world forest day?", "answer": "**World Forest Day** is on **21 March**. The UN's International Day of Forests.", "topic": "days"}
+{"question": "Which element has atomic number 89?", "answer": "Element number 89 is Actinium (Ac).", "topic": "elements"}
+{"question": "Element with atomic number 89?", "answer": "Element number 89 is Actinium (Ac).", "topic": "elements"}
+{"question": "Atomic number 89 element?", "answer": "Element number 89 is Actinium (Ac).", "topic": "elements"}
+{"question": "What is the sum of angles in a triangle?", "answer": "The angles of a triangle add up to 180°.", "topic": "maths"}
+{"question": "Angle sum of triangle?", "answer": "The angles of a triangle add up to 180°.", "topic": "maths"}
+{"question": "Angles of a triangle add up to?", "answer": "The angles of a triangle add up to 180°.", "topic": "maths"}
+{"question": "What is the full form of WHO?", "answer": "**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.", "topic": "fullforms"}
+{"question": "Full form of who?", "answer": "**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.", "topic": "fullforms"}
+{"question": "Who full form?", "answer": "**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.", "topic": "fullforms"}
+{"question": "Thirukkural 467", "answer": "எண்ணித் துணிக கருமம் துணிந்தபின்\nஎண்ணுவம் என்பது இழுக்கு\nMeaning: Think well before you begin a task; to begin and then think is a mistake.", "topic": "thirukkural"}
+{"question": "What is Navratri and Dussehra?", "answer": "Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.", "topic": "life"}
+{"question": "Navratri?", "answer": "Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.", "topic": "life"}
+{"question": "Dussehra?", "answer": "Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.", "topic": "life"}
+{"question": "What is the atomic number of Europium?", "answer": "The atomic number of Europium (Eu) is 63: it has 63 protons.", "topic": "elements"}
+{"question": "Atomic number of Europium?", "answer": "The atomic number of Europium (Eu) is 63: it has 63 protons.", "topic": "elements"}
+{"question": "Europium atomic number?", "answer": "The atomic number of Europium (Eu) is 63: it has 63 protons.", "topic": "elements"}
+{"question": "What is friction?", "answer": "Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.", "topic": "science"}
+{"question": "Define friction?", "answer": "Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.", "topic": "science"}
+{"question": "Friction meaning?", "answer": "Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.", "topic": "science"}
+{"question": "What is first aid for a burn?", "answer": "For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.", "topic": "health"}
+{"question": "Burn first aid?", "answer": "For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.", "topic": "health"}
+{"question": "What to do for burns?", "answer": "For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.", "topic": "health"}
+{"question": "Which element has the symbol Er?", "answer": "Er is the symbol of Erbium (atomic number 68).", "topic": "elements"}
+{"question": "Er element?", "answer": "Er is the symbol of Erbium (atomic number 68).", "topic": "elements"}
+{"question": "Element Er?", "answer": "Er is the symbol of Erbium (atomic number 68).", "topic": "elements"}
+{"question": "Which element has the symbol Cu?", "answer": "Cu is the symbol of Copper (atomic number 29).", "topic": "elements"}
+{"question": "Cu element?", "answer": "Cu is the symbol of Copper (atomic number 29).", "topic": "elements"}
+{"question": "Element Cu?", "answer": "Cu is the symbol of Copper (atomic number 29).", "topic": "elements"}
+{"question": "What is active and passive voice?", "answer": "In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').", "topic": "english"}
+{"question": "Active voice?", "answer": "In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').", "topic": "english"}
+{"question": "Passive voice?", "answer": "In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').", "topic": "english"}
+{"question": "What are objects in JavaScript?", "answer": "```javascript\nconst student = { name: \"Priya\", age: 16, subjects: [\"maths\", \"science\"] };\nconsole.log(student.name);            // Priya\nstudent.city = \"Chennai\";             // add a property\nfor (const [key, value] of Object.entries(student)) console.log(key, value);\nconst json = JSON.stringify(student); // to text\nconst back = JSON.parse(json);        // from text\n```", "topic": "coding"}
+{"question": "Javascript objects?", "answer": "```javascript\nconst student = { name: \"Priya\", age: 16, subjects: [\"maths\", \"science\"] };\nconsole.log(student.name);            // Priya\nstudent.city = \"Chennai\";             // add a property\nfor (const [key, value] of Object.entries(student)) console.log(key, value);\nconst json = JSON.stringify(student); // to text\nconst back = JSON.parse(json);        // from text\n```", "topic": "coding"}
+{"question": "Objects in javascript?", "answer": "```javascript\nconst student = { name: \"Priya\", age: 16, subjects: [\"maths\", \"science\"] };\nconsole.log(student.name);            // Priya\nstudent.city = \"Chennai\";             // add a property\nfor (const [key, value] of Object.entries(student)) console.log(key, value);\nconst json = JSON.stringify(student); // to text\nconst back = JSON.parse(json);        // from text\n```", "topic": "coding"}
+{"question": "Which element has atomic number 32?", "answer": "Element number 32 is Germanium (Ge).", "topic": "elements"}
+{"question": "Element with atomic number 32?", "answer": "Element number 32 is Germanium (Ge).", "topic": "elements"}
+{"question": "Atomic number 32 element?", "answer": "Element number 32 is Germanium (Ge).", "topic": "elements"}
+{"question": "What is the formula for speed?", "answer": "Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.", "topic": "maths"}
+{"question": "Speed formula?", "answer": "Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.", "topic": "maths"}
+{"question": "Speed distance time formula?", "answer": "Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.", "topic": "maths"}
+{"question": "Which continent is Micronesia in?", "answer": "Micronesia is in Oceania.", "topic": "countries"}
+{"question": "Micronesia is in which continent?", "answer": "Micronesia is in Oceania.", "topic": "countries"}
+{"question": "Continent of Micronesia?", "answer": "Micronesia is in Oceania.", "topic": "countries"}
+{"question": "Who was Srinivasa Ramanujan?", "answer": "Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.", "topic": "maths"}
+{"question": "Ramanujan?", "answer": "Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.", "topic": "maths"}
+{"question": "Who is ramanujan?", "answer": "Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.", "topic": "maths"}
+{"question": "What is the currency of United Arab Emirates?", "answer": "The currency of United Arab Emirates is the UAE dirham.", "topic": "countries"}
+{"question": "United Arab Emirates currency?", "answer": "The currency of United Arab Emirates is the UAE dirham.", "topic": "countries"}
+{"question": "UAE currency?", "answer": "The currency of United Arab Emirates is the UAE dirham.", "topic": "countries"}
+{"question": "What does \"The early bird catches the worm\" mean?", "answer": "**\"The early bird catches the worm.\"**\n\n**Meaning:** People who start early get the best chances.", "topic": "proverbs"}
+{"question": "The early bird catches the worm?", "answer": "**\"The early bird catches the worm.\"**\n\n**Meaning:** People who start early get the best chances.", "topic": "proverbs"}
+{"question": "Meaning of the early bird catches the worm?", "answer": "**\"The early bird catches the worm.\"**\n\n**Meaning:** People who start early get the best chances.", "topic": "proverbs"}
+{"question": "What is the difference between == and === in JavaScript?", "answer": "`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.\n```javascript\nconsole.log(5 == \"5\");    // true  (converted)\nconsole.log(5 === \"5\");   // false (number vs string)\nconsole.log(null == undefined);  // true\n```", "topic": "coding"}
+{"question": "== vs ===?", "answer": "`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.\n```javascript\nconsole.log(5 == \"5\");    // true  (converted)\nconsole.log(5 === \"5\");   // false (number vs string)\nconsole.log(null == undefined);  // true\n```", "topic": "coding"}
+{"question": "Double equals vs triple equals?", "answer": "`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.\n```javascript\nconsole.log(5 == \"5\");    // true  (converted)\nconsole.log(5 === \"5\");   // false (number vs string)\nconsole.log(null == undefined);  // true\n```", "topic": "coding"}
+{"question": "When is World Oceans Day?", "answer": "**World Oceans Day** is on **8 June**. A UN day to protect the oceans.", "topic": "days"}
+{"question": "World oceans day?", "answer": "**World Oceans Day** is on **8 June**. A UN day to protect the oceans.", "topic": "days"}
+{"question": "When is world oceans day?", "answer": "**World Oceans Day** is on **8 June**. A UN day to protect the oceans.", "topic": "days"}
+{"question": "What is the capital of Pakistan?", "answer": "The capital of Pakistan is Islamabad.", "topic": "countries"}
+{"question": "Pakistan capital?", "answer": "The capital of Pakistan is Islamabad.", "topic": "countries"}
+{"question": "Capital city of Pakistan?", "answer": "The capital of Pakistan is Islamabad.", "topic": "countries"}
+{"question": "Who was Periyar?", "answer": "E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.", "topic": "people"}
+{"question": "Periyar?", "answer": "E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.", "topic": "people"}
+{"question": "E v ramasamy?", "answer": "E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.", "topic": "people"}
+{"question": "How do SQL joins work?", "answer": "A JOIN combines rows from tables using a matching column:\n```sql\n-- students(id, name), marks(student_id, subject, score)\nSELECT s.name, m.subject, m.score\nFROM students s\nINNER JOIN marks m ON m.student_id = s.id;     -- only matching rows\n\nSELECT s.name, m.score\nFROM students s\nLEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks\n```\nINNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.", "topic": "coding"}
+{"question": "Sql join?", "answer": "A JOIN combines rows from tables using a matching column:\n```sql\n-- students(id, name), marks(student_id, subject, score)\nSELECT s.name, m.subject, m.score\nFROM students s\nINNER JOIN marks m ON m.student_id = s.id;     -- only matching rows\n\nSELECT s.name, m.score\nFROM students s\nLEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks\n```\nINNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.", "topic": "coding"}
+{"question": "Joins in sql?", "answer": "A JOIN combines rows from tables using a matching column:\n```sql\n-- students(id, name), marks(student_id, subject, score)\nSELECT s.name, m.subject, m.score\nFROM students s\nINNER JOIN marks m ON m.student_id = s.id;     -- only matching rows\n\nSELECT s.name, m.score\nFROM students s\nLEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks\n```\nINNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.", "topic": "coding"}
+{"question": "When is World AIDS Day?", "answer": "**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.", "topic": "days"}
+{"question": "World aids day?", "answer": "**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.", "topic": "days"}
+{"question": "When is world aids day?", "answer": "**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.", "topic": "days"}
+{"question": "What is the difference between SQL and NoSQL?", "answer": "SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.", "topic": "coding"}
+{"question": "Sql vs nosql?", "answer": "SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.", "topic": "coding"}
+{"question": "Nosql?", "answer": "SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.", "topic": "coding"}
+{"question": "Who wrote My Experiments with Truth?", "answer": "'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.", "topic": "general"}
+{"question": "Gandhi autobiography?", "answer": "'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.", "topic": "general"}
+{"question": "My experiments with truth?", "answer": "'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.", "topic": "general"}
+{"question": "Thirukkural 101", "answer": "செய்யாமல் செய்த உதவிக்கு வையகமும்\nவானகமும் ஆற்றல் அரிது\nMeaning: Earth and heaven together cannot repay a help given without any help received first.", "topic": "thirukkural"}
+{"question": "Kathmandu is the capital of which country?", "answer": "Kathmandu is the capital of Nepal.", "topic": "countries"}
+{"question": "Which country has Kathmandu as its capital?", "answer": "Kathmandu is the capital of Nepal.", "topic": "countries"}
+{"question": "Which country's capital is Kathmandu?", "answer": "Kathmandu is the capital of Nepal.", "topic": "countries"}
+{"question": "What is punctuation?", "answer": "Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (\" \"), colon (:), semicolon (;) and hyphen (-).", "topic": "english"}
+{"question": "Punctuation marks?", "answer": "Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (\" \"), colon (:), semicolon (;) and hyphen (-).", "topic": "english"}
+{"question": "Define punctuation?", "answer": "Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (\" \"), colon (:), semicolon (;) and hyphen (-).", "topic": "english"}
+{"question": "What is the atomic number of Oganesson?", "answer": "The atomic number of Oganesson (Og) is 118: it has 118 protons.", "topic": "elements"}
+{"question": "Atomic number of Oganesson?", "answer": "The atomic number of Oganesson (Og) is 118: it has 118 protons.", "topic": "elements"}
+{"question": "Oganesson atomic number?", "answer": "The atomic number of Oganesson (Og) is 118: it has 118 protons.", "topic": "elements"}
+{"question": "What is the atomic number of Holmium?", "answer": "The atomic number of Holmium (Ho) is 67: it has 67 protons.", "topic": "elements"}
+{"question": "Atomic number of Holmium?", "answer": "The atomic number of Holmium (Ho) is 67: it has 67 protons.", "topic": "elements"}
+{"question": "Holmium atomic number?", "answer": "The atomic number of Holmium (Ho) is 67: it has 67 protons.", "topic": "elements"}
+{"question": "Washington, D.C. is the capital of which country?", "answer": "Washington, D.C. is the capital of United States.", "topic": "countries"}
+{"question": "Which country has Washington, D.C. as its capital?", "answer": "Washington, D.C. is the capital of United States.", "topic": "countries"}
+{"question": "Which country's capital is Washington, D.C.?", "answer": "Washington, D.C. is the capital of United States.", "topic": "countries"}
+{"question": "What is the capital of Uruguay?", "answer": "The capital of Uruguay is Montevideo.", "topic": "countries"}
+{"question": "Uruguay capital?", "answer": "The capital of Uruguay is Montevideo.", "topic": "countries"}
+{"question": "Capital city of Uruguay?", "answer": "The capital of Uruguay is Montevideo.", "topic": "countries"}
+{"question": "Kuala Lumpur is the capital of which country?", "answer": "Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.", "topic": "countries"}
+{"question": "Which country has Kuala Lumpur as its capital?", "answer": "Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.", "topic": "countries"}
+{"question": "Which country's capital is Kuala Lumpur?", "answer": "Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.", "topic": "countries"}
+{"question": "What is Avogadro's number?", "answer": "Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.", "topic": "science"}
+{"question": "Avogadro number?", "answer": "Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.", "topic": "science"}
+{"question": "What is a mole in chemistry?", "answer": "Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.", "topic": "science"}
+{"question": "How does GROUP BY work in SQL?", "answer": "```sql\nSELECT class, COUNT(*) AS students, AVG(marks) AS average\nFROM students\nGROUP BY class\nHAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)\nORDER BY average DESC;\n```", "topic": "coding"}
+{"question": "Group by in sql?", "answer": "```sql\nSELECT class, COUNT(*) AS students, AVG(marks) AS average\nFROM students\nGROUP BY class\nHAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)\nORDER BY average DESC;\n```", "topic": "coding"}
+{"question": "Sql group by?", "answer": "```sql\nSELECT class, COUNT(*) AS students, AVG(marks) AS average\nFROM students\nGROUP BY class\nHAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)\nORDER BY average DESC;\n```", "topic": "coding"}
+{"question": "Who invented the AC?", "answer": "Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.", "topic": "inventions"}
+{"question": "Who invented ac?", "answer": "Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.", "topic": "inventions"}
+{"question": "Who invented air conditioner?", "answer": "Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.", "topic": "inventions"}
+{"question": "Which element has the symbol Sc?", "answer": "Sc is the symbol of Scandium (atomic number 21).", "topic": "elements"}
+{"question": "Sc element?", "answer": "Sc is the symbol of Scandium (atomic number 21).", "topic": "elements"}
+{"question": "Element Sc?", "answer": "Sc is the symbol of Scandium (atomic number 21).", "topic": "elements"}
+{"question": "What is calculus?", "answer": "Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.", "topic": "mathsadv"}
+{"question": "Define calculus?", "answer": "Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.", "topic": "mathsadv"}
+{"question": "Who invented calculus?", "answer": "Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.", "topic": "mathsadv"}
