@@ -466,18 +466,22 @@ export const askAlpaca = askGemini;
 
 // Independent mode: NOVA's own model (models/nova-mini) answers, in the browser.
 // It is small and often wrong, so every answer says so. No outside AI is called.
-export const NOVA_LABEL = "\n\n— NOVA Mini (experimental): Nova's own small model, trained by this project and running on your device. It is often wrong; check anything important.";
+// NOVA Mini is a 4M-parameter research model (models/nova-mini/evaluation.json):
+// it writes in Nova's style but usually gets facts wrong. So its attempt is shown
+// only underneath a plain statement that Nova's own engines can't answer yet.
 async function novaAnswer(question, onText, stop) {
+  const intro = `${INDEPENDENT_NOTE}\n\n**NOVA Mini's attempt** (research preview: Nova's own 4-million-parameter model, running on your device. At this size its facts are usually wrong, so don't rely on it):\n\n`;
   let novaChat;
   try {
     ({ novaChat } = await import("./nova/llm.js"));
   } catch {
     throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });
   }
+  onText(intro);
   try {
-    const text = await novaChat(question, { maxNew: 160, temperature: 0.6, signal: stop, onText });
+    const text = await novaChat(question, { maxNew: 120, temperature: 0.6, signal: stop, onText: (t) => onText(intro + "> " + t.replace(/\n/g, "\n> ")) });
     if (!text) throw new Error("empty");
-    return { answer: text + NOVA_LABEL, searchSuggestions: null, by: "nova-mini" };
+    return { answer: intro + "> " + text.replace(/\n/g, "\n> "), searchSuggestions: null, by: "nova-mini" };
   } catch (err) {
     if (stop?.aborted) throw httpError(499, "stopped");
     throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });

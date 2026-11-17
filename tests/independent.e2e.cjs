@@ -38,9 +38,9 @@ const AI_HOSTS = /(generativelanguage\.googleapis\.com|firebasevertexai\.googlea
   // An open question goes to NOVA Mini, with its honest label
   await pg.fill("#composer textarea", "Explain why the sky looks blue to people on a sunny afternoon");
   await pg.keyboard.press("Enter");
-  await pg.waitForFunction(() => /NOVA Mini \(experimental\)/.test(document.querySelector("#thread").innerText), null, { timeout: 120000 }).catch(() => {});
+  await pg.waitForFunction(() => { const t = document.querySelector("#thread").innerText; return /NOVA Mini.s attempt/.test(t) && !t.includes("▍"); }, null, { timeout: 240000 }).catch(() => {});
   const thread = await pg.innerText("#thread");
-  check("open question answered by NOVA Mini, clearly labelled", /NOVA Mini \(experimental\)/.test(thread), thread.slice(-300));
+  check("open question: says own engines can't answer, then shows NOVA Mini's labelled attempt", /can't answer this yet/.test(thread) && /NOVA Mini.s attempt/.test(thread) && /don't rely on it/.test(thread), thread.slice(-300));
 
   // Workspace: status shows it, outside image AI is refused, agents still work
   await pg.fill("#composer textarea", "/images");
