@@ -37,7 +37,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", required=True)
     ap.add_argument("--tokenizer", required=True)
-    ap.add_argument("--data", required=True)
+    ap.add_argument("--data", required=True, help="training text (for the unigram baseline)")
+    ap.add_argument("--heldout", required=True, help="held-out text the model never trained on")
     ap.add_argument("--questions", type=int, default=25)
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -48,10 +49,9 @@ def main():
     model.load_state_dict(ck["model"])
     model.eval()
 
-    text = open(a.data, encoding="utf-8").read()
-    ids = torch.load(a.data + ".ids.pt")
-    split = int(len(ids) * 0.98)
-    train_ids, val_ids = ids[:split], ids[split:]
+    train_ids = torch.load(a.data + ".ids.pt")
+    heldout_text = open(a.heldout, encoding="utf-8").read()
+    val_ids = torch.tensor(tok.encode(heldout_text), dtype=torch.long)
 
     # perplexity over the whole held-out stream, in context-sized windows
     nll, n = 0.0, 0
@@ -72,10 +72,13 @@ def main():
     uni = sum(-math.log((counts.get(t, 0) + 1) / (total + V)) for t in val_ids.tolist()) / len(val_ids)
     uni_ppl = math.exp(uni)
 
-    # held-out questions: examples that start inside the held-out region
-    cut = len(tok.decode(train_ids.tolist()))
-    tail = text[cut:]
-    pairs = re.findall(r"<\|user\|>(.*?)<\|assistant\|>(.*?)<\|eos\|>", tail, re.S)[: a.questions]
+    # held-out questions (answers never seen in training); one per distinct answer
+    seen, pairs = set(), []
+    for q, ref in re.findall(r"<\|user\|>(.*?)<\|assistant\|>(.*?)<\|eos\|>", heldout_text, re.S):
+        if ref not in seen:
+            seen.add(ref)
+            pairs.append((q, ref))
+    pairs = pairs[: a.questions]
     results = []
     eos = tok.special["<|eos|>"]
     for q, ref in pairs:

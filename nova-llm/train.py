@@ -20,6 +20,7 @@ from tokenizer import Tokenizer
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
+    ap.add_argument("--val-data", help="separate held-out file (recommended); else the last 2%% of --data")
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", default="ckpt")
     ap.add_argument("--steps", type=int, default=20000)
@@ -42,8 +43,12 @@ def main():
     else:
         ids = torch.tensor(tok.encode(open(a.data, encoding="utf-8").read()), dtype=torch.long)
         torch.save(ids, cache)
-    split = int(len(ids) * 0.98)
-    train, val = ids[:split], ids[split:]
+    if a.val_data:
+        train = ids
+        val = torch.tensor(tok.encode(open(a.val_data, encoding="utf-8").read()), dtype=torch.long)
+    else:
+        split = int(len(ids) * 0.98)
+        train, val = ids[:split], ids[split:]
     cfg = Config(vocab_size=tok.vocab_size, layers=2, width=128, heads=4, context=128) if a.small else Config(vocab_size=tok.vocab_size)
     for k in ("layers", "width", "heads", "context"):
         if getattr(a, k):
@@ -79,6 +84,7 @@ def main():
         return a.lr * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1, p))))
 
     t0 = time.time()
+    best = float("inf")
     for step in range(start, a.steps):
         for g in opt.param_groups:
             g["lr"] = lr_at(step)
@@ -99,6 +105,10 @@ def main():
                 vl = sum(model(*batch(val))[1].item() for _ in range(a.eval_batches)) / a.eval_batches
             model.train()
             print(f"val loss {vl:.3f}  perplexity {math.exp(vl):.1f}")
+            if vl < best:
+                best = vl
+                torch.save({"model": model.state_dict(), "step": step, "config": cfg.__dict__, "val_loss": vl}, os.path.join(a.out, "best.pt"))
+                print(f"  new best (step {step})")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "step": step, "config": cfg.__dict__}, last)
     model.eval()
     with torch.no_grad():

@@ -1,8 +1,21 @@
 {
-  "file": "corpus.txt",
-  "sha256": "25ed1b9da81e143ad52324acdd951e5e1e82d7e437b9fa55a0b7b794581f2d9a",
-  "characters": 1293009,
-  "examples": 7818,
+  "files": {
+    "corpus.txt": {
+      "sha256": "b0a3c1febf7a17238162bc6f6038ad42f68fb4c493a89ce91546e41701c6099c",
+      "characters": 1231101
+    },
+    "heldout.txt": {
+      "sha256": "b8684b917eaf9882e2c98f1f4e271477a6e5aa8942d569382af527e4a09d6af8",
+      "characters": 61908
+    }
+  },
+  "examples": {
+    "train": 7425,
+    "heldout": 393,
+    "distinct_answers_train": 2572,
+    "distinct_answers_heldout": 135
+  },
+  "split": "by distinct answer: no held-out answer text appears in training",
   "sources": {
     "data/kb/*.json": {
       "licence": "Nova AI project content (owned)",

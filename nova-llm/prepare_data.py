@@ -47,19 +47,29 @@ def kural_pairs():
 def main():
     os.makedirs(OUT, exist_ok=True)
     pairs = kb_pairs() + kural_pairs()
-    random.Random(7).shuffle(pairs)
-    lines = [f"<|user|>{q}<|assistant|>{a}<|eos|>" for q, a, _ in pairs]
-    text = "\n".join(lines) + "\n"
-    path = os.path.join(OUT, "corpus.txt")
-    open(path, "w", encoding="utf-8").write(text)
+    # Hold out whole ANSWERS (all paraphrased questions for an answer stay on one side),
+    # so evaluation never sees text the model trained on.
+    groups = {}
+    for q, a, src in pairs:
+        groups.setdefault(a, []).append((q, a, src))
+    keys = sorted(groups)
+    random.Random(7).shuffle(keys)
+    n_val = max(50, len(keys) // 20)  # 5% of distinct answers
+    val_keys, train_keys = set(keys[:n_val]), keys[n_val:]
+    train = [p for k in train_keys for p in groups[k]]
+    val = [p for k in sorted(val_keys) for p in groups[k]]
+    random.Random(7).shuffle(train)
+    fmt = lambda ps: "\n".join(f"<|user|>{q}<|assistant|>{a}<|eos|>" for q, a, _ in ps) + "\n"
+    files = {"corpus.txt": fmt(train), "heldout.txt": fmt(val)}
+    for name, text in files.items():
+        open(os.path.join(OUT, name), "w", encoding="utf-8").write(text)
     by_source = {}
     for _, _, s in pairs:
         by_source[s] = by_source.get(s, 0) + 1
     manifest = {
-        "file": "corpus.txt",
-        "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
-        "characters": len(text),
-        "examples": len(pairs),
+        "files": {name: {"sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(), "characters": len(text)} for name, text in files.items()},
+        "examples": {"train": len(train), "heldout": len(val), "distinct_answers_train": len(train_keys), "distinct_answers_heldout": n_val},
+        "split": "by distinct answer: no held-out answer text appears in training",
         "sources": {
             "data/kb/*.json": {"licence": "Nova AI project content (owned)", "examples": sum(v for k, v in by_source.items() if k.startswith("data/kb"))},
             "js/thirukkural.js": {"licence": "Public domain (Thiruvalluvar); English meanings written for this project", "examples": by_source.get("js/thirukkural.js", 0)},
