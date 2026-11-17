@@ -20,7 +20,7 @@ def main():
     ap.add_argument("--name", default="nova-mini")
     ap.add_argument("--eval", help="evaluation report JSON to include in the model card")
     a = ap.parse_args()
-    ck = torch.load(a.ckpt, map_location="cpu")
+    ck = torch.load(a.ckpt, map_location="cpu", weights_only=False)  # our own checkpoints
     out = os.path.join(ROOT, "models", a.name)
     os.makedirs(out, exist_ok=True)
     index, offset = [], 0

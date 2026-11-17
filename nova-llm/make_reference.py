@@ -17,7 +17,7 @@ ap.add_argument("--tokenizer", required=True)
 ap.add_argument("--out", required=True)
 ap.add_argument("--text", default="<|user|>What is photosynthesis?<|assistant|>")
 a = ap.parse_args()
-ck = torch.load(a.ckpt, map_location="cpu")
+ck = torch.load(a.ckpt, map_location="cpu", weights_only=False)  # our own checkpoints
 m = NovaLM(Config(**ck["config"]))
 m.load_state_dict({k: v.to(torch.float16).to(torch.float32) for k, v in ck["model"].items()})
 m.eval()

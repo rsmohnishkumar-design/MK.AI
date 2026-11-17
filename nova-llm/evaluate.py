@@ -43,7 +43,7 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
     tok = Tokenizer.load(a.tokenizer)
-    ck = torch.load(a.ckpt, map_location="cpu")
+    ck = torch.load(a.ckpt, map_location="cpu", weights_only=False)  # our own checkpoints
     cfg = Config(**ck["config"])
     model = NovaLM(cfg)
     model.load_state_dict(ck["model"])

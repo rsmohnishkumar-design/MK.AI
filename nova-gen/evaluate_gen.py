@@ -31,7 +31,7 @@ def png(path, img):  # img: H x W x 3 floats 0..1
 
 
 def load(path):
-    ck = torch.load(path, map_location="cpu")
+    ck = torch.load(path, map_location="cpu", weights_only=False)  # our own checkpoints
     m = UNet(ck["channels"], len(ck["captions"]), base=ck["base"])
     m.load_state_dict(ck["model"])
     m.eval()

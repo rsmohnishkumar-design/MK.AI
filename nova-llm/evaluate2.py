@@ -76,7 +76,7 @@ def decode(model, prompt_ids, eos, max_new=100, guarded=False, banned=()):
 
 
 def load(path):
-    ck = torch.load(path, map_location="cpu")
+    ck = torch.load(path, map_location="cpu", weights_only=False)  # our own checkpoints
     m = NovaLM(Config(**ck["config"]))
     m.load_state_dict(ck["model"])
     m.eval()
