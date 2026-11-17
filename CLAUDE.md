@@ -27,6 +27,12 @@ Read this first. It carries over what was learned in earlier chats with the owne
   (RBI CMS, Sachet, 1930 cyber fraud) support modes.
 - Logo: the owner's own image, icons/logo.png (+ favicon-32, icon-192/512, apple-touch-icon).
 
+## Nova AI on other sites (embed)
+- embed/nova-ai.js: a chat-bubble helper other sites load from
+  https://mkai-c042b.web.app/embed/nova-ai.js (data-app="Name" sets the site's name).
+  Used by Myhomely (myhomely.pages.dev). Updates reach those sites once Nova is made live
+  (cached 5 min). Each site's domain must be in the reCAPTCHA key's domain list.
+
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
 - Current version: v100. New files must be added to the sw.js precache list.
