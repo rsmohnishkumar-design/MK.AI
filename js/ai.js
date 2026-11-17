@@ -5,6 +5,8 @@ import { GEMINI_MODELS } from "../firebase-config.js";
 import { PROVIDERS, providerById, keyField, listModels, chooseModels, streamChat } from "./providers.js";
 import { geminiStream } from "./gemini-rest.js";
 import { needsVision, withFileText } from "./attach.js";
+import { gatewayOn, GATEWAY_PROVIDER, idToken, gatewayResearch } from "./gateway.js";
+import { independent, INDEPENDENT_NOTE } from "./independent.js";
 
 // Answers come from the free AI services whose keys the admin saved in the
 // vault (Groq, Cerebras, OpenRouter, GitHub Models), then from Gemini through
@@ -166,6 +168,11 @@ function suggestionsOf(response) {
   return response.candidates?.[0]?.groundingMetadata?.searchEntryPoint?.renderedContent || null;
 }
 
+// The web pages a Google Search answer was based on: [{ title, url }]
+export function sourcesOf(response) {
+  const chunks = response?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+  return chunks.map((c) => c.web).filter((w) => w?.uri).map((w) => ({ title: w.title || w.uri, url: w.uri }));
+}
 async function geminiAnswer(model, search, contents, onText) {
   const m = geminiModel(model, search);
   let text = "";
@@ -180,7 +187,7 @@ async function geminiAnswer(model, search, contents, onText) {
     }
     const response = await result.response;
     const finish = response.candidates?.[0]?.finishReason;
-    return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestionsOf(response) }, finish === "STOP");
+    return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestionsOf(response), sources: sourcesOf(response) }, finish === "STOP");
   } catch (err) {
     // Some networks drop streaming connections: ask again the ordinary way.
     if (!text && /failed to fetch|network|load failed|connection/i.test(errorText(err))) {
@@ -233,11 +240,11 @@ function keyedGemini(key, model, search) {
         contents: ctx.contents,
         ...(search === true ? { tools: [{ google_search: {} }] } : search === "url" ? { tools: [{ url_context: {} }] } : {}),
       };
-      const { text, complete, suggestions } = await geminiStream(key, model, body, (t) => {
+      const { text, complete, suggestions, sources } = await geminiStream(key, model, body, (t) => {
         const shown = clean(t);
         if (shown) onText(shown);
       }, TIMEOUT_MS, ctx.stop);
-      return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestions }, complete);
+      return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: suggestions, sources: sources || [] }, complete);
     },
   };
 }
@@ -258,6 +265,44 @@ async function visionPlan(mode = false) {
       run: (ctx, onText) => geminiAnswer(model, mode, ctx.contents, onText),
     })),
   ]);
+}
+
+// Answers through the Nova Gateway (keys stay on the server).
+function gatewayChat() {
+  return {
+    key: "gateway:chat",
+    run: async (ctx, onText) => {
+      const { text, complete } = await streamChat(GATEWAY_PROVIDER, await idToken(), "auto", ctx.messages(false), (t) => {
+        const shown = clean(t);
+        if (shown) onText(shown);
+      }, TIMEOUT_MS, ctx.stop);
+      return cutOffIfIncomplete({ answer: clean(text), searchSuggestions: null }, complete);
+    },
+  };
+}
+function gatewaySearch() {
+  return {
+    key: "gateway:research",
+    run: async (ctx, onText) => {
+      const last = ctx.contents[ctx.contents.length - 1].parts[0].text;
+      const out = await gatewayResearch(last, ctx.stop);
+      const answer = clean(out.text);
+      onText(answer);
+      return { answer, searchSuggestions: null, sources: out.sources || [] };
+    },
+  };
+}
+
+// Research: only options that search the web and return their sources.
+async function searchPlan() {
+  if (!navigator.onLine) return [];
+  const keys = await savedKeys();
+  const keyedModels = await keyedGeminiModels(keys);
+  const attempts = [];
+  if (gatewayOn()) attempts.push(gatewaySearch());
+  keyedModels.slice(0, 2).forEach((m) => attempts.push(keyedGemini(keys.gemini, m, true)));
+  for (const model of GEMINI_MODELS.slice(0, 3)) attempts.push({ key: `gemini:search:${model}`, run: (ctx, onText) => geminiAnswer(model, true, ctx.contents, onText) });
+  return available(attempts);
 }
 
 // The ordered list of things to try for this question.
@@ -285,6 +330,11 @@ async function plan(question) {
   });
 
   const attempts = [];
+  // The Nova Gateway (when set up) holds the service keys on the server: try it first.
+  if (gatewayOn()) {
+    if (fresh) attempts.push(gatewaySearch());
+    attempts.push(gatewayChat());
+  }
   if (fresh) {
     // Web-search models first for current events: Gemini with Google Search, then the others.
     if (keyedModels.length) attempts.push(keyedGemini(keys.gemini, keyedModels[0], true));
@@ -325,7 +375,7 @@ export const WEB_LINK = /https?:\/\/[^\s)]+\.[^\s)]+/i;
 // onText(textSoFar) is called as the answer streams in.
 // attachment: a photo or PDF (sent to Gemini, which can see them) or a text
 // file (added to the question, so any service can answer).
-export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false, attachment = null, deep = false, system = "", signal = null } = {}) {
+export async function askGemini(question, history, knowledge, onText = () => {}, { creator = false, attachment = null, deep = false, system = "", signal = null, search = false } = {}) {
   const asked = attachment?.kind === "text" ? withFileText(attachment, question) : question;
   const note = [system, deep ? DEEP_NOTE : "", creator ? CREATOR_NOTE : "", knowledgeNote(knowledge)].filter(Boolean).join("\n\n");
   const userText = note ? `${note}\n\nQuestion: ${asked}` : asked;
@@ -338,6 +388,8 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   // can never cancel (or be confused with) the next one.
   const stop = signal || globalThis.mkaiStop || null;
   if (stop?.aborted) throw httpError(499, "stopped");
+  // Independent mode: no outside AI service is called, and nothing falls back to one.
+  if (independent()) return novaAnswer(question, onText, stop);
   const ctx = {
     stop,
     contents: [
@@ -352,7 +404,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
   };
 
   let lastError = httpError(503, "all AI services are resting (used up or unavailable) — try again later");
-  const attempts = media.length ? await visionPlan() : link ? await visionPlan("url") : await plan(question);
+  const attempts = media.length ? await visionPlan() : link ? await visionPlan("url") : search ? await searchPlan() : await plan(question);
   if (media.length && !navigator.onLine) lastError = httpError(503, "reading photos and files needs the internet");
   for (const attempt of attempts) {
     if (stop?.aborted) throw httpError(499, "stopped");
@@ -379,6 +431,7 @@ export async function askGemini(question, history, knowledge, onText = () => {},
 }
 
 export function aiErrorMessage(err) {
+  if (err?.independent) return INDEPENDENT_NOTE;
   const status = statusOf(err);
   const text = errorText(err);
   // The provider's own wording, shortened, so problems can be diagnosed from a screenshot.
@@ -411,8 +464,33 @@ export function aiErrorMessage(err) {
 // Nova AI's name for it: every answer comes from Alpaca
 export const askAlpaca = askGemini;
 
+// Independent mode: NOVA's own model (models/nova-mini) answers, in the browser.
+// It is small and often wrong, so every answer says so. No outside AI is called.
+// NOVA Mini is a 2.4M-parameter research model (models/nova-mini/evaluation.json):
+// it writes in Nova's style but usually gets facts wrong. So its attempt is shown
+// only underneath a plain statement that Nova's own engines can't answer yet.
+async function novaAnswer(question, onText, stop) {
+  const intro = `${INDEPENDENT_NOTE}\n\n**NOVA Mini's attempt** (research preview: Nova's own 2.4-million-parameter model, running on your device. At this size its facts are usually wrong, so don't rely on it):\n\n`;
+  let novaChat;
+  try {
+    ({ novaChat } = await import("./nova/llm.js"));
+  } catch {
+    throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });
+  }
+  onText(intro);
+  try {
+    const text = await novaChat(question, { maxNew: 120, temperature: 0.6, signal: stop, onText: (t) => onText(intro + "> " + t.replace(/\n/g, "\n> ")) });
+    if (!text) throw new Error("empty");
+    return { answer: intro + "> " + text.replace(/\n/g, "\n> "), searchSuggestions: null, by: "nova-mini" };
+  } catch (err) {
+    if (stop?.aborted) throw httpError(499, "stopped");
+    throw Object.assign(httpError(503, INDEPENDENT_NOTE), { independent: true });
+  }
+}
+
 // For the voice and picture features: the saved Gemini key, if any
 export async function geminiKey() {
+  if (independent()) return null;
   return (await savedKeys()).gemini || null;
 }
 

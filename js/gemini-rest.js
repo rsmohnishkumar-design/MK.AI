@@ -41,7 +41,7 @@ export async function geminiGenerate(key, model, body, timeoutMs = 60000) {
   }
 }
 
-// Streams an answer. Resolves { text, complete, suggestions }.
+// Streams an answer. Resolves { text, complete, suggestions, sources }.
 export async function geminiStream(key, model, body, onText, timeoutMs = 20000, stop = null) {
   const controller = new AbortController();
   let timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -65,6 +65,7 @@ export async function geminiStream(key, model, body, onText, timeoutMs = 20000, 
     let text = "";
     let finish = null;
     let suggestions = null;
+    const sources = [];
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -84,6 +85,7 @@ export async function geminiStream(key, model, body, onText, timeoutMs = 20000, 
         const c = event.candidates?.[0];
         finish = c?.finishReason || finish;
         suggestions = c?.groundingMetadata?.searchEntryPoint?.renderedContent || suggestions;
+        for (const g of c?.groundingMetadata?.groundingChunks || []) if (g.web?.uri && !sources.some((x) => x.url === g.web.uri)) sources.push({ title: g.web.title || g.web.uri, url: g.web.uri });
         const piece = textOf(c);
         if (piece) {
           text += piece;
@@ -91,7 +93,7 @@ export async function geminiStream(key, model, body, onText, timeoutMs = 20000, 
         }
       }
     }
-    return { text, complete: !finish || finish === "STOP", suggestions };
+    return { text, complete: !finish || finish === "STOP", suggestions, sources };
   } catch (err) {
     if (err.name === "AbortError") throw httpError(504, `Gemini ${model}: timeout — no reply for ${timeoutMs / 1000}s`);
     throw err;

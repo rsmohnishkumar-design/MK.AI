@@ -1,0 +1,131 @@
+{
+  "split": "val",
+  "conditions": "identical data, tokenizer, prompts and decoders for every checkpoint",
+  "step450": {
+    "params": 4000000,
+    "config": {
+      "vocab_size": 3072,
+      "context": 256,
+      "layers": 4,
+      "width": 256,
+      "heads": 4,
+      "ffn_mult": 2.6666666666666665,
+      "dropout": 0.1
+    },
+    "selected_step": 450,
+    "train_probe_ppl": 11.36,
+    "val_ppl": 46.64,
+    "greedy": {
+      "questions": 67,
+      "word_f1": 0.296,
+      "repeated_trigram_rate": 0.113,
+      "distinct_2": 0.847,
+      "ended_properly": 0.836,
+      "mean_words": 16.2,
+      "f1_by_topic": {
+        "coding": 0.09,
+        "countries": 0.502,
+        "elements": 0.637,
+        "fullforms": 0.171,
+        "life": 0.088,
+        "maths": 0.05,
+        "people": 0.107,
+        "world": 0.131
+      },
+      "samples": [
+        {
+          "q": "Sanaa is the capital of which country?",
+          "ref": "Sanaa is the capital of Yemen.",
+          "nova": "San Salvador is the capital of San Salvador.",
+          "f1": 0.571
+        },
+        {
+          "q": "What is a tsunami?",
+          "ref": "A tsunami is a series of huge sea waves caused by an undersea earthquake, volcano or landslide. The 2004 Indian Ocean tsunami hit Tamil Nadu and other coasts. I",
+          "nova": "Australia (Hyar) is a form of the bulb in a circle; a number than 1 is the number that is a number of a number.",
+          "f1": 0.185
+        },
+        {
+          "q": "Who wrote The Alchemist?",
+          "ref": "The Alchemist (1988) was written by Paulo Coelho of Brazil.",
+          "nova": "The P. R. R. R. R. R. R. R. R. R. R. R. R.",
+          "f1": 0.083
+        },
+        {
+          "q": "What is the full form of EMI?",
+          "ref": "**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.",
+          "nova": "**MM** stands for **Do Don's No Gagan**: a computer that uses a computer or **Colomer** and molar**\n- **Delete a phone:** press **Cmd + PDF** and mal **Colence PDF**\n- **Cmd + PDF** and m/s\n- **Colence PDF**\n- **Cmd + PD",
+          "f1": 0.111
+        },
+        {
+          "q": "Who was the first Indian in space?",
+          "ref": "Rakesh Sharma was the first Indian in space, in 1984 aboard Soyuz T-11. He told Indira Gandhi India looked 'Saare Jahan Se Achha'.",
+          "nova": "The currency of the Saudi Arabia is the the Radiii.",
+          "f1": 0.059
+        },
+        {
+          "q": "What is the currency of Portugal?",
+          "ref": "The currency of Portugal is the euro (€).",
+          "nova": "The currency of Saudi Arabia is the Saudi Arabiagi of Saudi Arabia.",
+          "f1": 0.526
+        }
+      ]
+    },
+    "guarded": {
+      "questions": 67,
+      "word_f1": 0.331,
+      "repeated_trigram_rate": 0.002,
+      "distinct_2": 0.99,
+      "ended_properly": 1.0,
+      "mean_words": 12.9,
+      "f1_by_topic": {
+        "coding": 0.165,
+        "countries": 0.554,
+        "elements": 0.637,
+        "fullforms": 0.259,
+        "life": 0.075,
+        "maths": 0.142,
+        "people": 0.049,
+        "world": 0.161
+      },
+      "samples": [
+        {
+          "q": "Sanaa is the capital of which country?",
+          "ref": "Sanaa is the capital of Yemen.",
+          "nova": "Sanbia is the capital of Saudi Arabia.",
+          "f1": 0.615
+        },
+        {
+          "q": "What is a tsunami?",
+          "ref": "A tsunami is a series of huge sea waves caused by an undersea earthquake, volcano or landslide. The 2004 Indian Ocean tsunami hit Tamil Nadu and other coasts. I",
+          "nova": "Australia (Hyperor) is a number that can be a computer or more than 1.5. 2)",
+          "f1": 0.143
+        },
+        {
+          "q": "Who wrote The Alchemist?",
+          "ref": "The Alchemist (1988) was written by Paulo Coelho of Brazil.",
+          "nova": "The P. R. J. S. C. Raani (born 1955) is a former called 'Smager'.",
+          "f1": 0.083
+        },
+        {
+          "q": "What is the full form of EMI?",
+          "ref": "**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.",
+          "nova": "**MPS** stands for **Domer Nations Fund**: the first a computer that uses moso to the world, e.",
+          "f1": 0.294
+        },
+        {
+          "q": "Who was the first Indian in space?",
+          "ref": "Rakesh Sharma was the first Indian in space, in 1984 aboard Soyuz T-11. He told Indira Gandhi India looked 'Saare Jahan Se Achha'.",
+          "nova": "The Lord of the Burkan is the first widest in 1895 and the first to finish and the Govern. Sumpur (1911).",
+          "f1": 0.133
+        },
+        {
+          "q": "What is the currency of Portugal?",
+          "ref": "The currency of Portugal is the euro (€).",
+          "nova": "The currency of Kenos is the Panakumi in Sanada.",
+          "f1": 0.625
+        }
+      ]
+    }
+  }
+}

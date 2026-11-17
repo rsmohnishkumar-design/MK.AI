@@ -1,0 +1,355 @@
+<|user|>Who invented the electric motor?<|assistant|>Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.<|eos|>
+<|user|>Who invented electric motor?<|assistant|>Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.<|eos|>
+<|user|>Who invented generator?<|assistant|>Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.<|eos|>
+<|user|>What is insurance?<|assistant|>Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.<|eos|>
+<|user|>Insurance?<|assistant|>Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.<|eos|>
+<|user|>Types of insurance?<|assistant|>Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (term plans), health insurance, vehicle insurance and home insurance.<|eos|>
+<|user|>Which continent is Cyprus in?<|assistant|>Cyprus is in Europe.<|eos|>
+<|user|>Cyprus is in which continent?<|assistant|>Cyprus is in Europe.<|eos|>
+<|user|>Continent of Cyprus?<|assistant|>Cyprus is in Europe.<|eos|>
+<|user|>Which continent is New Zealand in?<|assistant|>New Zealand is in Oceania.<|eos|>
+<|user|>New Zealand is in which continent?<|assistant|>New Zealand is in Oceania.<|eos|>
+<|user|>Continent of New Zealand?<|assistant|>New Zealand is in Oceania.<|eos|>
+<|user|>What is the capital of Ukraine?<|assistant|>The capital of Ukraine is Kyiv.<|eos|>
+<|user|>Ukraine capital?<|assistant|>The capital of Ukraine is Kyiv.<|eos|>
+<|user|>Capital city of Ukraine?<|assistant|>The capital of Ukraine is Kyiv.<|eos|>
+<|user|>What is the chemical symbol of Thorium?<|assistant|>The chemical symbol of Thorium is Th.<|eos|>
+<|user|>Symbol of Thorium?<|assistant|>The chemical symbol of Thorium is Th.<|eos|>
+<|user|>Thorium symbol?<|assistant|>The chemical symbol of Thorium is Th.<|eos|>
+<|user|>Muscat is the capital of which country?<|assistant|>Muscat is the capital of Oman.<|eos|>
+<|user|>Which country has Muscat as its capital?<|assistant|>Muscat is the capital of Oman.<|eos|>
+<|user|>Which country's capital is Muscat?<|assistant|>Muscat is the capital of Oman.<|eos|>
+<|user|>What is the atomic number of Phosphorus?<|assistant|>The atomic number of Phosphorus (P) is 15: it has 15 protons.<|eos|>
+<|user|>Atomic number of Phosphorus?<|assistant|>The atomic number of Phosphorus (P) is 15: it has 15 protons.<|eos|>
+<|user|>Phosphorus atomic number?<|assistant|>The atomic number of Phosphorus (P) is 15: it has 15 protons.<|eos|>
+<|user|>What is the stock market?<|assistant|>The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.<|eos|>
+<|user|>Share market?<|assistant|>The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.<|eos|>
+<|user|>What is sensex?<|assistant|>The stock market is where shares (small parts of companies) are bought and sold. In India the main exchanges are the BSE (index: Sensex, 30 companies) and the NSE (index: Nifty 50). SEBI regulates the market.<|eos|>
+<|user|>Monrovia is the capital of which country?<|assistant|>Monrovia is the capital of Liberia.<|eos|>
+<|user|>Which country has Monrovia as its capital?<|assistant|>Monrovia is the capital of Liberia.<|eos|>
+<|user|>Which country's capital is Monrovia?<|assistant|>Monrovia is the capital of Liberia.<|eos|>
+<|user|>Panama City is the capital of which country?<|assistant|>Panama City is the capital of Panama.<|eos|>
+<|user|>Which country has Panama City as its capital?<|assistant|>Panama City is the capital of Panama.<|eos|>
+<|user|>Which country's capital is Panama City?<|assistant|>Panama City is the capital of Panama.<|eos|>
+<|user|>Port Moresby is the capital of which country?<|assistant|>Port Moresby is the capital of Papua New Guinea.<|eos|>
+<|user|>Which country has Port Moresby as its capital?<|assistant|>Port Moresby is the capital of Papua New Guinea.<|eos|>
+<|user|>Which country's capital is Port Moresby?<|assistant|>Port Moresby is the capital of Papua New Guinea.<|eos|>
+<|user|>How do I write an if else in Python?<|assistant|>Indentation (4 spaces) shows what's inside the if:
+```python
+marks = 72
+if marks >= 90:
+    print("A+")
+elif marks >= 60:
+    print("Pass with merit")
+else:
+    print("Keep trying")
+```<|eos|>
+<|user|>If else in python?<|assistant|>Indentation (4 spaces) shows what's inside the if:
+```python
+marks = 72
+if marks >= 90:
+    print("A+")
+elif marks >= 60:
+    print("Pass with merit")
+else:
+    print("Keep trying")
+```<|eos|>
+<|user|>Python if statement?<|assistant|>Indentation (4 spaces) shows what's inside the if:
+```python
+marks = 72
+if marks >= 90:
+    print("A+")
+elif marks >= 60:
+    print("Pass with merit")
+else:
+    print("Keep trying")
+```<|eos|>
+<|user|>What is the capital of Australia?<|assistant|>The capital of Australia is Canberra.<|eos|>
+<|user|>Australia capital?<|assistant|>The capital of Australia is Canberra.<|eos|>
+<|user|>Capital city of Australia?<|assistant|>The capital of Australia is Canberra.<|eos|>
+<|user|>Which continent is Ireland in?<|assistant|>Ireland is in Europe.<|eos|>
+<|user|>Ireland is in which continent?<|assistant|>Ireland is in Europe.<|eos|>
+<|user|>Continent of Ireland?<|assistant|>Ireland is in Europe.<|eos|>
+<|user|>Who invented Linux?<|assistant|>Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.<|eos|>
+<|user|>Who invented linux?<|assistant|>Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.<|eos|>
+<|user|>Who created linux?<|assistant|>Linus Torvalds created the Linux kernel in 1991 as a student in Finland. He also created Git in 2005.<|eos|>
+<|user|>What is the quadratic formula?<|assistant|>For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.<|eos|>
+<|user|>Quadratic formula?<|assistant|>For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.<|eos|>
+<|user|>Formula for quadratic equation?<|assistant|>For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a. The discriminant b² − 4ac tells the kind of roots: positive → two real roots, zero → one repeated root, negative → no real roots.<|eos|>
+<|user|>Which continent is France in?<|assistant|>France is in Europe.<|eos|>
+<|user|>France is in which continent?<|assistant|>France is in Europe.<|eos|>
+<|user|>Continent of France?<|assistant|>France is in Europe.<|eos|>
+<|user|>What is the difference between heat and temperature?<|assistant|>**Heat**
+- the total energy that flows from hot to cold
+- measured in joules (J)
+- depends on the amount of substance
+
+**Temperature**
+- how hot or cold something is (average energy of particles)
+- measured in °C or kelvin
+- doesn't depend on the amount
+
+💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.<|eos|>
+<|user|>Difference between heat and temperature?<|assistant|>**Heat**
+- the total energy that flows from hot to cold
+- measured in joules (J)
+- depends on the amount of substance
+
+**Temperature**
+- how hot or cold something is (average energy of particles)
+- measured in °C or kelvin
+- doesn't depend on the amount
+
+💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.<|eos|>
+<|user|>Heat vs temperature?<|assistant|>**Heat**
+- the total energy that flows from hot to cold
+- measured in joules (J)
+- depends on the amount of substance
+
+**Temperature**
+- how hot or cold something is (average energy of particles)
+- measured in °C or kelvin
+- doesn't depend on the amount
+
+💡 A bucket of warm water has more heat than a cup of boiling water, but a lower temperature.<|eos|>
+<|user|>Which element has atomic number 29?<|assistant|>Element number 29 is Copper (Cu).<|eos|>
+<|user|>Element with atomic number 29?<|assistant|>Element number 29 is Copper (Cu).<|eos|>
+<|user|>Atomic number 29 element?<|assistant|>Element number 29 is Copper (Cu).<|eos|>
+<|user|>What is photosynthesis?<|assistant|>Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).<|eos|>
+<|user|>Define photosynthesis?<|assistant|>Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).<|eos|>
+<|user|>Photosynthesis equation?<|assistant|>Photosynthesis is how green plants make food using sunlight, carbon dioxide and water, releasing oxygen: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂ (in the presence of sunlight and chlorophyll).<|eos|>
+<|user|>What is the simple past tense?<|assistant|>Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'<|eos|>
+<|user|>Past simple tense?<|assistant|>Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'<|eos|>
+<|user|>Simple past tense?<|assistant|>Simple past shows a finished action in the past, usually verb + -ed or an irregular form. Example: 'I walked to school.' 'He went home.'<|eos|>
+<|user|>How many players are there in a football team?<|assistant|>A football (soccer) team has 11 players on the field, including the goalkeeper.<|eos|>
+<|user|>Players in football team?<|assistant|>A football (soccer) team has 11 players on the field, including the goalkeeper.<|eos|>
+<|user|>Soccer team size?<|assistant|>A football (soccer) team has 11 players on the field, including the goalkeeper.<|eos|>
+<|user|>Give me a kural about patience<|assistant|>Kural 151:
+அகழ்வாரைத் தாங்கும் நிலம்போலத் தம்மை
+இகழ்வார்ப் பொறுத்தல் தலை
+Meaning: Like the earth that bears even those who dig into it, the best thing is to bear those who insult you.<|eos|>
+<|user|>What are the Millennium Prize Problems?<|assistant|>The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).<|eos|>
+<|user|>Millennium prize problems?<|assistant|>The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).<|eos|>
+<|user|>P vs np?<|assistant|>The seven Millennium Prize Problems (2000), each worth $1 million: P vs NP, Riemann hypothesis, Yang–Mills, Navier–Stokes, Birch and Swinnerton-Dyer, Hodge conjecture, and Poincaré conjecture. Only Poincaré is solved (Grigori Perelman, 2003).<|eos|>
+<|user|>Which element has atomic number 107?<|assistant|>Element number 107 is Bohrium (Bh).<|eos|>
+<|user|>Element with atomic number 107?<|assistant|>Element number 107 is Bohrium (Bh).<|eos|>
+<|user|>Atomic number 107 element?<|assistant|>Element number 107 is Bohrium (Bh).<|eos|>
+<|user|>What is Oracle RAC?<|assistant|>Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.<|eos|>
+<|user|>Oracle rac?<|assistant|>Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.<|eos|>
+<|user|>Real application clusters?<|assistant|>Oracle RAC (Real Application Clusters) lets several servers run one Oracle database together, sharing storage, for high availability and scalability: if one node fails, the others keep serving.<|eos|>
+<|user|>Which continent is Philippines in?<|assistant|>Philippines is in Asia.<|eos|>
+<|user|>Philippines is in which continent?<|assistant|>Philippines is in Asia.<|eos|>
+<|user|>Continent of Philippines?<|assistant|>Philippines is in Asia.<|eos|>
+<|user|>When is World Forest Day?<|assistant|>**World Forest Day** is on **21 March**. The UN's International Day of Forests.<|eos|>
+<|user|>World forest day?<|assistant|>**World Forest Day** is on **21 March**. The UN's International Day of Forests.<|eos|>
+<|user|>When is world forest day?<|assistant|>**World Forest Day** is on **21 March**. The UN's International Day of Forests.<|eos|>
+<|user|>Which element has atomic number 89?<|assistant|>Element number 89 is Actinium (Ac).<|eos|>
+<|user|>Element with atomic number 89?<|assistant|>Element number 89 is Actinium (Ac).<|eos|>
+<|user|>Atomic number 89 element?<|assistant|>Element number 89 is Actinium (Ac).<|eos|>
+<|user|>What is the sum of angles in a triangle?<|assistant|>The angles of a triangle add up to 180°.<|eos|>
+<|user|>Angle sum of triangle?<|assistant|>The angles of a triangle add up to 180°.<|eos|>
+<|user|>Angles of a triangle add up to?<|assistant|>The angles of a triangle add up to 180°.<|eos|>
+<|user|>What is the full form of WHO?<|assistant|>**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.<|eos|>
+<|user|>Full form of who?<|assistant|>**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.<|eos|>
+<|user|>Who full form?<|assistant|>**WHO** stands for **World Health Organization**: the UN agency for health, based in Geneva.<|eos|>
+<|user|>Thirukkural 467<|assistant|>எண்ணித் துணிக கருமம் துணிந்தபின்
+எண்ணுவம் என்பது இழுக்கு
+Meaning: Think well before you begin a task; to begin and then think is a mistake.<|eos|>
+<|user|>What is Navratri and Dussehra?<|assistant|>Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.<|eos|>
+<|user|>Navratri?<|assistant|>Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.<|eos|>
+<|user|>Dussehra?<|assistant|>Navratri is nine nights of worship of Goddess Durga, with garba and dandiya dances in Gujarat and Golu doll displays in Tamil Nadu. The tenth day, Dussehra (Vijayadashami), celebrates Rama's victory over Ravana and Durga's over Mahishasura.<|eos|>
+<|user|>What is the atomic number of Europium?<|assistant|>The atomic number of Europium (Eu) is 63: it has 63 protons.<|eos|>
+<|user|>Atomic number of Europium?<|assistant|>The atomic number of Europium (Eu) is 63: it has 63 protons.<|eos|>
+<|user|>Europium atomic number?<|assistant|>The atomic number of Europium (Eu) is 63: it has 63 protons.<|eos|>
+<|user|>What is friction?<|assistant|>Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.<|eos|>
+<|user|>Define friction?<|assistant|>Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.<|eos|>
+<|user|>Friction meaning?<|assistant|>Friction is the force that opposes motion between two surfaces in contact. It causes heat and wear, but also lets us walk and brakes work.<|eos|>
+<|user|>What is first aid for a burn?<|assistant|>For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.<|eos|>
+<|user|>Burn first aid?<|assistant|>For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.<|eos|>
+<|user|>What to do for burns?<|assistant|>For a burn: cool it under cool (not ice-cold) running water for 20 minutes, remove rings or tight items, cover loosely with cling film or a clean cloth. Don't apply ice, butter or toothpaste. Get medical help for large, deep or face burns.<|eos|>
+<|user|>Which element has the symbol Er?<|assistant|>Er is the symbol of Erbium (atomic number 68).<|eos|>
+<|user|>Er element?<|assistant|>Er is the symbol of Erbium (atomic number 68).<|eos|>
+<|user|>Element Er?<|assistant|>Er is the symbol of Erbium (atomic number 68).<|eos|>
+<|user|>Which element has the symbol Cu?<|assistant|>Cu is the symbol of Copper (atomic number 29).<|eos|>
+<|user|>Cu element?<|assistant|>Cu is the symbol of Copper (atomic number 29).<|eos|>
+<|user|>Element Cu?<|assistant|>Cu is the symbol of Copper (atomic number 29).<|eos|>
+<|user|>What is active and passive voice?<|assistant|>In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').<|eos|>
+<|user|>Active voice?<|assistant|>In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').<|eos|>
+<|user|>Passive voice?<|assistant|>In active voice the subject does the action ('Ravi wrote a letter'). In passive voice the subject receives it ('A letter was written by Ravi').<|eos|>
+<|user|>What are objects in JavaScript?<|assistant|>```javascript
+const student = { name: "Priya", age: 16, subjects: ["maths", "science"] };
+console.log(student.name);            // Priya
+student.city = "Chennai";             // add a property
+for (const [key, value] of Object.entries(student)) console.log(key, value);
+const json = JSON.stringify(student); // to text
+const back = JSON.parse(json);        // from text
+```<|eos|>
+<|user|>Javascript objects?<|assistant|>```javascript
+const student = { name: "Priya", age: 16, subjects: ["maths", "science"] };
+console.log(student.name);            // Priya
+student.city = "Chennai";             // add a property
+for (const [key, value] of Object.entries(student)) console.log(key, value);
+const json = JSON.stringify(student); // to text
+const back = JSON.parse(json);        // from text
+```<|eos|>
+<|user|>Objects in javascript?<|assistant|>```javascript
+const student = { name: "Priya", age: 16, subjects: ["maths", "science"] };
+console.log(student.name);            // Priya
+student.city = "Chennai";             // add a property
+for (const [key, value] of Object.entries(student)) console.log(key, value);
+const json = JSON.stringify(student); // to text
+const back = JSON.parse(json);        // from text
+```<|eos|>
+<|user|>Which element has atomic number 32?<|assistant|>Element number 32 is Germanium (Ge).<|eos|>
+<|user|>Element with atomic number 32?<|assistant|>Element number 32 is Germanium (Ge).<|eos|>
+<|user|>Atomic number 32 element?<|assistant|>Element number 32 is Germanium (Ge).<|eos|>
+<|user|>What is the formula for speed?<|assistant|>Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.<|eos|>
+<|user|>Speed formula?<|assistant|>Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.<|eos|>
+<|user|>Speed distance time formula?<|assistant|>Speed = distance ÷ time. So distance = speed × time and time = distance ÷ speed. To change km/h to m/s, multiply by 5/18.<|eos|>
+<|user|>Which continent is Micronesia in?<|assistant|>Micronesia is in Oceania.<|eos|>
+<|user|>Micronesia is in which continent?<|assistant|>Micronesia is in Oceania.<|eos|>
+<|user|>Continent of Micronesia?<|assistant|>Micronesia is in Oceania.<|eos|>
+<|user|>Who was Srinivasa Ramanujan?<|assistant|>Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.<|eos|>
+<|user|>Ramanujan?<|assistant|>Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.<|eos|>
+<|user|>Who is ramanujan?<|assistant|>Srinivasa Ramanujan (1887–1920) was a self-taught Indian mathematician from Erode, Tamil Nadu, famous for his work on infinite series, number theory and continued fractions. India celebrates National Mathematics Day on 22 December, his birthday.<|eos|>
+<|user|>What is the currency of United Arab Emirates?<|assistant|>The currency of United Arab Emirates is the UAE dirham.<|eos|>
+<|user|>United Arab Emirates currency?<|assistant|>The currency of United Arab Emirates is the UAE dirham.<|eos|>
+<|user|>UAE currency?<|assistant|>The currency of United Arab Emirates is the UAE dirham.<|eos|>
+<|user|>What does "The early bird catches the worm" mean?<|assistant|>**"The early bird catches the worm."**
+
+**Meaning:** People who start early get the best chances.<|eos|>
+<|user|>The early bird catches the worm?<|assistant|>**"The early bird catches the worm."**
+
+**Meaning:** People who start early get the best chances.<|eos|>
+<|user|>Meaning of the early bird catches the worm?<|assistant|>**"The early bird catches the worm."**
+
+**Meaning:** People who start early get the best chances.<|eos|>
+<|user|>What is the difference between == and === in JavaScript?<|assistant|>`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.
+```javascript
+console.log(5 == "5");    // true  (converted)
+console.log(5 === "5");   // false (number vs string)
+console.log(null == undefined);  // true
+```<|eos|>
+<|user|>== vs ===?<|assistant|>`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.
+```javascript
+console.log(5 == "5");    // true  (converted)
+console.log(5 === "5");   // false (number vs string)
+console.log(null == undefined);  // true
+```<|eos|>
+<|user|>Double equals vs triple equals?<|assistant|>`===` checks value AND type; `==` converts types first, which causes surprises. Always use `===`.
+```javascript
+console.log(5 == "5");    // true  (converted)
+console.log(5 === "5");   // false (number vs string)
+console.log(null == undefined);  // true
+```<|eos|>
+<|user|>When is World Oceans Day?<|assistant|>**World Oceans Day** is on **8 June**. A UN day to protect the oceans.<|eos|>
+<|user|>World oceans day?<|assistant|>**World Oceans Day** is on **8 June**. A UN day to protect the oceans.<|eos|>
+<|user|>When is world oceans day?<|assistant|>**World Oceans Day** is on **8 June**. A UN day to protect the oceans.<|eos|>
+<|user|>What is the capital of Pakistan?<|assistant|>The capital of Pakistan is Islamabad.<|eos|>
+<|user|>Pakistan capital?<|assistant|>The capital of Pakistan is Islamabad.<|eos|>
+<|user|>Capital city of Pakistan?<|assistant|>The capital of Pakistan is Islamabad.<|eos|>
+<|user|>Who was Periyar?<|assistant|>E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.<|eos|>
+<|user|>Periyar?<|assistant|>E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.<|eos|>
+<|user|>E v ramasamy?<|assistant|>E. V. Ramasamy (Periyar, 1879–1973) was a social reformer who led the Self-Respect Movement against caste discrimination and for women's rights and rational thinking.<|eos|>
+<|user|>How do SQL joins work?<|assistant|>A JOIN combines rows from tables using a matching column:
+```sql
+-- students(id, name), marks(student_id, subject, score)
+SELECT s.name, m.subject, m.score
+FROM students s
+INNER JOIN marks m ON m.student_id = s.id;     -- only matching rows
+
+SELECT s.name, m.score
+FROM students s
+LEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks
+```
+INNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.<|eos|>
+<|user|>Sql join?<|assistant|>A JOIN combines rows from tables using a matching column:
+```sql
+-- students(id, name), marks(student_id, subject, score)
+SELECT s.name, m.subject, m.score
+FROM students s
+INNER JOIN marks m ON m.student_id = s.id;     -- only matching rows
+
+SELECT s.name, m.score
+FROM students s
+LEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks
+```
+INNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.<|eos|>
+<|user|>Joins in sql?<|assistant|>A JOIN combines rows from tables using a matching column:
+```sql
+-- students(id, name), marks(student_id, subject, score)
+SELECT s.name, m.subject, m.score
+FROM students s
+INNER JOIN marks m ON m.student_id = s.id;     -- only matching rows
+
+SELECT s.name, m.score
+FROM students s
+LEFT JOIN marks m ON m.student_id = s.id;      -- every student, even with no marks
+```
+INNER = only matches; LEFT = all from the left table; RIGHT = all from the right; FULL = all from both.<|eos|>
+<|user|>When is World AIDS Day?<|assistant|>**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.<|eos|>
+<|user|>World aids day?<|assistant|>**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.<|eos|>
+<|user|>When is world aids day?<|assistant|>**World AIDS Day** is on **1 December**. Raises awareness of HIV and AIDS; the symbol is a red ribbon.<|eos|>
+<|user|>What is the difference between SQL and NoSQL?<|assistant|>SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.<|eos|>
+<|user|>Sql vs nosql?<|assistant|>SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.<|eos|>
+<|user|>Nosql?<|assistant|>SQL databases (MySQL, PostgreSQL, SQLite) store data in tables with fixed columns and use SQL queries and joins. NoSQL databases (Firestore, MongoDB) store flexible documents or key–value data, scale easily, and suit changing data. Nova AI uses Firestore, a NoSQL database.<|eos|>
+<|user|>Who wrote My Experiments with Truth?<|assistant|>'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.<|eos|>
+<|user|>Gandhi autobiography?<|assistant|>'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.<|eos|>
+<|user|>My experiments with truth?<|assistant|>'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.<|eos|>
+<|user|>Thirukkural 101<|assistant|>செய்யாமல் செய்த உதவிக்கு வையகமும்
+வானகமும் ஆற்றல் அரிது
+Meaning: Earth and heaven together cannot repay a help given without any help received first.<|eos|>
+<|user|>Kathmandu is the capital of which country?<|assistant|>Kathmandu is the capital of Nepal.<|eos|>
+<|user|>Which country has Kathmandu as its capital?<|assistant|>Kathmandu is the capital of Nepal.<|eos|>
+<|user|>Which country's capital is Kathmandu?<|assistant|>Kathmandu is the capital of Nepal.<|eos|>
+<|user|>What is punctuation?<|assistant|>Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (" "), colon (:), semicolon (;) and hyphen (-).<|eos|>
+<|user|>Punctuation marks?<|assistant|>Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (" "), colon (:), semicolon (;) and hyphen (-).<|eos|>
+<|user|>Define punctuation?<|assistant|>Punctuation marks make writing clear: full stop (.), comma (,), question mark (?), exclamation mark (!), apostrophe ('), quotation marks (" "), colon (:), semicolon (;) and hyphen (-).<|eos|>
+<|user|>What is the atomic number of Oganesson?<|assistant|>The atomic number of Oganesson (Og) is 118: it has 118 protons.<|eos|>
+<|user|>Atomic number of Oganesson?<|assistant|>The atomic number of Oganesson (Og) is 118: it has 118 protons.<|eos|>
+<|user|>Oganesson atomic number?<|assistant|>The atomic number of Oganesson (Og) is 118: it has 118 protons.<|eos|>
+<|user|>What is the atomic number of Holmium?<|assistant|>The atomic number of Holmium (Ho) is 67: it has 67 protons.<|eos|>
+<|user|>Atomic number of Holmium?<|assistant|>The atomic number of Holmium (Ho) is 67: it has 67 protons.<|eos|>
+<|user|>Holmium atomic number?<|assistant|>The atomic number of Holmium (Ho) is 67: it has 67 protons.<|eos|>
+<|user|>Washington, D.C. is the capital of which country?<|assistant|>Washington, D.C. is the capital of United States.<|eos|>
+<|user|>Which country has Washington, D.C. as its capital?<|assistant|>Washington, D.C. is the capital of United States.<|eos|>
+<|user|>Which country's capital is Washington, D.C.?<|assistant|>Washington, D.C. is the capital of United States.<|eos|>
+<|user|>What is the capital of Uruguay?<|assistant|>The capital of Uruguay is Montevideo.<|eos|>
+<|user|>Uruguay capital?<|assistant|>The capital of Uruguay is Montevideo.<|eos|>
+<|user|>Capital city of Uruguay?<|assistant|>The capital of Uruguay is Montevideo.<|eos|>
+<|user|>Kuala Lumpur is the capital of which country?<|assistant|>Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.<|eos|>
+<|user|>Which country has Kuala Lumpur as its capital?<|assistant|>Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.<|eos|>
+<|user|>Which country's capital is Kuala Lumpur?<|assistant|>Kuala Lumpur is the capital of Malaysia. Putrajaya is the administrative centre of the government.<|eos|>
+<|user|>What is Avogadro's number?<|assistant|>Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.<|eos|>
+<|user|>Avogadro number?<|assistant|>Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.<|eos|>
+<|user|>What is a mole in chemistry?<|assistant|>Avogadro's number is 6.022 × 10²³: the number of particles in one mole of a substance.<|eos|>
+<|user|>How does GROUP BY work in SQL?<|assistant|>```sql
+SELECT class, COUNT(*) AS students, AVG(marks) AS average
+FROM students
+GROUP BY class
+HAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)
+ORDER BY average DESC;
+```<|eos|>
+<|user|>Group by in sql?<|assistant|>```sql
+SELECT class, COUNT(*) AS students, AVG(marks) AS average
+FROM students
+GROUP BY class
+HAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)
+ORDER BY average DESC;
+```<|eos|>
+<|user|>Sql group by?<|assistant|>```sql
+SELECT class, COUNT(*) AS students, AVG(marks) AS average
+FROM students
+GROUP BY class
+HAVING AVG(marks) > 60        -- filter groups (WHERE filters rows)
+ORDER BY average DESC;
+```<|eos|>
+<|user|>Who invented the AC?<|assistant|>Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.<|eos|>
+<|user|>Who invented ac?<|assistant|>Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.<|eos|>
+<|user|>Who invented air conditioner?<|assistant|>Willis Carrier invented the modern air conditioner in 1902 to control humidity in a printing factory.<|eos|>
+<|user|>Which element has the symbol Sc?<|assistant|>Sc is the symbol of Scandium (atomic number 21).<|eos|>
+<|user|>Sc element?<|assistant|>Sc is the symbol of Scandium (atomic number 21).<|eos|>
+<|user|>Element Sc?<|assistant|>Sc is the symbol of Scandium (atomic number 21).<|eos|>
+<|user|>What is calculus?<|assistant|>Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.<|eos|>
+<|user|>Define calculus?<|assistant|>Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.<|eos|>
+<|user|>Who invented calculus?<|assistant|>Calculus is the maths of change. Differential calculus finds rates of change (slopes, derivatives); integral calculus adds up small pieces (areas, integrals). Newton and Leibniz developed it independently in the late 1600s.<|eos|>

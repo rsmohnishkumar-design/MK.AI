@@ -1,0 +1,43 @@
+{
+  "files": {
+    "corpus.txt": {
+      "sha256": "b0a3c1febf7a17238162bc6f6038ad42f68fb4c493a89ce91546e41701c6099c",
+      "characters": 1231101
+    },
+    "heldout.txt": {
+      "sha256": "b8684b917eaf9882e2c98f1f4e271477a6e5aa8942d569382af527e4a09d6af8",
+      "characters": 61908
+    }
+  },
+  "examples": {
+    "train": 7425,
+    "heldout": 393,
+    "distinct_answers_train": 2572,
+    "distinct_answers_heldout": 135
+  },
+  "split": "by distinct answer: no held-out answer text appears in training",
+  "sources": {
+    "data/kb/*.json": {
+      "licence": "Nova AI project content (owned)",
+      "examples": 7764
+    },
+    "js/thirukkural.js": {
+      "licence": "Public domain (Thiruvalluvar); English meanings written for this project",
+      "examples": 54
+    }
+  },
+  "excluded": "No user conversations, no private data, no output of other AI services.",
+  "final_split": {
+    "val": {
+      "examples": 195,
+      "distinct_answers": 67,
+      "sha256": "14d4b018b2627fa8d1e1cd5d3c264551721df387eebadaeb2ba4fc3004cd89d4"
+    },
+    "test": {
+      "examples": 198,
+      "distinct_answers": 68,
+      "sha256": "f9ab5070f4fe7f7a33e247160274f516112a6eee135444735996510952cf1987"
+    },
+    "rule": "heldout.txt split by distinct answer (seed 2026); val = checkpoint selection and tuning; test = final comparison only; no answer is shared between train, val and test"
+  }
+}

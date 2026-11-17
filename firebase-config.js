@@ -34,3 +34,8 @@ export const CREATOR_NAME = "Mohnishkumar";
 
 // Must match TRIAL_HOURS in firestore.rules.
 export const TRIAL_HOURS = 3;
+
+// Nova Gateway (gateway/, a Cloudflare Worker that keeps the AI keys secret and
+// enforces usage limits on the server). Empty = not set up yet: the app then uses
+// Gemini through Firebase for everyone, and the vault keys only on the admin's account.
+export const GATEWAY_URL = "";

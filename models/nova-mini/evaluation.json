@@ -1,0 +1,61 @@
+{
+  "params": 2398240,
+  "config": {
+    "vocab_size": 3072,
+    "context": 256,
+    "layers": 6,
+    "width": 160,
+    "heads": 4,
+    "ffn_mult": 2.6666666666666665,
+    "dropout": 0.1,
+    "resid_dropout": 0.2
+  },
+  "selected_step": 975,
+  "train_probe_ppl": 5.22,
+  "val_ppl": 36.65,
+  "test_ppl": 46.67,
+  "guarded": {
+    "questions": 68,
+    "word_f1": 0.32,
+    "repeated_trigram_rate": 0.0,
+    "distinct_2": 0.997,
+    "ended_properly": 1.0,
+    "mean_words": 13.4,
+    "f1_by_topic": {
+      "coding": 0.071,
+      "countries": 0.575,
+      "days": 0.416,
+      "elements": 0.548,
+      "english": 0.119,
+      "inventions": 0.115,
+      "maths": 0.055,
+      "science": 0.169,
+      "thirukkural": 0.196
+    }
+  },
+  "greedy": {
+    "questions": 68,
+    "word_f1": 0.336,
+    "repeated_trigram_rate": 0.015,
+    "distinct_2": 0.961,
+    "ended_properly": 0.956,
+    "mean_words": 12.9,
+    "f1_by_topic": {
+      "coding": 0.083,
+      "countries": 0.57,
+      "days": 0.43,
+      "elements": 0.61,
+      "english": 0.048,
+      "inventions": 0.095,
+      "maths": 0.106,
+      "science": 0.04,
+      "thirukkural": 0.183
+    }
+  },
+  "baseline_step450_test": {
+    "test_ppl": 58.33,
+    "greedy_word_f1": 0.285,
+    "guarded_word_f1": 0.318,
+    "guarded_ended_properly": 0.971
+  }
+}

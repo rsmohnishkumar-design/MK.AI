@@ -1,0 +1,52 @@
+{
+  "run": "r4-deepnarrow",
+  "args": {
+    "run": "r4-deepnarrow",
+    "root": "/tmp/claude-0/-home-user-MK-AI/f2647ed4-f4e2-5a16-8a40-1d9720b190ab/scratchpad/runs",
+    "data": "/home/user/MK.AI/nova-llm/data/corpus.txt",
+    "val": "/home/user/MK.AI/nova-llm/data/val.txt",
+    "tokenizer": "/home/user/MK.AI/nova-llm/data/tokenizer.json",
+    "layers": 6,
+    "width": 160,
+    "heads": 4,
+    "context": 256,
+    "dropout": 0.1,
+    "resid_dropout": 0.2,
+    "lr": 0.001,
+    "min_lr_ratio": 0.1,
+    "warmup": 100,
+    "max_steps": 1500,
+    "batch": 24,
+    "weight_decay": 0.1,
+    "clip": 1.0,
+    "eval_every": 75,
+    "patience": 4,
+    "seed": 1337
+  },
+  "config": {
+    "vocab_size": 3072,
+    "context": 256,
+    "layers": 6,
+    "width": 160,
+    "heads": 4,
+    "ffn_mult": 2.6666666666666665,
+    "dropout": 0.1,
+    "resid_dropout": 0.2
+  },
+  "parameters": 2398240,
+  "train_tokens": 369762,
+  "val_tokens": 8632,
+  "data_sha256": {
+    "train": "b0a3c1febf7a17238162bc6f6038ad42f68fb4c493a89ce91546e41701c6099c",
+    "val": "14d4b018b2627fa8d1e1cd5d3c264551721df387eebadaeb2ba4fc3004cd89d4",
+    "tokenizer": "a11d37c71ae83439d845d56569c0938b489253627a2779465775eceb5350fc8f"
+  },
+  "git_commit": "9b6384cbc371b54c900e5b10b8848c78046ed08b",
+  "torch": "2.15.0+cu132",
+  "note": "data/test.txt is not used by training or selection",
+  "best_step": 975,
+  "best_val_loss": 3.6012868944207206,
+  "best_val_ppl": 36.6453628255135,
+  "stopped_at": 1275,
+  "train_seconds": 1141
+}

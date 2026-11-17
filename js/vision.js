@@ -1,3 +1,4 @@
+import { independent } from "./independent.js";
 // Alpaca Vision: Nova AI's own picture and video model. It reads a description
 // ("a sunset over mountains with a lake", "diwali greeting card for Asha",
 // "logo for MK Tech", "video of rain in a forest at night") and paints it on
@@ -1514,6 +1515,7 @@ async function fastPhotos(spec, onProgress) {
 }
 
 async function loadPhotos(spec, onProgress, timeoutMs = 300000) {
+  if (independent()) return null; // no outside image AI in Independent mode
   const gen0 = cancelGen;
   const hd = await geminiPhoto(spec, onProgress);
   if (gen0 !== cancelGen) return { stopped: true };
@@ -1902,21 +1904,23 @@ export function mountVision(container, specText) {
 export function visionAnswer(question, { allowVideo = true } = {}) {
   if (isBlockedPicture(question)) return "I can't create that kind of picture: Alpaca Vision doesn't make images of death, violence, weapons, injuries or adult content. Try something else, like a place, a festival, nature, people doing everyday things, or an idea you like.";
   const spec = planPicture(question);
+  // Independent mode: no outside image AI, so Nova draws it with its own drawing engine (and says so)
+  if (independent()) spec.photo = false;
   // Videos are made only for the admin; everyone else gets a still picture
   const videoBlocked = spec.video && !allowVideo;
   if (videoBlocked) spec.video = false;
   const what = spec.photo && spec.kind !== "card" ? subjectOfPicture(spec.prompt) || describePicture(spec) : describePicture(spec);
   const lines = [
     ...(videoBlocked ? ["Video creation is reserved for Nova AI's admin, so here's a picture instead.", ""] : []),
-    `**Alpaca Vision** — ${spec.video ? "here's your video" : spec.photo ? "here's your photo" : "here's your picture"}: ${what}.`,
+    `**Alpaca Vision** — ${spec.video ? "here's your animation (not AI-generated video)" : spec.photo ? "here's your photo" : "here's your drawing"}: ${what}.`,
     "",
     "```alpaca-vision\n" + JSON.stringify(spec) + "\n```",
     "",
   ];
-  if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and turn them into a short film with camera moves. It plays right here; tap **⬇ Video** to save it, or **New version** for different shots.");
+  if (spec.photo && spec.video) lines.push("I create several real AI photos of the scene and animate them with camera moves. This is an animation, not AI video generation. It plays right here; tap **⬇ Video** to save it, or **New version** for different shots.");
   else if (spec.photo && spec.kind === "card") lines.push("A real photo background with your wishes on top. Tap **⬇ Image** to save or share it, or **New version** for a different photo.");
   else if (spec.photo) lines.push(`A real AI photo (it takes a few seconds). Tap **⬇ Image** to save it, or **New version** for a different take. Add details like the time of day, weather, style (cinematic, black and white, anime, oil painting)${allowVideo ? ' or "video"' : ""} to change it.`);
-  else if (spec.video) lines.push("It plays right here. Tap **⬇ Video** to save it as a video file, **⬇ Image** for a still, or **New version** for a different take.");
-  else lines.push("Tap **⬇ Image** to save it, or **New version** for a different take.");
+  else if (spec.video) lines.push("Drawn and animated by Nova's own drawing engine (not an AI model). It plays right here. Tap **⬇ Video** to save it as a video file, **⬇ Image** for a still, or **New version** for a different take.");
+  else lines.push("Drawn by Nova's own drawing engine (shapes and scenes, not an AI image model). Tap **⬇ Image** to save it, or **New version** for a different take.");
   return lines.join("\n");
 }

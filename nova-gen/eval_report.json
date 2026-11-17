@@ -1,0 +1,11 @@
+{
+  "image": {
+    "samples": 108,
+    "colour_adherence": 0.704,
+    "shape_adherence": 0.407,
+    "seconds_per_image_cpu": 4.106,
+    "sheet": "samples_image.png",
+    "chance_colour": 0.167,
+    "chance_shape": 0.333
+  }
+}

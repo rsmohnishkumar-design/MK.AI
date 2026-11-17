@@ -33,9 +33,28 @@ Read this first. It carries over what was learned in earlier chats with the owne
   Used by Myhomely (myhomely.pages.dev). Updates reach those sites once Nova is made live
   (cached 5 min). Each site's domain must be in the reCAPTCHA key's domain list.
 
+## Agent platform (v101, on the testing branch; NOT live yet)
+- js/agent/: engine.js (task states CREATED…COMPLETED, planner, 9 specialist agents, approvals,
+  verification, resume), tools.js (permissioned tools), analytics.js (stats/forecast/decisions),
+  memory.js (per-device, user-controlled), ui.js (Nova Workspace: Agent, Research, Images,
+  Memory, Tasks, Status). Open with /agent /research /images /memory /tasks or the ⋯ menu.
+- gateway/: Cloudflare Worker that keeps AI keys server-side + server usage limits. Not deployed;
+  needs the owner's Cloudflare account (gateway/README.md). GATEWAY_URL in firebase-config.js.
+- firestore.rules changed (keys admin-only, usage can't be lowered, shared learned answers
+  admin-only). The owner must paste them into the Firebase console WITH their real codes.
+- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21).
+- nova-llm/: our own tokenizer (tested) + PyTorch model/training (untested here). docs/RESEARCH.md.
+
+## NOVA's own models
+- nova-llm/: NOVA Mini v2 (2.4M params, checkpoints/nova-mini-v2-r4.pt) is live in models/nova-mini;
+  v1 kept at checkpoints/nova-mini-step450.pt. Data split train/val/test by answer (data/MANIFEST.json);
+  test set only for final comparisons. train2.py + evaluate2.py; reports in nova-llm/reports/.
+- nova-gen/: tiny image/video diffusion prototypes (shapes only), NOT shown as a product.
+- Owner wants the vault and its API keys KEPT. Independent mode is optional and off by default.
+
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v100. New files must be added to the sw.js precache list.
+- Current version: v102. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,
@@ -50,7 +69,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   `npx firebase-tools deploy --only hosting --project mkai-c042b --non-interactive`, delete the file.
 - Alternative: GitHub Actions workflow "Deploy to Firebase" (.github/workflows/firebase-deploy.yml,
   manual run) using the repo secret `FIREBASE_SERVICE_ACCOUNT`.
-- Firebase now serves v100 (deployed 2026-11-08 with the FIREBASE_SERVICE_ACCOUNT env var, raw JSON).
+- Firebase serves v102 (deployed 2026-11-17): Workspace, Image Studio, Independent mode, NOVA Mini v2.
 
 ## Ideas mentioned but not done
 - Making the GitHub repo private (only the owner can: Settings → Change visibility).
