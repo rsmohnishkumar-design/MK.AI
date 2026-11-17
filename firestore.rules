@@ -36,6 +36,22 @@ service cloud.firestore {
     }
 
     function incoming() { return request.resource.data; }
+
+    // Free-plan usage (times in milliseconds). A count may only grow; it may restart
+    // from zero only after its window (5 hours) or week has passed, and a new start
+    // time must be "now" (within 10 minutes) so nobody can push it into the future.
+    function nowMs() { return request.time.toMillis(); }
+    function freshStart(t) { return t is int && t <= nowMs() + 600000 && t >= nowMs() - 600000; }
+    function counterOk(newStart, newCount, oldStart, oldCount, spanMs) {
+      return newStart is int && newCount is number && newCount >= 0 && (
+        (newStart == oldStart && newCount >= oldCount)
+        || ((oldStart == 0 || nowMs() >= oldStart + spanMs) && (newStart == 0 || freshStart(newStart)))
+      );
+    }
+    function usageOk(u, old) {
+      return counterOk(u.windowStart, u.windowTokens, old.get('windowStart', 0), old.get('windowTokens', 0), 18000000)
+        && counterOk(u.weekStart, u.weekTokens, old.get('weekStart', 0), old.get('weekTokens', 0), 604800000);
+    }
     function changed() { return incoming().diff(resource.data).affectedKeys(); }
 
     // Unlimited and free-plan accounts (the free plan's token limits are counted in the app).
@@ -73,10 +89,12 @@ service cloud.firestore {
         && incoming().expiresAt == null
         && incoming().accessCode == unlimitedCode()
       ) || (
+        // Usage can only go up, except when a 5-hour window or a week has really ended.
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['usage'])
         && incoming().usage is map
         && incoming().usage.keys().hasOnly(['windowStart', 'windowTokens', 'weekStart', 'weekTokens'])
+        && usageOk(incoming().usage, resource.data.get('usage', {}))
       ) || (
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['accessRequest'])
@@ -146,7 +164,8 @@ service cloud.firestore {
     match /learned/{id} {
       allow read: if signedIn();
 
-      allow create: if signedIn() && hasAccess()
+      // Only the admin adds shared answers: answers from one person are shown to everyone
+      allow create: if isAdmin()
         && incoming().keys().hasOnly([
           'question', 'answer', 'keywords', 'timeSensitive', 'uses', 'voters',
           'createdBy', 'createdAt', 'lastUsedAt', 'source'
@@ -175,9 +194,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // --- AI settings (the Groq API key): members read, only the admin changes ---
+    // --- Settings. settings/ai holds the AI service keys: only the admin may read it,
+    // so keys never reach other people's browsers (everyone else uses Gemini through
+    // Firebase, or the Nova Gateway once it is set up). Other settings: members read. ---
     match /settings/{id} {
-      allow read: if signedIn() && hasAccess();
+      allow read: if (id == 'ai' && isAdmin()) || (id != 'ai' && signedIn() && hasAccess());
       allow write: if isAdmin();
     }
 
@@ -195,8 +216,10 @@ service cloud.firestore {
         && changed().hasOnly(['tries', 'lastTriedAt'])
         && incoming().tries == resource.data.tries + 1
         && incoming().lastTriedAt == request.time;
-      allow delete: if signedIn() && hasAccess();
+      allow delete: if isAdmin() || (signedIn() && resource.data.createdBy == request.auth.uid);
     }
+
+    // --- Agent tasks and memory live on each person's device (js/agent), not here. ---
 
     // --- Activity log: people add their own entries, only the admin reads ---
     match /activity/{id} {

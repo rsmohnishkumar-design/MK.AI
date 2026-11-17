@@ -1,0 +1,12 @@
+# Nova Gateway on Cloudflare Workers (free plan). See gateway/README.md.
+name = "nova-gateway"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+FIREBASE_PROJECT = "mkai-c042b"
+ALLOWED_ORIGINS = "https://mkai-c042b.web.app,https://mkai-c042b.firebaseapp.com,http://localhost:8000"
+
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "PASTE_YOUR_KV_NAMESPACE_ID"

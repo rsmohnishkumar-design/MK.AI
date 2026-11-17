@@ -24,6 +24,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { configured, auth, db, friendlyError } from "./firebase.js";
 import { lookup, learn, markUsed, vote, votes, logActivity, dependsOnContext, isTimeSensitive, keywords } from "./brain.js";
+import { GATEWAY_URL } from "../firebase-config.js";
 import { bestSentences, summarise, wantsSummary, sentencesOf } from "./reader.js";
 import { knowledgeAnswer, loadKnowledge, relatedEntries, spellFix } from "./kb.js";
 import * as deep from "./deepthink.js";
@@ -649,7 +650,8 @@ function showChat(user, notice) {
     loadKnowledge().catch(() => {});
   });
   stopLearner?.();
-  stopLearner = startAutoLearner({ canLearn: hasAccess, onStatus: (t) => ($("learnStatus").textContent = t) });
+  // Only the admin's pages save shared answers (the database allows nobody else)
+  stopLearner = startAutoLearner({ canLearn: () => hasAccess() && isCreator(), onStatus: (t) => ($("learnStatus").textContent = t) });
 }
 
 function showAuth() {
@@ -1139,6 +1141,7 @@ $("chatMoreTop")?.addEventListener("click", (e) => {
   items.push(
     { label: "New chat", run: newChat },
     { label: "Talk to Nova (avatar)", run: startAvatar },
+    { label: "Nova Workspace (agents, research, images)", run: () => openNovaWorkspace("agent") },
     ...(voice.canListen && voice.canSpeak ? [{ label: voiceChat ? "End voice chat" : "Voice chat (hands-free)", run: () => setVoiceChat(!voiceChat) }] : []),
     {
       label: `Personality: ${PERSONAS[persona].label.replace(" (default)", "")}`,
@@ -1219,6 +1222,11 @@ const SLASH = [
   { cmd: "deep", hint: "Deep thinking for the next question", run: () => { deepOnce = true; toast("Deep thinking is on for your next question."); } },
   { cmd: "folder", hint: "Open a folder and work on its files", run: () => startWorkspace({ onError: (m) => addErrorMessage(m) }) },
   { cmd: "talk", hint: "Talk to Nova, the speaking avatar", run: () => startAvatar() },
+  { cmd: "agent", hint: "Agents plan and do a multi-step task", run: () => openNovaWorkspace("agent") },
+  { cmd: "research", hint: "Research the web with sources", run: () => openNovaWorkspace("research") },
+  { cmd: "images", hint: "Image studio: sizes, variations, history", run: () => openNovaWorkspace("images") },
+  { cmd: "memory", hint: "See and control what Nova remembers", run: () => openNovaWorkspace("memory") },
+  { cmd: "tasks", hint: "Task history", run: () => openNovaWorkspace("tasks") },
   { cmd: "wellbeing", hint: "Wellbeing support: talk it through", run: () => { setPersona("wellbeing"); toast("Wellbeing support is on. I'm here to listen."); } },
   { cmd: "money", hint: "Money help: budgets, debt, scams", run: () => { setPersona("money"); toast("Money help is on."); } },
   { cmd: "new", hint: "Start a new chat", run: () => newChat() },
@@ -2568,7 +2576,8 @@ composer.addEventListener("submit", async (e) => {
     if (!isCode && !cancelled && result.source !== "stopped" && !result.teachable) msg.enableSave(question);
     if (["knowledge", "wiki"].includes(result.source) && !deepNow && result.answer.length > 120 && !result.answer.includes("```")) msg.setRefine(question);
     if (!isCode && !cancelled && !result.teachable && ["alpaca", "knowledge", "wiki", "memory", "vault", "local", "app"].includes(result.source) && navigator.onLine) msg.enableRetry(question);
-    if (result.teachable) msg.enableTeaching(question);
+    // Shared answers are visible to everyone, so only the admin (creator) can teach them
+    if (result.teachable && isCreator()) msg.enableTeaching(question);
     else if (stillHere() && !isCode) remember(question, result.answer);
     const saved = record(chatId, {
       role: "bot",
@@ -2603,6 +2612,19 @@ composer.addEventListener("submit", async (e) => {
 // The talking avatar (and anything else) hears when an answer is ready
 function announceAnswer(detail) {
   document.dispatchEvent(new CustomEvent("mkai-answer", { detail }));
+}
+
+// --- Nova Workspace: agents, research, images, memory, tasks (js/agent) ---
+async function openNovaWorkspace(tab = "agent") {
+  if (!hasAccess()) return toast("Sign in to use the workspace.");
+  const prefill = questionInput.value.trim();
+  try {
+    const { openWorkspace } = await import("./agent/ui.js");
+    openWorkspace({ uid: auth.currentUser?.uid || "guest", tab, prefill, status: { gateway: !!GATEWAY_URL }, onClose: () => questionInput.focus() });
+  } catch (err) {
+    console.warn("Workspace:", err);
+    addErrorMessage("The workspace couldn't open. Check your connection and try again.");
+  }
 }
 
 // --- Talk to Nova: the talking avatar ---

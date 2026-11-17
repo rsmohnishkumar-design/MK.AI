@@ -33,9 +33,21 @@ Read this first. It carries over what was learned in earlier chats with the owne
   Used by Myhomely (myhomely.pages.dev). Updates reach those sites once Nova is made live
   (cached 5 min). Each site's domain must be in the reCAPTCHA key's domain list.
 
+## Agent platform (v101, on the testing branch; NOT live yet)
+- js/agent/: engine.js (task states CREATED…COMPLETED, planner, 9 specialist agents, approvals,
+  verification, resume), tools.js (permissioned tools), analytics.js (stats/forecast/decisions),
+  memory.js (per-device, user-controlled), ui.js (Nova Workspace: Agent, Research, Images,
+  Memory, Tasks, Status). Open with /agent /research /images /memory /tasks or the ⋯ menu.
+- gateway/: Cloudflare Worker that keeps AI keys server-side + server usage limits. Not deployed;
+  needs the owner's Cloudflare account (gateway/README.md). GATEWAY_URL in firebase-config.js.
+- firestore.rules changed (keys admin-only, usage can't be lowered, shared learned answers
+  admin-only). The owner must paste them into the Firebase console WITH their real codes.
+- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21).
+- nova-llm/: our own tokenizer (tested) + PyTorch model/training (untested here). docs/RESEARCH.md.
+
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v100. New files must be added to the sw.js precache list.
+- Current version: v101. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,
