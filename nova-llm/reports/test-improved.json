@@ -1,0 +1,135 @@
+{
+  "split": "test",
+  "conditions": "identical data, tokenizer, prompts and decoders for every checkpoint",
+  "improved": {
+    "params": 2398240,
+    "config": {
+      "vocab_size": 3072,
+      "context": 256,
+      "layers": 6,
+      "width": 160,
+      "heads": 4,
+      "ffn_mult": 2.6666666666666665,
+      "dropout": 0.1,
+      "resid_dropout": 0.2
+    },
+    "selected_step": 975,
+    "train_probe_ppl": 5.22,
+    "val_ppl": 36.65,
+    "test_ppl": 46.67,
+    "greedy": {
+      "questions": 68,
+      "word_f1": 0.336,
+      "repeated_trigram_rate": 0.015,
+      "distinct_2": 0.961,
+      "ended_properly": 0.956,
+      "mean_words": 12.9,
+      "f1_by_topic": {
+        "coding": 0.083,
+        "countries": 0.57,
+        "days": 0.43,
+        "elements": 0.61,
+        "english": 0.048,
+        "inventions": 0.095,
+        "maths": 0.106,
+        "science": 0.04,
+        "thirukkural": 0.183
+      },
+      "samples": [
+        {
+          "q": "Who invented the electric motor?",
+          "ref": "Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.",
+          "nova": "The chemical symbol of Tellur (atomic number 87).",
+          "f1": 0.069
+        },
+        {
+          "q": "What is insurance?",
+          "ref": "Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (ter",
+          "nova": "Alexander the computer program attract. Hindnessic, patrees and lungs.",
+          "f1": 0.095
+        },
+        {
+          "q": "Which continent is Cyprus in?",
+          "ref": "Cyprus is in Europe.",
+          "nova": "Cripei is in Africa.",
+          "f1": 0.5
+        },
+        {
+          "q": "Which continent is New Zealand in?",
+          "ref": "New Zealand is in Oceania.",
+          "nova": "Suriname is in Asia.",
+          "f1": 0.444
+        },
+        {
+          "q": "What is the capital of Ukraine?",
+          "ref": "The capital of Ukraine is Kyiv.",
+          "nova": "The capital of Crobraia is Skopje.",
+          "f1": 0.667
+        },
+        {
+          "q": "What is the chemical symbol of Thorium?",
+          "ref": "The chemical symbol of Thorium is Th.",
+          "nova": "The chemical symbol of Chlorine is T.",
+          "f1": 0.714
+        }
+      ]
+    },
+    "guarded": {
+      "questions": 68,
+      "word_f1": 0.32,
+      "repeated_trigram_rate": 0.0,
+      "distinct_2": 0.997,
+      "ended_properly": 1.0,
+      "mean_words": 13.4,
+      "f1_by_topic": {
+        "coding": 0.071,
+        "countries": 0.575,
+        "days": 0.416,
+        "elements": 0.548,
+        "english": 0.119,
+        "inventions": 0.115,
+        "maths": 0.055,
+        "science": 0.169,
+        "thirukkural": 0.196
+      },
+      "samples": [
+        {
+          "q": "Who invented the electric motor?",
+          "ref": "Michael Faraday showed the first electric motor in 1821 and discovered electromagnetic induction in 1831, which led to generators and transformers.",
+          "nova": "Ale Benjing the law of light, a circle at the centre of its own as one form to reduce in a molar mass.",
+          "f1": 0.136
+        },
+        {
+          "q": "What is insurance?",
+          "ref": "Insurance protects you from big money losses: you pay a small premium regularly, and the insurer pays when something covered happens. Types: life insurance (ter",
+          "nova": "The currency of Sulfur (Bkk's) is the pesus; the government economics.",
+          "f1": 0.045
+        },
+        {
+          "q": "Which continent is Cyprus in?",
+          "ref": "Cyprus is in Europe.",
+          "nova": "Cerde is in Asia.",
+          "f1": 0.5
+        },
+        {
+          "q": "Which continent is New Zealand in?",
+          "ref": "New Zealand is in Oceania.",
+          "nova": "Zealand is in Asia.",
+          "f1": 0.667
+        },
+        {
+          "q": "What is the capital of Ukraine?",
+          "ref": "The capital of Ukraine is Kyiv.",
+          "nova": "The capital of Crobraia is Sanjavíl.",
+          "f1": 0.667
+        },
+        {
+          "q": "What is the chemical symbol of Thorium?",
+          "ref": "The chemical symbol of Thorium is Th.",
+          "nova": "The chemical symbol of Thulium is Tm.",
+          "f1": 0.714
+        }
+      ]
+    }
+  }
+}

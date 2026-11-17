@@ -45,6 +45,13 @@ Read this first. It carries over what was learned in earlier chats with the owne
 - Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21).
 - nova-llm/: our own tokenizer (tested) + PyTorch model/training (untested here). docs/RESEARCH.md.
 
+## NOVA's own models
+- nova-llm/: NOVA Mini v2 (2.4M params, checkpoints/nova-mini-v2-r4.pt) is live in models/nova-mini;
+  v1 kept at checkpoints/nova-mini-step450.pt. Data split train/val/test by answer (data/MANIFEST.json);
+  test set only for final comparisons. train2.py + evaluate2.py; reports in nova-llm/reports/.
+- nova-gen/: tiny image/video diffusion prototypes (shapes only), NOT shown as a product.
+- Owner wants the vault and its API keys KEPT. Independent mode is optional and off by default.
+
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
 - Current version: v102. New files must be added to the sw.js precache list.
@@ -62,7 +69,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   `npx firebase-tools deploy --only hosting --project mkai-c042b --non-interactive`, delete the file.
 - Alternative: GitHub Actions workflow "Deploy to Firebase" (.github/workflows/firebase-deploy.yml,
   manual run) using the repo secret `FIREBASE_SERVICE_ACCOUNT`.
-- Firebase now serves v100 (deployed 2026-11-08 with the FIREBASE_SERVICE_ACCOUNT env var, raw JSON).
+- Firebase serves v102 (deployed 2026-11-17): Workspace, Image Studio, Independent mode, NOVA Mini v2.
 
 ## Ideas mentioned but not done
 - Making the GitHub repo private (only the owner can: Settings → Change visibility).

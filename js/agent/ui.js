@@ -374,7 +374,7 @@ export function openWorkspace({ uid = "guest", tab = "agent", prefill = "", onCl
       ["Code running", "Working", "Python in a sandbox on this device (Pyodide); first run downloads it."],
       ["Memory", deps.memory.enabled ? "On" : "Off", "On this device only; you can view and delete everything."],
       ["Nova Gateway (keys on server, server limits)", status.gateway ? "On" : "Not set up", status.gateway ? "AI keys stay on the server." : "Waiting for the owner to deploy it (gateway/README.md)."],
-      ["NOVA LLM (own model)", "Experimental", "NOVA Mini (4M parameters): trained by this project on its own data, runs on your device. Held-out perplexity 53 (baseline 695), but facts are usually wrong, so it is shown only as a research preview."],
+      ["NOVA LLM (own model)", "Experimental", "NOVA Mini v2 (2.4M parameters): trained by this project on its own data, runs on your device. Test perplexity 46.7 (v1: 58.3), but facts are usually wrong, so it is shown only as a research preview."],
       ["Physical robot", "Optional", "Only when you connect one yourself; it follows the avatar, nothing else."],
       ["AGI / self-awareness", "Research only", "Nova AI is not conscious or generally intelligent. See docs/RESEARCH.md."],
     ];

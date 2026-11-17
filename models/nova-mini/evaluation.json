@@ -1,68 +1,61 @@
 {
-  "parameters": 4000000,
+  "params": 2398240,
   "config": {
     "vocab_size": 3072,
     "context": 256,
-    "layers": 4,
-    "width": 256,
+    "layers": 6,
+    "width": 160,
     "heads": 4,
     "ffn_mult": 2.6666666666666665,
-    "dropout": 0.1
+    "dropout": 0.1,
+    "resid_dropout": 0.2
   },
-  "train_tokens": 369762,
-  "heldout_tokens": 19072,
-  "heldout_perplexity": 53.05,
-  "unigram_baseline_perplexity": 694.95,
-  "heldout_questions": 40,
-  "mean_word_f1": 0.205,
-  "samples": [
-    {
-      "question": "Who wrote My Experiments with Truth?",
-      "reference": "'The Story of My Experiments with Truth' is Mahatma Gandhi's autobiography.",
-      "nova": "The Potb (1879–1799) was an Indian National Congress (1779).",
-      "f1": 0.0
-    },
-    {
-      "question": "What does \"The early bird catches the worm\" mean?",
-      "reference": "**\"The early bird catches the worm.\"**\n\n**Meaning:** People who start early get the best chances.",
-      "nova": "**\"A store fighting.\"**\n\n**Meaning:** Time and the hockey, is the waves to fixing.",
-      "f1": 0.214
-    },
-    {
-      "question": "What is the full form of EMI?",
-      "reference": "**EMI** stands for **Equated Monthly Instalment**: the fixed amount you pay every month to repay a loan.",
-      "nova": "**MM** stands for **Do Don's No Gagan**: a mal that uses a computer or **Colomer**\n- **Coles**\n- **Cmd + PDF**\n- **Cmd + PDF**\n- **Cmd + P**\n- **Cmd + P**\n- **Cmd + P",
-      "f1": 0.14
-    },
-    {
-      "question": "What is the difference between heat and temperature?",
-      "reference": "**Heat**\n- the total energy that flows from hot to cold\n- measured in joules (J)\n- depends on the amount of substance\n\n**Temperature**\n- how hot or cold something is (average energy of particles)\n- measured in °C or kelvin\n- doesn't depend on the amount\n\n💡 A bucket of warm water has more heat than a",
-      "nova": "**Metals**\n- e.g. 'The mal'\n\n**Meaning:** press **Coling a PDF**\n- **Do Don's a lion**: a mal to the lion of a computer or **Colomer** and mal **Colence PDF:**\n- **Colence PDF:** press **Cmd",
-      "f1": 0.154
-    },
-    {
-      "question": "What is the full form of ISP?",
-      "reference": "**ISP** stands for **Internet Service Provider**: the company that gives you internet, like Jio or Airtel.",
-      "nova": "**MP** stands for **Dojiniate Pay of Sur**: a number that can missing agency.",
-      "f1": 0.207
-    },
-    {
-      "question": "What is the full form of LAN?",
-      "reference": "**LAN** stands for **Local Area Network**: a network in one building or campus.",
-      "nova": "**MP** stands for **Do Don's No**: a number that can missing a computer or finite.",
-      "f1": 0.286
-    },
-    {
-      "question": "What is the full form of MLA?",
-      "reference": "**MLA** stands for **Member of the Legislative Assembly**: an elected member of a state's assembly.",
-      "nova": "**MS** stands for **Do Pay of Standard Time**: a computer that uses a computer or **Colomer** and mal **Colence PDF**\n- **Cmd + PDF**\n- **Cmd + PDF**\n- **Cmd + PDF**\n- **Cmd + PDF**\n- **C",
-      "f1": 0.182
-    },
-    {
-      "question": "What is the full form of RTGS?",
-      "reference": "**RTGS** stands for **Real Time Gross Settlement**: instant transfer of large amounts (₹2 lakh or more) between banks.",
-      "nova": "**MP** stands for **Do Don's No Gagan**: a mal's number that can be a moles.",
-      "f1": 0.121
+  "selected_step": 975,
+  "train_probe_ppl": 5.22,
+  "val_ppl": 36.65,
+  "test_ppl": 46.67,
+  "guarded": {
+    "questions": 68,
+    "word_f1": 0.32,
+    "repeated_trigram_rate": 0.0,
+    "distinct_2": 0.997,
+    "ended_properly": 1.0,
+    "mean_words": 13.4,
+    "f1_by_topic": {
+      "coding": 0.071,
+      "countries": 0.575,
+      "days": 0.416,
+      "elements": 0.548,
+      "english": 0.119,
+      "inventions": 0.115,
+      "maths": 0.055,
+      "science": 0.169,
+      "thirukkural": 0.196
     }
-  ]
+  },
+  "greedy": {
+    "questions": 68,
+    "word_f1": 0.336,
+    "repeated_trigram_rate": 0.015,
+    "distinct_2": 0.961,
+    "ended_properly": 0.956,
+    "mean_words": 12.9,
+    "f1_by_topic": {
+      "coding": 0.083,
+      "countries": 0.57,
+      "days": 0.43,
+      "elements": 0.61,
+      "english": 0.048,
+      "inventions": 0.095,
+      "maths": 0.106,
+      "science": 0.04,
+      "thirukkural": 0.183
+    }
+  },
+  "baseline_step450_test": {
+    "test_ppl": 58.33,
+    "greedy_word_f1": 0.285,
+    "guarded_word_f1": 0.318,
+    "guarded_ended_properly": 0.971
+  }
 }
