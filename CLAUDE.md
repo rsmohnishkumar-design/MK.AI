@@ -50,6 +50,8 @@ Read this first. It carries over what was learned in earlier chats with the owne
   v1 kept at checkpoints/nova-mini-step450.pt. Data split train/val/test by answer (data/MANIFEST.json);
   test set only for final comparisons. train2.py + evaluate2.py; reports in nova-llm/reports/.
 - nova-gen/: tiny image/video diffusion prototypes (shapes only), NOT shown as a product.
+- Team training: TRAINING.md (root). Team data in nova-llm/data/contrib/*.jsonl (check_contrib.py);
+  pipeline.py (train+evaluate+export), promote.py (team lead), checkpoints/LIVE.txt = live model.
 - Owner wants the vault and its API keys KEPT. Independent mode is optional and off by default.
 
 ## Versioning — bump on every app change

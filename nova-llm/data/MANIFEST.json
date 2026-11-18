@@ -11,6 +11,7 @@
   },
   "examples": {
     "train": 7425,
+    "team_contrib": 0,
     "heldout": 393,
     "distinct_answers_train": 2572,
     "distinct_answers_heldout": 135

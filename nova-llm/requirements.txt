@@ -1,0 +1,2 @@
+# NOVA Mini training needs only PyTorch (2.3 or newer). Kaggle and Colab already have it.
+torch>=2.3

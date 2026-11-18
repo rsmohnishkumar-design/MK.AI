@@ -55,7 +55,7 @@ def decode(model, prompt_ids, eos, max_new=100, guarded=False, banned=()):
     ids = list(prompt_ids)
     out = []
     for _ in range(max_new):
-        logits, _ = model(torch.tensor([ids[-model.c.context :]]))
+        logits, _ = model(torch.tensor([ids[-model.c.context :]], device=DEVICE))
         lg = logits[0, -1].clone()
         for b in banned:
             lg[b] = -float("inf")
@@ -75,12 +75,15 @@ def decode(model, prompt_ids, eos, max_new=100, guarded=False, banned=()):
     return out, False
 
 
+DEVICE = "cpu"
+
+
 def load(path):
     ck = torch.load(path, map_location="cpu", weights_only=False)  # our own checkpoints
     m = NovaLM(Config(**ck["config"]))
     m.load_state_dict(ck["model"])
     m.eval()
-    return m, ck
+    return m.to(DEVICE), ck
 
 
 def evaluate(path, tok, split, train_ids, max_questions):
@@ -144,7 +147,10 @@ def main():
     ap.add_argument("--split", default="test", choices=["val", "test"])
     ap.add_argument("--questions", type=int, default=68)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--device", default="auto")
     a = ap.parse_args()
+    global DEVICE
+    DEVICE = ("cuda" if torch.cuda.is_available() else "cpu") if a.device == "auto" else a.device
     torch.manual_seed(0)
     tok = Tokenizer.load("data/tokenizer.json")
     train_ids = torch.load("data/corpus.txt.ids.pt")
