@@ -47,6 +47,10 @@ def kural_pairs():
 def main():
     os.makedirs(OUT, exist_ok=True)
     pairs = kb_pairs() + kural_pairs()
+    from check_contrib import load_contrib  # team data (data/contrib/*.jsonl), training only
+    contrib, problems = load_contrib()
+    if problems:
+        raise SystemExit("Fix data/contrib first (run: python check_contrib.py):\n  " + "\n  ".join(problems[:20]))
     # Hold out whole ANSWERS (all paraphrased questions for an answer stay on one side),
     # so evaluation never sees text the model trained on.
     groups = {}
@@ -59,8 +63,17 @@ def main():
     train = [p for k in train_keys for p in groups[k]]
     val = [p for k in sorted(val_keys) for p in groups[k]]
     random.Random(7).shuffle(train)
+    # Team data goes to training only, after the original examples (so with no team data
+    # the training file is byte-for-byte what NOVA Mini v1/v2 were trained on).
+    held_answers = set(val_keys)
+    extra = [(r["question"], r["answer"], r["source"]) for r in contrib if r["answer"] not in held_answers]
+    random.Random(8).shuffle(extra)
+    train = train + extra
     fmt = lambda ps: "\n".join(f"<|user|>{q}<|assistant|>{a}<|eos|>" for q, a, _ in ps) + "\n"
     files = {"corpus.txt": fmt(train), "heldout.txt": fmt(val)}
+    frozen = os.path.join(OUT, "heldout.txt")
+    if os.path.exists(frozen) and open(frozen, encoding="utf-8").read() != files["heldout.txt"]:
+        raise SystemExit("heldout.txt would change: the evaluation sets must stay fixed. Stop and ask the team lead.")
     for name, text in files.items():
         open(os.path.join(OUT, name), "w", encoding="utf-8").write(text)
     by_source = {}
@@ -68,7 +81,7 @@ def main():
         by_source[s] = by_source.get(s, 0) + 1
     manifest = {
         "files": {name: {"sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(), "characters": len(text)} for name, text in files.items()},
-        "examples": {"train": len(train), "heldout": len(val), "distinct_answers_train": len(train_keys), "distinct_answers_heldout": n_val},
+        "examples": {"train": len(train), "team_contrib": len(extra), "heldout": len(val), "distinct_answers_train": len(train_keys), "distinct_answers_heldout": n_val},
         "split": "by distinct answer: no held-out answer text appears in training",
         "sources": {
             "data/kb/*.json": {"licence": "Nova AI project content (owned)", "examples": sum(v for k, v in by_source.items() if k.startswith("data/kb"))},
@@ -76,7 +89,11 @@ def main():
         },
         "excluded": "No user conversations, no private data, no output of other AI services.",
     }
-    json.dump(manifest, open(os.path.join(OUT, "MANIFEST.json"), "w"), indent=2)
+    old_path = os.path.join(OUT, "MANIFEST.json")
+    if os.path.exists(old_path):  # keep records written by other steps (e.g. the val/test split)
+        for k, v in json.load(open(old_path)).items():
+            manifest.setdefault(k, v)
+    json.dump(manifest, open(old_path, "w"), indent=2)
     print(json.dumps(manifest, indent=2))
 
 

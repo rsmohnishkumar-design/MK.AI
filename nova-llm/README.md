@@ -1,5 +1,7 @@
 # NOVA LLM — Nova AI's own language model (research)
 
+**Team members: start with [TRAINING.md](../TRAINING.md)** (add data, train on Kaggle/Colab/laptop, compare fairly, promote).
+
 NOVA LLM is separate from the Nova AI app. It has its own tokenizer, architecture,
 training run and weights. It is not Gemini or any other provider's model renamed.
 

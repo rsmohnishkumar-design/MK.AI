@@ -56,7 +56,8 @@ def eval_loss(model, wins, bs=16):
         for j, (x, y) in enumerate(group):
             X[j, : len(x)] = x
             Y[j, : len(y)] = y
-        _, loss = model(X, Y)
+        d = next(model.parameters()).device
+        _, loss = model(X.to(d), Y.to(d))
         cnt = (Y != -1).sum().item()
         total += loss.item() * cnt
         n += cnt
@@ -87,6 +88,7 @@ def main():
     ap.add_argument("--eval-every", type=int, default=75)
     ap.add_argument("--patience", type=int, default=4)
     ap.add_argument("--seed", type=int, default=1337)
+    ap.add_argument("--device", default="auto", help="auto | cpu | cuda")
     a = ap.parse_args()
 
     out = os.path.join(a.root, a.run)
@@ -103,7 +105,8 @@ def main():
         torch.save(train, cache)
     val = torch.tensor(tok.encode(open(a.val, encoding="utf-8").read()), dtype=torch.long)
     cfg = Config(vocab_size=tok.vocab_size, layers=a.layers, width=a.width, heads=a.heads, context=a.context, dropout=a.dropout, resid_dropout=a.resid_dropout)
-    model = NovaLM(cfg)
+    dev = ("cuda" if torch.cuda.is_available() else "cpu") if a.device == "auto" else a.device
+    model = NovaLM(cfg).to(dev)
     val_w = windows(val, cfg.context)
     g = torch.Generator().manual_seed(a.seed + 1)
     starts = torch.randint(0, len(train) - cfg.context - 1, (40,), generator=g)
@@ -129,25 +132,32 @@ def main():
         "data_sha256": {"train": sha(a.data), "val": sha(a.val), "tokenizer": sha(a.tokenizer)},
         "git_commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=HERE, capture_output=True, text=True).stdout.strip(),
         "torch": torch.__version__,
+        "device": dev,
         "note": "data/test.txt is not used by training or selection",
     }
     json.dump(record, open(os.path.join(out, "run.json"), "w"), indent=2)
     log = open(os.path.join(out, "log.jsonl"), "w")
-    print(f"[{a.run}] params {model.params() / 1e6:.2f}M  train tokens {len(train)}  val tokens {len(val)}", flush=True)
+    print(f"[{a.run}] params {model.params() / 1e6:.2f}M  train tokens {len(train)}  val tokens {len(val)}  device {dev}", flush=True)
+    use_amp = dev == "cuda"
+    amp_dtype = torch.bfloat16 if use_amp and torch.cuda.is_bf16_supported() else torch.float16
+    scaler = torch.amp.GradScaler(enabled=use_amp and amp_dtype == torch.float16)
 
     best, best_step, bad, ema, t0 = float("inf"), -1, 0, None, time.time()
     for step in range(a.max_steps):
         for gr in opt.param_groups:
             gr["lr"] = lr_at(step)
         i = torch.randint(0, len(train) - cfg.context - 1, (a.batch,))
-        x = torch.stack([train[j : j + cfg.context] for j in i])
-        y = torch.stack([train[j + 1 : j + 1 + cfg.context] for j in i])
-        _, loss = model(x, y)
+        x = torch.stack([train[j : j + cfg.context] for j in i]).to(dev)
+        y = torch.stack([train[j + 1 : j + 1 + cfg.context] for j in i]).to(dev)
+        with torch.autocast(dev, dtype=amp_dtype, enabled=use_amp):
+            _, loss = model(x, y)
         opt.zero_grad(set_to_none=True)
-        loss.backward()
+        scaler.scale(loss).backward()
+        scaler.unscale_(opt)
         gn = torch.nn.utils.clip_grad_norm_(model.parameters(), a.clip).item()
         ema = loss.item() if ema is None else 0.95 * ema + 0.05 * loss.item()
-        opt.step()
+        scaler.step(opt)
+        scaler.update()
         if (step + 1) % a.eval_every == 0 or step == a.max_steps - 1:
             vl = eval_loss(model, val_w)
             tl = eval_loss(model, train_probe)
@@ -155,7 +165,7 @@ def main():
             improved = vl < best - 1e-3
             if improved:
                 best, best_step, bad = vl, step + 1, 0
-                torch.save({"model": model.state_dict(), "step": step + 1, "config": cfg.__dict__, "val_loss": vl, "run": record}, os.path.join(out, "best.pt"))
+                torch.save({"model": {k: v.detach().cpu() for k, v in model.state_dict().items()}, "step": step + 1, "config": cfg.__dict__, "val_loss": vl, "run": record}, os.path.join(out, "best.pt"))
             else:
                 bad += 1
             row["best"] = improved

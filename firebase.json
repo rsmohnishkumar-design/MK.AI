@@ -18,7 +18,8 @@
       "gateway/**",
       "nova-llm/**",
       "docs/**",
-      "nova-gen/**"
+      "nova-gen/**",
+      "TRAINING.md"
     ],
     "headers": [
       {

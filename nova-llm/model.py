@@ -45,7 +45,7 @@ def rope(seq, dim, device, base=10000.0):
 def apply_rope(x, cos, sin):
     x1, x2 = x[..., 0::2], x[..., 1::2]
     out = torch.stack((x1 * cos - x2 * sin, x1 * sin + x2 * cos), dim=-1)
-    return out.flatten(-2)
+    return out.flatten(-2).to(x.dtype)  # keep the input dtype under mixed precision
 
 
 class Attention(nn.Module):
