@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<script>/* The public GitHub copy is a dummy; the real Nova AI runs on its own site */if(/\.github\.io$/i.test(location.hostname))location.replace("demo.html");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nova AI — Team Training Room</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="stylesheet" href="style.css?v=103" />
+<link rel="stylesheet" href="training.css?v=103" />
+</head>
+<body>
+<main class="tr">
+  <header class="tr-head">
+    <img src="icons/logo.png" alt="" width="36" height="36">
+    <div><h1>Team Training Room</h1><p>Help train NOVA, Nova AI's own model</p></div>
+    <a class="tr-link" href="index.html">← Nova AI</a>
+  </header>
+
+  <section id="trSignin" class="tr-card" hidden>
+    <h2>Sign in first</h2>
+    <p>Sign in to Nova AI with your own account, then come back here (Alt + N in Nova AI, or this page's link).</p>
+    <a class="tr-btn" href="index.html">Open Nova AI to sign in</a>
+  </section>
+
+  <section id="trJoin" class="tr-card" hidden>
+    <h2>Enter the team code</h2>
+    <p>The team code opens the Training Room only. It doesn't open the vault or anything else.</p>
+    <form id="trJoinForm" class="tr-row">
+      <input id="trCode" type="password" inputmode="numeric" autocomplete="off" maxlength="40" placeholder="Team code" aria-label="Team code" required>
+      <button class="tr-btn" type="submit">Join</button>
+    </form>
+    <p id="trJoinMsg" class="tr-msg" role="status"></p>
+  </section>
+
+  <section id="trRoom" hidden>
+    <div class="tr-card tr-stats" id="trStats" aria-live="polite"></div>
+
+    <section class="tr-card">
+      <h2>Add a training example</h2>
+      <p class="tr-hint">One clear question and a correct answer. Write it yourself, or copy only from public-domain / CC sources with a link. Never copy from ChatGPT, Claude or Gemini, and never add private details.</p>
+      <form id="trForm" class="tr-form">
+        <label>Question <input id="fQ" maxlength="500" required placeholder="What is the capital of Kerala?"></label>
+        <label>Answer <textarea id="fA" rows="3" maxlength="2000" required placeholder="Thiruvananthapuram is the capital of Kerala."></textarea></label>
+        <div class="tr-row">
+          <label>Topic <input id="fT" maxlength="40" placeholder="geography" value="general"></label>
+          <label>Licence
+            <select id="fL">
+              <option value="own">Written by me (own)</option>
+              <option value="public-domain">Public domain</option>
+              <option value="cc0">CC0</option>
+              <option value="cc-by">CC-BY (needs link)</option>
+              <option value="cc-by-sa">CC-BY-SA (needs link)</option>
+            </select>
+          </label>
+        </div>
+        <label>Source <input id="fS" maxlength="300" value="written for Nova" placeholder="written for Nova, or a link"></label>
+        <div class="tr-row"><button class="tr-btn" type="submit" id="fSave">Add example</button><button class="tr-btn ghost" type="button" id="fCancel" hidden>Cancel edit</button></div>
+        <p id="trFormMsg" class="tr-msg" role="status"></p>
+      </form>
+    </section>
+
+    <section class="tr-card">
+      <h2>Add many at once</h2>
+      <p class="tr-hint">Paste lines in the team format (one JSON per line), as in TRAINING.md.</p>
+      <textarea id="trBulk" rows="4" placeholder='{"question": "…", "answer": "…", "topic": "…", "source": "written for Nova", "licence": "own"}'></textarea>
+      <div class="tr-row"><button class="tr-btn" type="button" id="trBulkBtn">Check and add</button></div>
+      <p id="trBulkMsg" class="tr-msg" role="status"></p>
+    </section>
+
+    <section class="tr-card">
+      <div class="tr-row tr-listhead">
+        <h2>Examples</h2>
+        <select id="trFilter" aria-label="Show">
+          <option value="mine">Mine</option>
+          <option value="pending">Waiting for review</option>
+          <option value="approved">Approved</option>
+          <option value="all">All</option>
+        </select>
+        <button class="tr-btn ghost" type="button" id="trExport">Export for training (.jsonl)</button>
+      </div>
+      <ul id="trList" class="tr-list"></ul>
+    </section>
+
+    <section class="tr-card">
+      <h2>How training works</h2>
+      <ol class="tr-steps">
+        <li>Add and check examples here. The admin approves good ones.</li>
+        <li>The admin exports the approved examples into <code>nova-llm/data/contrib/</code>.</li>
+        <li>A trainer runs <code>python pipeline.py --name yourname-1</code> on Kaggle or Colab (free GPU).</li>
+        <li>Only a model that beats the live one on the fixed exams gets promoted.</li>
+      </ol>
+      <p><a href="https://github.com/rsmohnishkumar-design/MK.AI/blob/main/TRAINING.md" target="_blank" rel="noopener">Full team guide (TRAINING.md) →</a></p>
+      <p id="trModel" class="tr-hint"></p>
+    </section>
+  </section>
+</main>
+<script type="module" src="js/trainer.js?v=103"></script>
+</body>
+</html>

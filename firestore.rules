@@ -17,6 +17,8 @@ service cloud.firestore {
     function creatorCode() { return 'change-this-creator-code'; }
     // The vault password: checked here, never stored in the website's code
     function vaultCode() { return 'change-this-vault-password'; }
+    // The team training code: lets team members into the Training Room only (not the vault)
+    function trainerCode() { return 'change-this-trainer-code'; }
     // ====================================================
 
     // Trial length: 3 hours (180 minutes) plus 5 minutes for clock differences.
@@ -29,6 +31,11 @@ service cloud.firestore {
     // (with the creator code) in the chat.
     function isAdmin() {
       return signedIn() && (request.auth.token.email in adminEmails() || isCreator());
+    }
+    // Team trainers: may only work with training data (the trainingData collection)
+    function isTrainer() {
+      let profile = /databases/$(database)/documents/users/$(request.auth.uid);
+      return signedIn() && exists(profile) && get(profile).data.get('trainer', false) == true;
     }
     function isCreator() {
       let profile = /databases/$(database)/documents/users/$(request.auth.uid);
@@ -117,6 +124,16 @@ service cloud.firestore {
         && incoming().tier == 'unlimited'
         && incoming().expiresAt == null
         && incoming().autoUnlimited == true
+      ) || (
+        // Join the training team with the team code (then the app removes the code again)
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['trainer', 'trainerCode'])
+        && incoming().trainer == true
+        && incoming().trainerCode == trainerCode()
+      ) || (
+        signedIn() && request.auth.uid == uid
+        && changed().hasOnly(['trainerCode'])
+        && !('trainerCode' in incoming())
       ) || (
         signedIn() && request.auth.uid == uid
         && changed().hasOnly(['creator', 'creatorCode'])
@@ -220,6 +237,34 @@ service cloud.firestore {
     }
 
     // --- Agent tasks and memory live on each person's device (js/agent), not here. ---
+
+    // --- Team training data (Training Room): trainers and the admin only ---
+    function validExample(d) {
+      return d.question is string && d.question.size() >= 1 && d.question.size() <= 500
+        && d.answer is string && d.answer.size() >= 1 && d.answer.size() <= 2000
+        && d.topic is string && d.topic.size() <= 40
+        && d.source is string && d.source.size() >= 1 && d.source.size() <= 300
+        && d.licence in ['own', 'public-domain', 'cc0', 'cc-by', 'cc-by-sa'];
+    }
+    match /trainingData/{id} {
+      allow read: if isTrainer() || isAdmin();
+      allow create: if (isTrainer() || isAdmin())
+        && incoming().keys().hasOnly(['question', 'answer', 'topic', 'source', 'licence', 'author', 'createdBy', 'createdAt', 'updatedAt', 'status'])
+        && validExample(incoming())
+        && incoming().author is string && incoming().author.size() <= 60
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && incoming().status == 'pending';
+      // Authors edit their own examples until the admin approves them; the admin can do anything
+      allow update: if isAdmin() || (isTrainer()
+        && resource.data.createdBy == request.auth.uid
+        && resource.data.status == 'pending'
+        && changed().hasOnly(['question', 'answer', 'topic', 'source', 'licence', 'updatedAt'])
+        && validExample(incoming())
+        && incoming().updatedAt == request.time);
+      allow delete: if isAdmin() || (isTrainer() && resource.data.createdBy == request.auth.uid && resource.data.status == 'pending');
+    }
 
     // --- Activity log: people add their own entries, only the admin reads ---
     match /activity/{id} {

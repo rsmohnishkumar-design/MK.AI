@@ -5,13 +5,14 @@
 // The rules' secret codes are replaced with test values here; the real ones live only in the Firebase console.
 import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, serverTimestamp, Timestamp, deleteField } from "firebase/firestore";
 
 const rules = readFileSync(new URL("../firestore.rules", import.meta.url), "utf8")
   .replace("['your-email@example.com']", "['admin@test.com']")
   .replace("'change-this-code'", "'UNLIMITED-TEST'")
   .replace("'change-this-creator-code'", "'CREATOR-TEST'")
-  .replace("'change-this-vault-password'", "'VAULT-TEST'");
+  .replace("'change-this-vault-password'", "'VAULT-TEST'")
+  .replace("'change-this-trainer-code'", "'TRAINER-TEST'");
 
 const env = await initializeTestEnvironment({ projectId: "demo-mkai", firestore: { rules, host: "127.0.0.1", port: 8080 } });
 const results = [];
@@ -84,6 +85,24 @@ await check("a user can read their own chat", () => assertSucceeds(getDoc(doc(bo
 await check("no self-upgrade to unlimited without the code", () => assertFails(updateDoc(doc(alice, "users/alice"), { tier: "unlimited", expiresAt: null, accessCode: "guess" })));
 await check("self-upgrade with the right code works", () => assertSucceeds(updateDoc(doc(alice, "users/alice"), { tier: "unlimited", expiresAt: null, accessCode: "UNLIMITED-TEST" })));
 await check("wrong vault password cannot make someone the creator", () => assertFails(updateDoc(doc(bob, "users/bob"), { creator: true, creatorCode: "nope" })));
+
+// --- Team Training Room ---
+const ex = (by) => ({ question: "Capital of Kerala?", answer: "Thiruvananthapuram.", topic: "india", source: "written for Nova", licence: "own", author: "Bob", createdBy: by, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), status: "pending" });
+await check("non-trainer cannot read training data", () => assertFails(getDoc(doc(bob, "trainingData/x"))));
+await check("wrong team code does not make a trainer", () => assertFails(updateDoc(doc(bob, "users/bob"), { trainer: true, trainerCode: "1234" })));
+await check("right team code makes a trainer", () => assertSucceeds(updateDoc(doc(bob, "users/bob"), { trainer: true, trainerCode: "TRAINER-TEST" })));
+await check("trainer can remove the stored code", () => assertSucceeds(updateDoc(doc(bob, "users/bob"), { trainerCode: deleteField() })));
+await check("trainer cannot give themselves unlimited or creator", () => assertFails(updateDoc(doc(bob, "users/bob"), { creator: true, creatorCode: "TRAINER-TEST" })));
+await check("trainer cannot read the AI keys", () => assertFails(getDoc(doc(bob, "settings/ai"))));
+await check("trainer cannot read others' chats", () => assertFails(getDoc(doc(bob, "users/alice"))));
+let exId;
+await check("trainer can add a training example", async () => { exId = (await assertSucceeds(addDoc(collection(bob, "trainingData"), ex("bob")))).id; });
+await check("trainer cannot add an example with a bad licence", () => assertFails(addDoc(collection(bob, "trainingData"), { ...ex("bob"), licence: "copied" })));
+await check("trainer cannot mark their own example approved", () => assertFails(addDoc(collection(bob, "trainingData"), { ...ex("bob"), status: "approved" })));
+await check("trainer can edit their own pending example", () => assertSucceeds(updateDoc(doc(bob, `trainingData/${exId}`), { answer: "Thiruvananthapuram is the capital.", updatedAt: serverTimestamp() })));
+await check("other users cannot read or add training data", async () => { await assertFails(getDoc(doc(alice, `trainingData/${exId}`))); await assertFails(addDoc(collection(alice, "trainingData"), ex("alice"))); });
+await check("admin can approve an example", () => assertSucceeds(updateDoc(doc(admin, `trainingData/${exId}`), { status: "approved" })));
+await check("trainer cannot edit an approved example", () => assertFails(updateDoc(doc(bob, `trainingData/${exId}`), { answer: "changed", updatedAt: serverTimestamp() })));
 
 await env.cleanup();
 for (const [r, n] of results) console.log(r, n);

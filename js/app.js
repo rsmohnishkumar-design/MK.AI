@@ -2614,6 +2614,17 @@ function announceAnswer(detail) {
   document.dispatchEvent(new CustomEvent("mkai-answer", { detail }));
 }
 
+// --- Team Training Room (training.html): Alt+N or Ctrl+Alt+N. Browsers keep Ctrl+N
+// for "new window" and don't let pages use it, but where a browser does pass it on we take it too.
+document.addEventListener("keydown", (e) => {
+  const key = (e.key || "").toLowerCase();
+  if (key !== "n" || e.shiftKey || e.metaKey) return;
+  if (e.altKey || (e.ctrlKey && e.altKey) || e.ctrlKey) {
+    e.preventDefault();
+    location.href = "training.html";
+  }
+});
+
 // --- Nova Workspace: agents, research, images, memory, tasks (js/agent) ---
 async function openNovaWorkspace(tab = "agent") {
   if (!hasAccess()) return toast("Sign in to use the workspace.");

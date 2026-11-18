@@ -52,11 +52,16 @@ Read this first. It carries over what was learned in earlier chats with the owne
 - nova-gen/: tiny image/video diffusion prototypes (shapes only), NOT shown as a product.
 - Team training: TRAINING.md (root). Team data in nova-llm/data/contrib/*.jsonl (check_contrib.py);
   pipeline.py (train+evaluate+export), promote.py (team lead), checkpoints/LIVE.txt = live model.
+- Team Training Room: training.html + js/trainer.js (Alt+N / Ctrl+Alt+N in the app; vault links to it).
+  Team code checked by trainerCode() in the LIVE Firestore rules only (repo has a placeholder).
+  Trainers can only use the trainingData collection; the admin approves/rejects and exports JSONL.
+- Live Firestore rules: deployed from the session by merging repo rules with the secret settings read
+  from the live ruleset (never printed or committed). Repo rules keep placeholders.
 - Owner wants the vault and its API keys KEPT. Independent mode is optional and off by default.
 
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v102. New files must be added to the sw.js precache list.
+- Current version: v103. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,
