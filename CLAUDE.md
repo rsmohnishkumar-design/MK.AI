@@ -33,7 +33,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   Used by Myhomely (myhomely.pages.dev). Updates reach those sites once Nova is made live
   (cached 5 min). Each site's domain must be in the reCAPTCHA key's domain list.
 
-## Agent platform (v101, on the testing branch; NOT live yet)
+## Agent platform (v101; live since v102/v103)
 - js/agent/: engine.js (task states CREATED…COMPLETED, planner, 9 specialist agents, approvals,
   verification, resume), tools.js (permissioned tools), analytics.js (stats/forecast/decisions),
   memory.js (per-device, user-controlled), ui.js (Nova Workspace: Agent, Research, Images,
@@ -76,7 +76,10 @@ Read this first. It carries over what was learned in earlier chats with the owne
   `npx firebase-tools deploy --only hosting --project mkai-c042b --non-interactive`, delete the file.
 - Alternative: GitHub Actions workflow "Deploy to Firebase" (.github/workflows/firebase-deploy.yml,
   manual run) using the repo secret `FIREBASE_SERVICE_ACCOUNT`.
-- Firebase serves v102 (deployed 2026-11-17): Workspace, Image Studio, Independent mode, NOVA Mini v2.
+- Firebase serves v103 (deployed 2026-11-18): Workspace, Image Studio, Independent mode, NOVA Mini v2,
+  Team Training Room. New Firestore rules (v101 security + trainingData + team code) live 2026-11-19.
+  Deploy key has the "Firebase Rules Admin" role, so rules can be published from the session
+  (Rules API: create ruleset + update release; the :test call is still not permitted).
 
 ## Ideas mentioned but not done
 - Making the GitHub repo private (only the owner can: Settings → Change visibility).
