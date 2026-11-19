@@ -127,6 +127,18 @@ python promote.py --name <name>
    browser engine gives the same output as PyTorch. If that check fails, don't commit.
 4. Commit and push to the testing branch, then ask the owner to **"make it live"**.
 
+## 7b. Automatic training (no person needed)
+
+GitHub runs **Auto-train NOVA** (`.github/workflows/auto-train.yml`) every 3 hours, for free:
+
+1. It collects the owner's **Mind Quest** questions and the examples **approved** in the Training Room (`nova-llm/auto_sources.py`).
+2. If there are at least 10 new examples, it trains a new `cpu-small` model on GitHub's computers (about 30–60 minutes).
+3. The new model goes live **only if** it beats the current one on validation **and** on the final test, and the browser check passes (`nova-llm/auto_finish.py`). Otherwise the current model stays.
+4. Every attempt is recorded in `nova-llm/checkpoints/AUTO_STATE.json` and `reports/leaderboard.jsonl`.
+
+To run it now: GitHub → **Actions → Auto-train NOVA → Run workflow** (tick *force* to train even with few new examples).
+Mind Quest questions are never saved in this public repo; only the trained model is.
+
 ## 8. Which preset to use
 
 | Preset | Size | Use when the training text is about | Time |

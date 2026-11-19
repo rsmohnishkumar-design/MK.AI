@@ -30,6 +30,31 @@ def heldout_answers():
     return out
 
 
+def check_row(r, held):
+    """Returns None if the example is fine, else a short reason."""
+    if not isinstance(r, dict):
+        return "each line must be a JSON object"
+    missing = [k for k in REQUIRED if not str(r.get(k, "")).strip()]
+    if missing:
+        return f"missing {', '.join(missing)}"
+    q, a, lic = str(r["question"]).strip(), str(r["answer"]).strip(), str(r["licence"]).strip().lower()
+    if lic not in LICENCES:
+        return f"licence '{lic}' not allowed (use one of {sorted(LICENCES)})"
+    if lic.startswith("cc-by") and not re.match(r"https?://", str(r["source"]).strip()):
+        return f"{lic} needs a link in 'source'"
+    if not (1 <= len(q) <= 500 and 1 <= len(a) <= 2000):
+        return "question must be 1-500 and answer 1-2000 characters"
+    if AI_SIGNS.search(a):
+        return "answer looks copied from an AI service; write it yourself"
+    if PASTED.search(a):
+        return "answer looks pasted from a chatbot (bold, bullets or chatty words); write 1-3 plain sentences"
+    if PRIVATE.search(q + " " + a):
+        return "looks like private data (phone, ID or email number)"
+    if a in held:
+        return "this exact answer is in the validation/test set (leak) - remove it"
+    return None
+
+
 def load_contrib(strict=True):
     """Returns (rows, problems). Rows are dicts with question/answer/topic/source."""
     held = heldout_answers()
@@ -45,32 +70,11 @@ def load_contrib(strict=True):
             except json.JSONDecodeError as e:
                 problems.append(f"{where}: not valid JSON ({e.msg})")
                 continue
-            missing = [k for k in REQUIRED if not str(r.get(k, "")).strip()]
-            if missing:
-                problems.append(f"{where}: missing {', '.join(missing)}")
+            problem = check_row(r, held)
+            if problem:
+                problems.append(f"{where}: {problem}")
                 continue
             q, a, lic = r["question"].strip(), r["answer"].strip(), r["licence"].strip().lower()
-            if lic not in LICENCES:
-                problems.append(f"{where}: licence '{lic}' not allowed (use one of {sorted(LICENCES)})")
-                continue
-            if lic.startswith("cc-by") and not re.match(r"https?://", r["source"].strip()):
-                problems.append(f"{where}: {lic} needs a link in 'source'")
-                continue
-            if not (1 <= len(q) <= 500 and 1 <= len(a) <= 2000):
-                problems.append(f"{where}: question must be 1-500 and answer 1-2000 characters")
-                continue
-            if AI_SIGNS.search(a):
-                problems.append(f"{where}: answer looks copied from an AI service; write it yourself")
-                continue
-            if PASTED.search(a):
-                problems.append(f"{where}: answer looks pasted from a chatbot (bold, bullets or chatty words); write 1-3 plain sentences")
-                continue
-            if PRIVATE.search(q + " " + a):
-                problems.append(f"{where}: looks like private data (phone, ID or email number)")
-                continue
-            if a in held:
-                problems.append(f"{where}: this exact answer is in the validation/test set (leak) - remove it")
-                continue
             key = (q.lower(), a)
             if key in seen:
                 problems.append(f"{where}: duplicate of an earlier line")

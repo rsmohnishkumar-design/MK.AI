@@ -1,0 +1,97 @@
+# Trains NOVA Mini by itself when new questions arrive. No person or chat needed.
+#
+# Every 3 hours: collects the owner's Mind Quest questions + examples approved in Nova's
+# Training Room (nova-llm/auto_sources.py). If there are at least MIN_NEW new examples, it
+# trains a new model on GitHub's free computers, and makes it live ONLY if it beats the
+# current model on validation AND the final test, and the browser check passes
+# (nova-llm/auto_finish.py). Otherwise the current model stays and nothing is deployed.
+# Can also be started by hand: Actions tab -> "Auto-train NOVA" -> Run workflow.
+# Needs the repo secret FIREBASE_SERVICE_ACCOUNT (already used by "Deploy to Firebase").
+name: Auto-train NOVA
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Train even if there are few new examples"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-train
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      MIN_NEW: ${{ inputs.force && '0' || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Collect new questions
+        id: data
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          pip install --quiet google-auth requests
+          python nova-llm/auto_sources.py
+
+      - name: Install PyTorch (CPU)
+        if: steps.data.outputs.train == 'true'
+        run: pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Train and compare with the live model
+        id: run
+        if: steps.data.outputs.train == 'true'
+        working-directory: nova-llm
+        run: |
+          NAME="auto-$(date -u +%Y%m%d-%H%M)"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python pipeline.py --name "$NAME" --preset cpu-small
+
+      - name: Promote only if better
+        id: finish
+        if: steps.data.outputs.train == 'true'
+        working-directory: nova-llm
+        run: python auto_finish.py --name "${{ steps.run.outputs.name }}" --examples "${{ steps.data.outputs.examples }}" --sha "${{ steps.data.outputs.sha }}"
+
+      - name: Save results
+        if: steps.data.outputs.train == 'true'
+        run: |
+          git config user.name "nova-auto-train"
+          git config user.email "nova-auto-train@users.noreply.github.com"
+          NAME="${{ steps.run.outputs.name }}"
+          git add nova-llm/checkpoints/AUTO_STATE.json nova-llm/reports/leaderboard.jsonl nova-llm/reports/val-$NAME.json
+          git add nova-llm/reports/test-$NAME.json nova-llm/reports/test_usage.jsonl 2>/dev/null || true
+          if [ "${{ steps.finish.outputs.promoted }}" = "true" ]; then
+            git add -f "nova-llm/checkpoints/nova-mini-$NAME.pt"
+            git add nova-llm/checkpoints/LIVE.txt models/nova-mini
+          fi
+          git commit -m "Auto-train $NAME: ${{ steps.finish.outputs.result }} (trained on ${{ steps.data.outputs.examples }} Mind Quest + Training Room examples)"
+          git push origin HEAD:main
+
+      - name: Make the new model live
+        if: steps.finish.outputs.promoted == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: mkai-c042b
+          channelId: live
