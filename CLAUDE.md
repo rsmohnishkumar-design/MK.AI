@@ -42,7 +42,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   needs the owner's Cloudflare account (gateway/README.md). GATEWAY_URL in firebase-config.js.
 - firestore.rules changed (keys admin-only, usage can't be lowered, shared learned answers
   admin-only). The owner must paste them into the Firebase console WITH their real codes.
-- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21, training room 16).
+- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21, training room 21).
 - nova-llm/: our own tokenizer (tested) + PyTorch model/training (untested here). docs/RESEARCH.md.
 
 ## NOVA's own models
@@ -61,7 +61,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
 
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v104. New files must be added to the sw.js precache list.
+- Current version: v105. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,
