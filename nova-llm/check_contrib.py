@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
 LICENCES = {"own", "public-domain", "cc0", "cc-by", "cc-by-sa"}
 REQUIRED = ["question", "answer", "source", "licence", "author"]
-PASTED = re.compile(r"(\*\*|^\s*(#{1,6}\s|[-*•]\s|\d+\.\s)|\b(sure!|certainly!|great question|i hope this helps|let me know if|feel free to))", re.I | re.M)
+PASTED = re.compile(r"(\*\*|^\s*(#{1,6}\s|[-*•]\s|\d+[.)]\s.*\n\s*\d+[.)]\s)|\b(sure!|certainly!|great question|i hope this helps|let me know if|feel free to))", re.I | re.M)
 AI_SIGNS = re.compile(r"\b(as an ai (language )?model|i'm an ai|i am an ai|chatgpt|openai|gemini|claude|anthropic|i cannot browse)\b", re.I)
 PRIVATE = re.compile(r"(\b\d{10}\b|\b\d{4}\s?\d{4}\s?\d{4}\b|[\w.+-]+@[\w-]+\.[\w.]+)")
 

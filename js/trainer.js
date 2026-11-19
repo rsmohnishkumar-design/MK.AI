@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 const LICENCES = ["own", "public-domain", "cc0", "cc-by", "cc-by-sa"];
 const AI_SIGNS = /\b(as an ai (language )?model|i'm an ai|i am an ai|chatgpt|openai|gemini|claude|anthropic|i cannot browse)\b/i;
 // Signs that text was pasted straight from a chatbot (markdown, chatty openers/closers).
-const PASTED = /(\*\*|^\s*(#{1,6}\s|[-*•]\s|\d+\.\s)|\b(sure!|certainly!|great question|i hope this helps|let me know if|feel free to))/im;
+const PASTED = /(\*\*|^\s*(#{1,6}\s|[-*•]\s|\d+[.)]\s.*\n\s*\d+[.)]\s)|\b(sure!|certainly!|great question|i hope this helps|let me know if|feel free to))/im;
 const PRIVATE = /(\b\d{10}\b|\b\d{4}\s?\d{4}\s?\d{4}\b|[\w.+-]+@[\w-]+\.[\w.]+)/;
 let user = null, admin = false, rows = [], editing = null;
 
@@ -20,7 +20,7 @@ const show = (id) => ["trSignin", "trJoin", "trRoom"].forEach((s) => ($(s).hidde
 const msg = (el, text, kind = "") => { el.textContent = text; el.className = `tr-msg ${kind}`; };
 
 // Same checks as nova-llm/check_contrib.py, so problems are caught while typing.
-export function checkExample(r) {
+export function checkExample(r, opts = {}) {
   const q = String(r.question || "").trim(), a = String(r.answer || "").trim();
   const lic = String(r.licence || "").trim().toLowerCase(), src = String(r.source || "").trim();
   if (!q || q.length > 500) return "The question must be 1–500 characters.";
@@ -30,7 +30,7 @@ export function checkExample(r) {
   if (lic.startsWith("cc-by") && !/^https?:\/\//.test(src)) return "CC-BY needs a link to the source.";
   if (AI_SIGNS.test(a)) return "This looks copied from an AI service. Please write it yourself.";
   if (PASTED.test(a)) return "This looks pasted from a chatbot (bold text, bullet points or chatty words). Write it as 1–3 plain sentences in your own words.";
-  if (a.length > 600 && lic === "own") return "That's long. Keep it to 1–3 short sentences in your own words (under 600 letters).";
+  if (!opts.imported && a.length > 600 && lic === "own") return "That's long. Keep it to 1–3 short sentences in your own words (under 600 letters).";
   if (PRIVATE.test(q + " " + a)) return "This looks like private data (a phone, ID or email). Remove it.";
   if (rows.some((x) => x.id !== editing && x.question.toLowerCase() === q.toLowerCase() && x.answer === a)) return "This exact example is already here.";
   return null;
@@ -53,6 +53,7 @@ async function enter() {
     throw err;
   }
   admin = await isAdminNow();
+  $("trMQ").hidden = !admin;
   show("trRoom");
   for (const o of $("trFilter").options) if (["pending", "all"].includes(o.value)) o.textContent = o.value === "pending" ? (admin ? "Waiting for your review" : "Waiting for review") : "All";
   await load();
@@ -179,8 +180,8 @@ $("fA").addEventListener("input", () => {
   $("fCount").textContent = $("fA").value.trim() ? `${n} sentence${n === 1 ? "" : "s"}${n > 3 ? " — try to keep it to 1–3" : " ✓"}` : "";
 });
 
-async function addOne(v) {
-  const problem = checkExample(v);
+async function addOne(v, opts) {
+  const problem = checkExample(v, opts);
   if (problem) throw new Error(problem);
   const author = (user.displayName || user.email || "team").split("@")[0].slice(0, 60);
   await addDoc(collection(db, "trainingData"), { ...v, author, createdBy: user.uid, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), status: "pending" });
@@ -251,6 +252,57 @@ $("trExport").addEventListener("click", () => {
 });
 
 $("trFilter").addEventListener("change", render);
+
+// ---- Mind Quest sync (admin only) ----------------------------------------------
+// Mind Quest (mindquest-learn.pages.dev, also the owner's app) has a private export
+// endpoint that checks this admin's Firebase sign-in token; no shared secret exists.
+const MQ_EXPORT = "https://mindquest-learn.pages.dev/api/nova-export";
+const MQ_TOPICS = { mathematics: "maths", maths: "maths", physics: "science", chemistry: "science", biology: "science", "social science": "history", "general knowledge": "general" };
+
+export function fromMindQuest(q) {
+  const question = String(q.question || "").replace(/\s+/g, " ").trim();
+  let answer = String(q.answer ?? "").trim();
+  if (Array.isArray(q.options) && /^\d+$/.test(answer) && q.options[+answer] != null) answer = String(q.options[+answer]).trim();
+  const why = String(q.explanation || "").replace(/\s+/g, " ").trim();
+  if (!question || !answer) return null;
+  const full = (/[.!?]$/.test(answer) ? answer : answer + ".") + (why ? " " + why : "");
+  const subject = String(q.subject || "").toLowerCase().trim();
+  return {
+    question: question.slice(0, 500),
+    answer: full.slice(0, 2000),
+    topic: (MQ_TOPICS[subject] || subject.replace(/[^a-z ]/g, "") || "general").slice(0, 40),
+    licence: "own",
+    source: `Mind Quest #${String(q.id || "").slice(0, 80)}${q.grade ? " · " + String(q.grade).slice(0, 40) : ""}`,
+  };
+}
+
+$("trMQBtn").addEventListener("click", async () => {
+  const out = $("trMQMsg");
+  if (!admin) return;
+  msg(out, "Fetching from Mind Quest…");
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch(MQ_EXPORT, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 404) throw new Error("Mind Quest doesn't have the Nova export yet (its session needs to add it).");
+    if (res.status === 401 || res.status === 403) throw new Error("Mind Quest refused this account. Check NOVA_ADMIN_EMAILS there.");
+    if (!res.ok) throw new Error(`Mind Quest said ${res.status}. Try again later.`);
+    const data = await res.json();
+    const items = Array.isArray(data.questions) ? data.questions : [];
+    const have = new Set(rows.map((r) => (/^Mind Quest #([^ ·]+)/.exec(r.source || "") || [])[1]).filter(Boolean));
+    let added = 0, skipped = 0, bad = 0;
+    for (const q of items) {
+      if (have.has(String(q.id))) { skipped++; continue; }
+      const v = fromMindQuest(q);
+      if (!v || checkExample(v, { imported: true })) { bad++; continue; }
+      await addOne(v, { imported: true }).then(() => added++, () => bad++);
+      have.add(String(q.id));
+    }
+    msg(out, `Added ${added} new question${added === 1 ? "" : "s"} for review. ${skipped} already here${bad ? `, ${bad} skipped (empty, too long or failed checks)` : ""}.`, "good");
+    await load();
+  } catch (err) {
+    msg(out, err?.message?.startsWith("Failed to fetch") ? "Couldn't reach Mind Quest (it may not allow this site yet)." : err.message, "bad");
+  }
+});
 
 async function loadModelInfo() {
   try {

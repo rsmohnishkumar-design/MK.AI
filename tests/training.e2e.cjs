@@ -85,6 +85,9 @@ async function signUp(pg, email) {
   await pg.goto("http://localhost:8000/MK.AI/vault.html");
   await pg.waitForTimeout(4000);
   check("trainer cannot see the vault contents", !(await pg.isVisible("#vaultScreen")));
+  await pg.goto("http://localhost:8000/MK.AI/training.html");
+  await pg.waitForSelector("#trRoom:not([hidden])", { timeout: 15000 });
+  check("trainer does not see the Mind Quest sync", !(await pg.isVisible("#trMQ")));
 
   // Admin: sees everything, approves
   const pa = await page(browser, errors);
@@ -104,6 +107,27 @@ async function signUp(pg, email) {
     await pa.selectOption("#trFilter", "approved");
     check("admin approved an example", /approved/.test(await pa.textContent("#trList")));
   }
+  // Mind Quest sync (the export is mocked here; the real one checks the admin's sign-in token)
+  let sentToken = "";
+  await pa.route("https://mindquest-learn.pages.dev/api/nova-export", (r) => {
+    sentToken = r.request().headers()["authorization"] || "";
+    r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ questions: [
+      { id: "mq1", question: "What is 7 x 8?", options: ["54", "56", "64"], answer: "1", explanation: "Seven eights are fifty-six.", subject: "Mathematics", grade: "Grade 4" },
+      { id: "mq2", question: "Which gas do plants take in?", answer: "Carbon dioxide", subject: "Biology" },
+      { id: "mq3", question: "", answer: "" },
+    ] }) });
+  });
+  check("admin sees the Mind Quest sync", await pa.isVisible("#trMQ"));
+  await pa.click("#trMQBtn");
+  await pa.waitForTimeout(2500);
+  const mq = await pa.textContent("#trMQMsg");
+  check("sync adds new Mind Quest questions for review", /Added 2 new/.test(mq) && /^Bearer ./.test(sentToken), mq);
+  await pa.click("#trMQBtn");
+  await pa.waitForTimeout(2500);
+  check("sync again adds no duplicates", /Added 0 new/.test(await pa.textContent("#trMQMsg")) && /2 already here/.test(await pa.textContent("#trMQMsg")));
+  await pa.selectOption("#trFilter", "pending");
+  check("synced question shows its answer", /56\. Seven eights/.test(await pa.textContent("#trList")));
+
   check("no page errors", !errors.length, errors.join(" | ").slice(0, 300));
   console.log(`\n${fails} failure(s)`);
   await browser.close();
