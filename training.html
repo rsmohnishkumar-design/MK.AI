@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-<link rel="stylesheet" href="style.css?v=103" />
-<link rel="stylesheet" href="training.css?v=103" />
+<link rel="stylesheet" href="style.css?v=104" />
+<link rel="stylesheet" href="training.css?v=104" />
 </head>
 <body>
 <main class="tr">
@@ -39,25 +39,56 @@
   <section id="trRoom" hidden>
     <div class="tr-card tr-stats" id="trStats" aria-live="polite"></div>
 
+    <section class="tr-card tr-easy">
+      <h2>How to add an example (easy)</h2>
+      <ol class="tr-steps">
+        <li>Press <b>Give me a question</b>, or type your own school question.</li>
+        <li>Find the answer: your textbook, notes, a teacher, or Gemini / Google to <b>learn</b> the fact.</li>
+        <li><b>Close it</b>, then type the answer in <b>your own words</b>: 1–3 short sentences, no bullet points.</li>
+        <li>Press <b>Add example</b>. The admin checks it before NOVA learns it.</li>
+      </ol>
+      <p class="tr-hint">Why your own words? Copying Gemini's or ChatGPT's text to train another AI breaks their rules, and NOVA learns better from short, simple answers. Facts are fine; just write them yourself. No phone numbers, emails or anyone's private details.</p>
+    </section>
+
     <section class="tr-card">
       <h2>Add a training example</h2>
-      <p class="tr-hint">One clear question and a correct answer. Write it yourself, or copy only from public-domain / CC sources with a link. Never copy from ChatGPT, Claude or Gemini, and never add private details.</p>
       <form id="trForm" class="tr-form">
-        <label>Question <input id="fQ" maxlength="500" required placeholder="What is the capital of Kerala?"></label>
-        <label>Answer <textarea id="fA" rows="3" maxlength="2000" required placeholder="Thiruvananthapuram is the capital of Kerala."></textarea></label>
         <div class="tr-row">
-          <label>Topic <input id="fT" maxlength="40" placeholder="geography" value="general"></label>
-          <label>Licence
-            <select id="fL">
-              <option value="own">Written by me (own)</option>
-              <option value="public-domain">Public domain</option>
-              <option value="cc0">CC0</option>
-              <option value="cc-by">CC-BY (needs link)</option>
-              <option value="cc-by-sa">CC-BY-SA (needs link)</option>
+          <label>Subject
+            <select id="fT">
+              <option value="general">General</option>
+              <option value="science">Science</option>
+              <option value="maths">Maths</option>
+              <option value="geography">Geography</option>
+              <option value="history">History</option>
+              <option value="india">India</option>
+              <option value="english">English</option>
+              <option value="tamil">Tamil</option>
+              <option value="computers">Computers</option>
+              <option value="health">Health</option>
+              <option value="nova">About Nova AI</option>
             </select>
           </label>
+          <button class="tr-btn ghost" type="button" id="fIdea">💡 Give me a question</button>
         </div>
-        <label>Source <input id="fS" maxlength="300" value="written for Nova" placeholder="written for Nova, or a link"></label>
+        <label>Question <input id="fQ" maxlength="500" required placeholder="What is the capital of Kerala?"></label>
+        <label>Answer in your own words <textarea id="fA" rows="3" maxlength="2000" required placeholder="Thiruvananthapuram is the capital of Kerala."></textarea></label>
+        <p id="fCount" class="tr-hint" aria-live="polite"></p>
+        <details class="tr-more">
+          <summary>More options (only if you copied from a free source)</summary>
+          <div class="tr-row">
+            <label>Licence
+              <select id="fL">
+                <option value="own">Written by me (own)</option>
+                <option value="public-domain">Public domain</option>
+                <option value="cc0">CC0</option>
+                <option value="cc-by">CC-BY, e.g. Wikipedia (needs link)</option>
+                <option value="cc-by-sa">CC-BY-SA, e.g. Wikipedia (needs link)</option>
+              </select>
+            </label>
+          </div>
+          <label>Source <input id="fS" maxlength="300" value="written for Nova" placeholder="written for Nova, or a link"></label>
+        </details>
         <div class="tr-row"><button class="tr-btn" type="submit" id="fSave">Add example</button><button class="tr-btn ghost" type="button" id="fCancel" hidden>Cancel edit</button></div>
         <p id="trFormMsg" class="tr-msg" role="status"></p>
       </form>
@@ -98,6 +129,6 @@
     </section>
   </section>
 </main>
-<script type="module" src="js/trainer.js?v=103"></script>
+<script type="module" src="js/trainer.js?v=104"></script>
 </body>
 </html>

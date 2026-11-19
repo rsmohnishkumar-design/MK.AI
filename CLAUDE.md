@@ -42,7 +42,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   needs the owner's Cloudflare account (gateway/README.md). GATEWAY_URL in firebase-config.js.
 - firestore.rules changed (keys admin-only, usage can't be lowered, shared learned answers
   admin-only). The owner must paste them into the Firebase console WITH their real codes.
-- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21).
+- Tests: tests/README.md (agent 31, gateway 14, rules 21, tokenizer 10, browser e2e 21, training room 16).
 - nova-llm/: our own tokenizer (tested) + PyTorch model/training (untested here). docs/RESEARCH.md.
 
 ## NOVA's own models
@@ -61,7 +61,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
 
 ## Versioning — bump on every app change
 - sw.js `CACHE = "mkai-vNNN"` and `?v=NNN` on scripts/styles in index.html and vault.html.
-- Current version: v103. New files must be added to the sw.js precache list.
+- Current version: v104. New files must be added to the sw.js precache list.
 
 ## Workflow the owner expects
 1. Develop on branch `claude/repo-integration-sn5fit`, test (Playwright + Firebase emulators,
@@ -76,7 +76,7 @@ Read this first. It carries over what was learned in earlier chats with the owne
   `npx firebase-tools deploy --only hosting --project mkai-c042b --non-interactive`, delete the file.
 - Alternative: GitHub Actions workflow "Deploy to Firebase" (.github/workflows/firebase-deploy.yml,
   manual run) using the repo secret `FIREBASE_SERVICE_ACCOUNT`.
-- Firebase serves v103 (deployed 2026-11-18): Workspace, Image Studio, Independent mode, NOVA Mini v2,
+- Firebase serves v104 (deployed 2026-11-19; v104 = easier Training Room for students): Workspace, Image Studio, Independent mode, NOVA Mini v2,
   Team Training Room. New Firestore rules (v101 security + trainingData + team code) live 2026-11-19.
   Deploy key has the "Firebase Rules Admin" role, so rules can be published from the session
   (Rules API: create ruleset + update release; the :test call is still not permitted).

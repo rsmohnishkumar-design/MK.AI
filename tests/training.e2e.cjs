@@ -50,9 +50,11 @@ async function signUp(pg, email) {
   await pg.waitForSelector("#trRoom:not([hidden])", { timeout: 15000 });
   check("right code opens the room", await pg.isVisible("#trRoom"));
 
+  await pg.selectOption("#fT", "geography");
+  await pg.click("#fIdea");
+  check("idea button suggests a question for the subject", (await pg.inputValue("#fQ")).endsWith("?"));
   await pg.fill("#fQ", "What is the capital of Kerala?");
   await pg.fill("#fA", "Thiruvananthapuram is the capital of Kerala.");
-  await pg.fill("#fT", "geography");
   await pg.click("#fSave");
   await pg.waitForTimeout(1500);
   check("example added and listed as pending", /capital of Kerala/.test(await pg.textContent("#trList")) && /pending/.test(await pg.textContent("#trList")));
@@ -62,6 +64,13 @@ async function signUp(pg, email) {
   await pg.click("#fSave");
   await pg.waitForTimeout(800);
   check("AI-copied text is blocked", /copied from an AI/.test(await pg.textContent("#trFormMsg")));
+
+  await pg.fill("#fQ", "What is photosynthesis?");
+  await pg.fill("#fA", "Sure! Here's an explanation:\n\n**Photosynthesis** is how plants make food.\n- It uses sunlight");
+  await pg.click("#fSave");
+  await pg.waitForTimeout(800);
+  check("text pasted from a chatbot is caught with a friendly tip", /own words/.test(await pg.textContent("#trFormMsg")));
+  check("subject stays chosen after adding", (await pg.inputValue("#fT")) === "geography");
 
   await pg.fill("#trBulk", '{"question":"Largest planet?","answer":"Jupiter is the largest planet in the Solar System.","topic":"science","source":"written for Nova","licence":"own"}\n{"question":"bad"}');
   await pg.click("#trBulkBtn");
