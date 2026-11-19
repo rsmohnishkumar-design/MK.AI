@@ -15,6 +15,7 @@ The test split must only be used for final comparisons, never for tuning.
 import argparse
 import json
 import math
+import os
 import re
 from collections import Counter, defaultdict
 
@@ -153,7 +154,12 @@ def main():
     DEVICE = ("cuda" if torch.cuda.is_available() else "cpu") if a.device == "auto" else a.device
     torch.manual_seed(0)
     tok = Tokenizer.load("data/tokenizer.json")
-    train_ids = torch.load("data/corpus.txt.ids.pt")
+    cache = "data/corpus.txt.ids.pt"
+    if os.path.exists(cache):
+        train_ids = torch.load(cache)
+    else:  # pipeline.py removes a stale cache when the training text changes; rebuild it
+        train_ids = torch.tensor(tok.encode(open("data/corpus.txt", encoding="utf-8").read()), dtype=torch.long)
+        torch.save(train_ids, cache)
     report = {"split": a.split, "conditions": "identical data, tokenizer, prompts and decoders for every checkpoint"}
     for spec in a.ckpt:
         name, path = spec.split("=", 1)

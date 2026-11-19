@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 *.pt
 nova-gen/*.png
+nova-llm/data/contrib/_auto.jsonl

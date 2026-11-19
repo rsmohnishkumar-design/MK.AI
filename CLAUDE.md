@@ -57,6 +57,14 @@ Read this first. It carries over what was learned in earlier chats with the owne
   Trainers can only use the trainingData collection; the admin approves/rejects and exports JSONL.
 - Live Firestore rules: deployed from the session by merging repo rules with the secret settings read
   from the live ruleset (never printed or committed). Repo rules keep placeholders.
+- Auto-training: .github/workflows/auto-train.yml (every 3 h) runs nova-llm/auto_sources.py (Mind Quest
+  export + approved trainingData; Mind Quest data git-ignored, never committed), trains cpu-small, and
+  nova-llm/auto_finish.py promotes + deploys ONLY if better on val AND test and the parity check passes.
+  The owner asked for this to run without them (2026-11-19). State: checkpoints/AUTO_STATE.json.
+- Mind Quest (mindquest-learn.pages.dev, the owner's own app; owner is its coordinator): needs
+  GET /api/nova-export accepting (a) Nova admin Firebase ID token or (b) Google ID token of
+  firebase-adminsdk-fbsvc (aud https://mindquest-learn.pages.dev). Built in the Mind Quest session.
+  Training Room has an admin-only "Sync from Mind Quest" button (v105).
 - Owner wants the vault and its API keys KEPT. Independent mode is optional and off by default.
 
 ## Versioning — bump on every app change
