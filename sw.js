@@ -1,11 +1,11 @@
 // Nova AI service worker: makes the app installable and lets it open offline.
 // Bump CACHE when shipping changes that must reach installed apps right away.
 // Paths are relative to this file, so it works under /MK.AI/ on GitHub Pages.
-const CACHE = "mkai-v103";
+const CACHE = "mkai-v104";
 const SHELL = [
   "./",
-  "style.css?v=103",
-  "js/app.js?v=103",
+  "style.css?v=104",
+  "js/app.js?v=104",
   "js/ai.js",
   "js/avatar.js",
   "js/robot.js",
@@ -13,7 +13,7 @@ const SHELL = [
   "js/independent.js",
   "js/trainer.js",
   "training.html",
-  "training.css?v=103",
+  "training.css?v=104",
   "js/nova/llm.js",
   "js/nova/tokenizer.js",
   "js/agent/engine.js",

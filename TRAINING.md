@@ -22,7 +22,7 @@ it better is more good, checked data**, not a bigger model.
 ## 2. Golden rules (read these first)
 
 1. **Only data we're allowed to use:** written by us (`own`), public domain, or CC0/CC-BY/CC-BY-SA with a link.
-2. **Never copy answers from ChatGPT, Claude, Gemini or any AI service.** It's against their terms and it isn't NOVA learning.
+2. **You may use Gemini, Google or your textbook to *learn* a fact, but type the answer in your own words** (1–3 short sentences, no bullet points). Copying an AI's text to train another AI breaks those services' rules, and NOVA learns better from short, simple answers. The checker catches pasted chatbot text.
 3. **No private information:** no phone numbers, addresses, marks or anyone's chats.
 4. **Never edit `nova-llm/data/val.txt`, `test.txt` or `heldout.txt`.** They are the fixed exams. If the model sees them, our scores become lies.
 5. **Pick models by the validation score only.** The final test is used once per candidate, just before promotion (it's logged in `reports/test_usage.jsonl`).
@@ -30,6 +30,11 @@ it better is more good, checked data**, not a bigger model.
 7. **Never paste keys or passwords** into notebooks, chats or files.
 
 ## 3. Adding training data (data writers + fact checkers)
+
+**Easiest way (students):** in Nova AI press **Alt + N** (or open `training.html`), enter the team
+code once, pick a subject, press **💡 Give me a question**, and type the answer in your own words.
+
+**GitHub way (bigger batches):**
 
 1. Open the repo on GitHub: https://github.com/rsmohnishkumar-design/MK.AI
 2. Go to `nova-llm/data/contrib/`, press **Add file → Create new file**, and name it `yourname-topic.jsonl` (for example `priya-geography.jsonl`).

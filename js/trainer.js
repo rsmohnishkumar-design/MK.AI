@@ -11,6 +11,8 @@ import { auth, db } from "./firebase.js";
 const $ = (id) => document.getElementById(id);
 const LICENCES = ["own", "public-domain", "cc0", "cc-by", "cc-by-sa"];
 const AI_SIGNS = /\b(as an ai (language )?model|i'm an ai|i am an ai|chatgpt|openai|gemini|claude|anthropic|i cannot browse)\b/i;
+// Signs that text was pasted straight from a chatbot (markdown, chatty openers/closers).
+const PASTED = /(\*\*|^\s*(#{1,6}\s|[-*•]\s|\d+\.\s)|\b(sure!|certainly!|great question|i hope this helps|let me know if|feel free to))/im;
 const PRIVATE = /(\b\d{10}\b|\b\d{4}\s?\d{4}\s?\d{4}\b|[\w.+-]+@[\w-]+\.[\w.]+)/;
 let user = null, admin = false, rows = [], editing = null;
 
@@ -27,6 +29,8 @@ export function checkExample(r) {
   if (!src) return "Say where it came from (\"written for Nova\" if you wrote it).";
   if (lic.startsWith("cc-by") && !/^https?:\/\//.test(src)) return "CC-BY needs a link to the source.";
   if (AI_SIGNS.test(a)) return "This looks copied from an AI service. Please write it yourself.";
+  if (PASTED.test(a)) return "This looks pasted from a chatbot (bold text, bullet points or chatty words). Write it as 1–3 plain sentences in your own words.";
+  if (a.length > 600 && lic === "own") return "That's long. Keep it to 1–3 short sentences in your own words (under 600 letters).";
   if (PRIVATE.test(q + " " + a)) return "This looks like private data (a phone, ID or email). Remove it.";
   if (rows.some((x) => x.id !== editing && x.question.toLowerCase() === q.toLowerCase() && x.answer === a)) return "This exact example is already here.";
   return null;
@@ -125,7 +129,7 @@ function startEdit(r) {
   editing = r.id;
   $("fQ").value = r.question;
   $("fA").value = r.answer;
-  $("fT").value = r.topic || "general";
+  setTopic(r.topic || "general");
   $("fL").value = r.licence;
   $("fS").value = r.source;
   $("fSave").textContent = "Save changes";
@@ -134,13 +138,46 @@ function startEdit(r) {
 }
 function stopEdit() {
   editing = null;
+  const topic = $("fT").value;
   $("trForm").reset();
-  $("fT").value = "general";
+  $("fT").value = topic; // keep the chosen subject for the next example
   $("fS").value = "written for Nova";
   $("fSave").textContent = "Add example";
   $("fCancel").hidden = true;
+  $("fCount").textContent = "";
 }
 $("fCancel").addEventListener("click", stopEdit);
+
+function setTopic(t) {
+  if (![...$("fT").options].some((o) => o.value === t)) $("fT").append(new Option(t, t));
+  $("fT").value = t;
+}
+
+// Question ideas so students always know what to write next.
+const IDEAS = {
+  general: ["What is the difference between weather and climate?", "Why do we need sleep?", "What is a library?", "How do you make a good study timetable?"],
+  science: ["What is photosynthesis?", "Why is the sky blue?", "What are the three states of matter?", "What does the heart do?", "What is gravity?", "Why do we have day and night?"],
+  maths: ["What is a prime number?", "How do you find the area of a rectangle?", "What is 15% of 200?", "What is the difference between mean and median?", "What is a right angle?"],
+  geography: ["What is the longest river in India?", "What causes earthquakes?", "What is a peninsula?", "Which is the largest ocean?", "What is the capital of Tamil Nadu?"],
+  history: ["Who was the first Prime Minister of India?", "When did India become independent?", "Who built the Brihadeeswarar Temple?", "What was the Dandi March?"],
+  india: ["How many states does India have?", "What is the national animal of India?", "When is Republic Day celebrated?", "What does the Indian flag's wheel stand for?"],
+  english: ["What is a noun?", "What is the past tense of 'go'?", "What is the difference between 'their' and 'there'?", "What is a synonym?"],
+  tamil: ["திருக்குறளை எழுதியவர் யார்?", "தமிழ்நாட்டின் தலைநகரம் எது?", "பொங்கல் ஏன் கொண்டாடப்படுகிறது?", "What does 'vanakkam' mean?"],
+  computers: ["What is a computer virus?", "What is the difference between RAM and storage?", "What is a password manager?", "What does a web browser do?"],
+  health: ["Why should we wash our hands?", "Why is drinking water important?", "What is a balanced diet?", "Why is exercise good for us?"],
+  nova: ["What is Nova AI?", "Is Nova AI free to use?", "What can Nova AI help me with?"],
+};
+$("fIdea").addEventListener("click", () => {
+  const list = IDEAS[$("fT").value] || IDEAS.general;
+  const used = new Set(rows.map((r) => r.question.toLowerCase()));
+  const fresh = list.filter((q) => !used.has(q.toLowerCase()) && q !== $("fQ").value);
+  $("fQ").value = (fresh.length ? fresh : list)[Math.floor(Math.random() * (fresh.length || list.length))];
+  $("fA").focus();
+});
+$("fA").addEventListener("input", () => {
+  const n = $("fA").value.trim().split(/(?<=[.!?।])\s+/).filter(Boolean).length;
+  $("fCount").textContent = $("fA").value.trim() ? `${n} sentence${n === 1 ? "" : "s"}${n > 3 ? " — try to keep it to 1–3" : " ✓"}` : "";
+});
 
 async function addOne(v) {
   const problem = checkExample(v);
@@ -161,7 +198,7 @@ $("trForm").addEventListener("submit", async (e) => {
       msg(out, "Saved.", "good");
     } else {
       await addOne(v);
-      msg(out, "Added. Thank you! It now waits for review.", "good");
+      msg(out, "Added. Thank you! It now waits for review. Press 💡 for the next question.", "good");
     }
     stopEdit();
     await load();

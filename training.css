@@ -40,3 +40,6 @@ body { background: var(--ink); color: var(--paper); }
 .tr-steps { margin: 0 0 10px; padding-left: 20px; color: var(--paper-dim); font-size: 14px; line-height: 1.6; }
 .tr a { color: var(--accent); }
 @media (max-width: 520px) { .tr-head p { display: none; } }
+.tr-more summary { cursor: pointer; color: var(--paper-dim); font-size: 13px; padding: 4px 0; }
+.tr-more[open] { display: flex; flex-direction: column; gap: 10px; }
+.tr-easy .tr-steps b { color: var(--paper); }
