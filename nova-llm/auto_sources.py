@@ -73,6 +73,9 @@ def fetch_online():
     from google.oauth2 import service_account
 
     info = credentials()
+    print(f"Key: account {info.get('client_email', '?').split('@')[0]}, project {info.get('project_id', '?')}")
+    if info.get("project_id") != PROJECT:
+        raise SystemExit(f"This key is for project '{info.get('project_id')}', not {PROJECT}. Make a new key for {PROJECT}.")
     mq, approved = [], []
     try:
         idc = service_account.IDTokenCredentials.from_service_account_info(info, target_audience=MQ_AUDIENCE)
@@ -81,7 +84,7 @@ def fetch_online():
         if r.ok:
             mq = r.json().get("questions", [])
         else:
-            print(f"Mind Quest export answered {r.status_code}; using Training Room data only")
+            print(f"Mind Quest export answered {r.status_code} ({r.text[:120]}); using Training Room data only")
     except Exception as e:  # Mind Quest being down must not stop training on approved data
         print("Mind Quest not reachable:", type(e).__name__)
     sc = service_account.Credentials.from_service_account_info(info, scopes=["https://www.googleapis.com/auth/datastore"])
@@ -90,7 +93,8 @@ def fetch_online():
                              "where": {"fieldFilter": {"field": {"fieldPath": "status"}, "op": "EQUAL", "value": {"stringValue": "approved"}}}}}
     r = requests.post(f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)/documents:runQuery",
                       headers={"Authorization": f"Bearer {sc.token}"}, json=q, timeout=60)
-    r.raise_for_status()
+    if not r.ok:
+        raise SystemExit(f"Nova database refused ({r.status_code}): {r.text[:300]}")
     approved = [x["document"] for x in r.json() if "document" in x]
     return mq, approved
 
