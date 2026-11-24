@@ -57,7 +57,8 @@ Read this first. It carries over what was learned in earlier chats with the owne
   Trainers can only use the trainingData collection; the admin approves/rejects and exports JSONL.
 - Live Firestore rules: deployed from the session by merging repo rules with the secret settings read
   from the live ruleset (never printed or committed). Repo rules keep placeholders.
-- Auto-training: .github/workflows/auto-train.yml (every 3 h) runs nova-llm/auto_sources.py (Mind Quest
+- Auto-training: owner prefers it run from the Claude session (no GitHub). GitHub timer is OFF;
+  the GitHub secret holds a wrong-project (mk-vfx) key. Session runs the same scripts: .github/workflows/auto-train.yml runs nova-llm/auto_sources.py (Mind Quest
   export + approved trainingData; Mind Quest data git-ignored, never committed), trains cpu-small, and
   nova-llm/auto_finish.py promotes + deploys ONLY if better on val AND test and the parity check passes.
   The owner asked for this to run without them (2026-11-19). State: checkpoints/AUTO_STATE.json.

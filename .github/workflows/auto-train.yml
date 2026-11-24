@@ -10,8 +10,9 @@
 name: Auto-train NOVA
 
 on:
-  schedule:
-    - cron: "17 */3 * * *"
+  # Timer off (owner prefers training from the Claude session). To turn it back on, add:
+  #   schedule:
+  #     - cron: "17 */3 * * *"
   workflow_dispatch:
     inputs:
       force:
